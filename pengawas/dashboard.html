@@ -248,22 +248,33 @@
      RENDER ALL
      ============================================================ */
   function renderAll() {
-    renderPeriode();
-    renderStat();
-    renderChartTren();
-    renderChartKategori();
-    renderAttention();
-    renderSekolahTable();
+    const tasks = [
+      ['Periode', renderPeriode],
+      ['Stat', renderStat],
+      ['Chart Tren', renderChartTren],
+      ['Chart Kategori', renderChartKategori],
+      ['Attention', renderAttention],
+      ['Tabel Sekolah', renderSekolahTable]
+    ];
+    tasks.forEach(([label, fn]) => {
+      try { fn(); }
+      catch (err) { console.error('[SISPA] render' + label + ' gagal:', err); }
+    });
     refreshIcons();
   }
 
   function renderPeriode() {
-    el('periodeLabel').textContent = data.periode.label;
     const p = data.periode;
-    el('periodeInfo').querySelector('div.text-sm').innerHTML =
-      '<div class="text-slate-500">Periode Aktif</div>' +
-      '<div class="font-semibold text-slate-900">' + escapeHtml(p.label) + '</div>' +
-      '<div class="text-xs text-slate-500 mt-0.5">' + formatTanggalIndo(p.dari) + ' — ' + formatTanggalIndo(p.sampai) + '</div>';
+    el('periodeInfo').innerHTML = `
+      <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+        <i data-lucide="calendar-range" class="w-5 h-5"></i>
+      </div>
+      <div class="text-sm">
+        <div class="text-slate-500">Periode Aktif</div>
+        <div class="font-semibold text-slate-900">${escapeHtml(p.label)}</div>
+        <div class="text-xs text-slate-500 mt-0.5">${formatTanggalIndo(p.dari)} — ${formatTanggalIndo(p.sampai)}</div>
+      </div>`;
+    refreshIcons();
   }
 
   function renderStat() {
