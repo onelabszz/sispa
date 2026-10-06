@@ -198,24 +198,25 @@
   }
 
   function populateForm() {
-    el('fGuru').value = existing.guru_id || '';
-    el('fTanggal').value = (existing.tanggal || '').slice(0, 10);
-    el('fMapel').value = existing.mapel || '';
-    el('fMateri').value = existing.materi || '';
-    el('fDurasi').value = existing.durasi || '';
-    el('fLink').value = existing.link_dokumentasi || '';
+  el('fGuru').value = existing.guru_id || '';
+  el('fTanggal').value = (existing.tanggal || '').slice(0, 10);
+  el('fMapel').value = existing.mapel || '';
+  el('fMateri').value = existing.materi || '';
+  el('fDurasi').value = existing.durasi || '';
+  el('fLink').value = existing.link_dokumentasi || '';
+  el('fCatatan').value = existing.catatan_tambahan || '';     // ← BARU
+  el('fKekuatan').value = existing.kekuatan || '';            // ← BARU
+  el('fArea').value = existing.area_pengembangan || '';       // ← BARU
+  el('fRencana').value = existing.rencana_pembinaan || '';    // ← BARU
 
-    INSTRUMEN_LK1.forEach(i => {
-      const d = detailMap[i.kode];
-      if (!d) return;
-      if (d.skor > 0) setSkor(i.kode, d.skor);
-      const ta = document.querySelector(`[data-catatan="${i.kode}"]`);
-      if (ta) ta.value = d.catatan || '';
-    });
-
-    // Catatan kualitatif ambil dari header (perlu endpoint get yang lengkap)
-    // Kita load ulang via supervisi.get kalau perlu field ini. Untuk sekarang, biarkan kosong.
-  }
+  INSTRUMEN_LK1.forEach(i => {
+    const d = detailMap[i.kode];
+    if (!d) return;
+    if (d.skor > 0) setSkor(i.kode, d.skor);
+    const ta = document.querySelector(`[data-catatan="${i.kode}"]`);
+    if (ta) ta.value = d.catatan || '';
+  });
+}
 
   async function save(submit) {
     const payload = {
