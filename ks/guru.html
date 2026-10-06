@@ -5,70 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SISPA — Data Guru</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
-<body class="bg-slate-100 min-h-screen">
-<div id="appHeader"></div>
+<body>
 
-<main class="max-w-6xl mx-auto px-4 py-8">
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-slate-800">Data Guru</h1>
-      <p id="sekolahInfo" class="text-sm text-slate-500"></p>
-    </div>
-    <button id="btnAdd" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition">+ Tambah Guru</button>
+<div class="flex items-center justify-between mb-6 gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Data Guru</h1>
+    <p class="text-sm text-slate-500 mt-1" id="sekolahInfo">Memuat...</p>
   </div>
+  <button id="btnAdd" class="btn btn-primary">
+    <i data-lucide="plus" class="w-4 h-4"></i>
+    <span>Tambah Guru</span>
+  </button>
+</div>
 
-  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-50 text-slate-600 text-left">
+<div class="card overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="table">
+      <thead>
         <tr>
-          <th class="px-4 py-3">NIP</th>
-          <th class="px-4 py-3">Nama</th>
-          <th class="px-4 py-3">Mapel</th>
-          <th class="px-4 py-3">Kelas</th>
-          <th class="px-4 py-3 text-right">Aksi</th>
+          <th>NIP</th>
+          <th>Nama</th>
+          <th>Mapel</th>
+          <th>Kelas</th>
+          <th class="text-right">Aksi</th>
         </tr>
       </thead>
-      <tbody id="guruTable" class="divide-y divide-slate-100"></tbody>
+      <tbody id="guruTable"></tbody>
     </table>
-    <div id="emptyState" class="hidden p-8 text-center text-slate-500">Belum ada data guru.</div>
   </div>
-</main>
-
-<!-- Modal Form -->
-<div id="modal" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-    <h2 id="modalTitle" class="text-lg font-bold text-slate-800 mb-4">Tambah Guru</h2>
-    <form id="guruForm" class="space-y-3">
-      <input type="hidden" id="fId" />
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">NIP</label>
-        <input type="text" id="fNip" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Nama <span class="text-red-500">*</span></label>
-        <input type="text" id="fNama" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Mapel</label>
-          <input type="text" id="fMapel" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-1">Kelas</label>
-          <input type="text" id="fKelas" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
-        <input type="email" id="fEmail" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-      </div>
-      <div class="flex justify-end gap-2 pt-2">
-        <button type="button" id="btnCancel" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-lg font-medium">Batal</button>
-        <button type="submit" id="btnSave" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">Simpan</button>
-      </div>
-    </form>
+  <div id="emptyState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="users" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Belum ada data guru</h3>
+    <p class="text-sm text-slate-500 mb-4">Mulai dengan menambahkan guru pertama.</p>
+    <button onclick="el('btnAdd').click()" class="btn btn-primary">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+      <span>Tambah Guru</span>
+    </button>
   </div>
 </div>
 
@@ -77,9 +52,9 @@
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
-  const user = sispaRequireLogin(['KS']);
+  const user = sispaRequireLogin(['KS', 'Admin']);
   if (user) {
-    mountHeader('/ks/guru.html');
+    mountShell('guru');
     el('sekolahInfo').textContent = user.nama_sekolah + ' · NPSN ' + user.npsn;
     loadGuru();
   }
@@ -87,30 +62,41 @@
   let guruList = [];
 
   async function loadGuru() {
-    try {
-      guruList = await sispaRequest('guru.list', {});
-      renderTable();
-    } catch (err) { handleApiError(err); }
+    await withLoading('Memuat data guru...', async () => {
+      try {
+        guruList = await sispaRequest('guru.list', {});
+        renderTable();
+      } catch (err) { handleApiError(err); }
+    });
   }
 
   function renderTable() {
     const tbody = el('guruTable');
     const empty = el('emptyState');
+    const table = tbody.closest('.card').querySelector('.overflow-x-auto');
+
     if (!guruList.length) {
-      tbody.innerHTML = '';
+      table.classList.add('hidden');
       empty.classList.remove('hidden');
+      refreshIcons();
       return;
     }
+    table.classList.remove('hidden');
     empty.classList.add('hidden');
+
     tbody.innerHTML = guruList.map(g => `
-      <tr class="hover:bg-slate-50">
-        <td class="px-4 py-3 font-mono text-xs">${escapeHtml(g.nip)}</td>
-        <td class="px-4 py-3 font-medium text-slate-800">${escapeHtml(g.nama)}</td>
-        <td class="px-4 py-3">${escapeHtml(g.mapel)}</td>
-        <td class="px-4 py-3">${escapeHtml(g.kelas)}</td>
-        <td class="px-4 py-3 text-right">
-          <button data-edit="${g.id}" class="text-indigo-600 hover:underline text-xs mr-3">Edit</button>
-          <button data-del="${g.id}" class="text-red-600 hover:underline text-xs">Hapus</button>
+      <tr>
+        <td class="text-mono text-xs">${escapeHtml(g.nip || '—')}</td>
+        <td class="font-medium text-slate-900">${escapeHtml(g.nama)}</td>
+        <td>${escapeHtml(g.mapel || '—')}</td>
+        <td>${escapeHtml(g.kelas || '—')}</td>
+        <td class="text-right">
+          <button class="icon-btn" data-edit="${g.id}" title="Edit">
+            <i data-lucide="pencil" class="w-4 h-4"></i>
+          </button>
+          <button class="icon-btn text-red-600" data-del="${g.id}" title="Hapus">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
         </td>
       </tr>`).join('');
 
@@ -118,39 +104,62 @@
       b.addEventListener('click', () => openEdit(b.dataset.edit)));
     tbody.querySelectorAll('[data-del]').forEach(b =>
       b.addEventListener('click', () => doDelete(b.dataset.del)));
+    refreshIcons();
   }
 
-  function openModal(title) {
-    el('modalTitle').textContent = title;
-    el('modal').classList.remove('hidden');
-  }
-  function closeModal() {
-    el('modal').classList.add('hidden');
-    el('guruForm').reset();
-    el('fId').value = '';
-  }
+  el('btnAdd').addEventListener('click', () => openForm());
 
-  el('btnAdd').addEventListener('click', () => {
-    closeModal(); openModal('Tambah Guru');
-  });
-  el('btnCancel').addEventListener('click', closeModal);
+  function openForm(g) {
+    const isEdit = !!g;
+    openModal({
+      title: isEdit ? 'Edit Data Guru' : 'Tambah Guru',
+      body: `
+        <form id="guruForm" class="space-y-4">
+          <input type="hidden" id="fId" value="${isEdit ? escapeHtml(g.id) : ''}" />
+          <div>
+            <label class="label" for="fNip">NIP</label>
+            <input type="text" id="fNip" class="input" value="${isEdit ? escapeHtml(g.nip || '') : ''}" />
+          </div>
+          <div>
+            <label class="label" for="fNama">Nama Lengkap <span class="text-red-500">*</span></label>
+            <input type="text" id="fNama" required class="input" value="${isEdit ? escapeHtml(g.nama || '') : ''}" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="fMapel">Mata Pelajaran</label>
+              <input type="text" id="fMapel" class="input" value="${isEdit ? escapeHtml(g.mapel || '') : ''}" />
+            </div>
+            <div>
+              <label class="label" for="fKelas">Kelas</label>
+              <input type="text" id="fKelas" class="input" value="${isEdit ? escapeHtml(g.kelas || '') : ''}" />
+            </div>
+          </div>
+          <div>
+            <label class="label" for="fEmail">Email</label>
+            <input type="email" id="fEmail" class="input" value="${isEdit ? escapeHtml(g.email || '') : ''}" />
+          </div>
+        </form>`,
+      footer: `
+        <button class="btn btn-secondary" data-close>Batal</button>
+        <button class="btn btn-primary" id="btnSave">
+          <i data-lucide="save" class="w-4 h-4"></i>
+          <span>Simpan</span>
+        </button>`,
+    });
+    el('btnSave').addEventListener('click', saveGuru);
+  }
 
   function openEdit(id) {
     const g = guruList.find(x => x.id === id);
-    if (!g) return;
-    el('fId').value = g.id;
-    el('fNip').value = g.nip;
-    el('fNama').value = g.nama;
-    el('fMapel').value = g.mapel;
-    el('fKelas').value = g.kelas;
-    el('fEmail').value = g.email;
-    openModal('Edit Guru');
+    if (g) openForm(g);
   }
 
-  el('guruForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+  async function saveGuru() {
     const btn = el('btnSave');
-    btn.disabled = true; btn.textContent = 'Menyimpan...';
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Menyimpan...</span>`;
+    refreshIcons();
+
     const id = el('fId').value;
     const payload = {
       nip: el('fNip').value.trim(),
@@ -159,29 +168,46 @@
       kelas: el('fKelas').value.trim(),
       email: el('fEmail').value.trim()
     };
+
+    if (!payload.nama) {
+      showToast('Nama guru wajib diisi', 'error');
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Simpan</span>`;
+      refreshIcons();
+      return;
+    }
+
     try {
       if (id) {
         await sispaRequest('guru.update', { id, payload });
-        showToast('Guru diperbarui', 'success');
+        showToast('Data guru diperbarui', 'success');
       } else {
         await sispaRequest('guru.create', payload);
         showToast('Guru ditambahkan', 'success');
       }
       closeModal();
+      clearFrontendCache && clearFrontendCache();
       await loadGuru();
-    } catch (err) { handleApiError(err); }
-    finally { btn.disabled = false; btn.textContent = 'Simpan'; }
-  });
+    } catch (err) {
+      handleApiError(err);
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Simpan</span>`;
+      refreshIcons();
+    }
+  }
 
   async function doDelete(id) {
     const g = guruList.find(x => x.id === id);
     if (!g) return;
-    if (!confirm('Hapus guru "' + g.nama + '"? Tindakan ini tidak dapat dibatalkan.')) return;
-    try {
-      await sispaRequest('guru.delete', { id });
-      showToast('Guru dihapus', 'success');
-      await loadGuru();
-    } catch (err) { handleApiError(err); }
+    if (!confirm(`Hapus guru "${g.nama}"?`)) return;
+    await withLoading('Menghapus...', async () => {
+      try {
+        await sispaRequest('guru.delete', { id });
+        showToast('Guru dihapus', 'success');
+        clearFrontendCache && clearFrontendCache();
+        await loadGuru();
+      } catch (err) { handleApiError(err); }
+    });
   }
 </script>
 </body>
