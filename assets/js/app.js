@@ -181,8 +181,30 @@ function openPdfPreview(res) {
    UTILS
    ============================================================ */
 
+/**
+ * Ambil elemen by id.
+ * Mengembalikan dummy element jika tidak ditemukan,
+ * supaya `el('x').textContent = '...'` tidak crash.
+ */
 function el(id) {
-  return document.getElementById(id);
+  const node = document.getElementById(id);
+  if (node) return node;
+
+  // Fallback: dummy supaya tidak crash
+  console.warn('[SISPA] Elemen tidak ditemukan:', id);
+  return {
+    textContent: '',
+    innerHTML: '',
+    value: '',
+    classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } },
+    style: {},
+    dataset: {},
+    addEventListener() {},
+    removeEventListener() {},
+    appendChild() {},
+    querySelector() { return null; },
+    querySelectorAll() { return []; }
+  };
 }
 
 function escapeHtml(s) {
