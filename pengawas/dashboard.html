@@ -6,126 +6,581 @@
 <title>SISPA — Dashboard Pengawas</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <link rel="stylesheet" href="../assets/css/style.css" />
+<style>
+  .chart-box {
+    position: relative;
+    height: 260px;
+    width: 100%;
+  }
+  .chart-box-sm { height: 200px; }
+  @media (max-width: 768px) {
+    .chart-box { height: 220px; }
+  }
+</style>
 </head>
 <body>
 
-<div class="mb-6">
-  <h1 class="text-2xl font-bold text-slate-900">Dashboard Pengawas</h1>
-  <p class="text-sm text-slate-500 mt-1">Monitoring supervisi di sekolah binaan.</p>
+<!-- ================== KONTEN ================== -->
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Dashboard Pengawas</h1>
+    <p class="text-sm text-slate-500 mt-1">
+      Monitoring supervisi & coaching di sekolah binaan
+    </p>
+  </div>
+  <div class="flex flex-wrap gap-2 items-center">
+    <select id="filterPeriode" class="select text-sm" style="max-width:220px">
+      <option value="semester">Semester Berjalan</option>
+      <option value="semester_lalu">Semester Lalu</option>
+      <option value="tahun">Tahun Ajaran Penuh</option>
+    </select>
+    <button id="btnRefresh" class="btn btn-secondary" title="Muat ulang">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      <span class="hidden md:inline">Refresh</span>
+    </button>
+  </div>
 </div>
 
+<!-- Periode info -->
+<div id="periodeInfo" class="card card-body mb-4 flex items-center gap-3">
+  <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+    <i data-lucide="calendar-range" class="w-5 h-5"></i>
+  </div>
+  <div class="text-sm">
+    <div class="text-slate-500">Periode Aktif</div>
+    <div id="periodeLabel" class="font-semibold text-slate-900">—</div>
+  </div>
+</div>
+
+<!-- ================== STAT CARDS ================== -->
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
   <div class="stat-card">
     <div class="stat-icon bg-blue-50 text-blue-600"><i data-lucide="building-2" class="w-5 h-5"></i></div>
-    <div>
-      <div class="text-xs text-slate-500">Sekolah</div>
+    <div class="min-w-0">
+      <div class="text-xs text-slate-500">Sekolah Binaan</div>
       <div id="statSekolah" class="text-2xl font-bold text-slate-900">—</div>
+      <div id="statSekolahSub" class="text-xs text-slate-500 mt-0.5">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-cyan-50 text-cyan-600"><i data-lucide="users" class="w-5 h-5"></i></div>
+    <div class="min-w-0">
+      <div class="text-xs text-slate-500">Total Guru</div>
+      <div id="statGuru" class="text-2xl font-bold text-slate-900">—</div>
+      <div id="statGuruSub" class="text-xs text-slate-500 mt-0.5">—</div>
     </div>
   </div>
   <div class="stat-card">
     <div class="stat-icon bg-indigo-50 text-indigo-600"><i data-lucide="clipboard-list" class="w-5 h-5"></i></div>
-    <div>
-      <div class="text-xs text-slate-500">Total Supervisi</div>
-      <div id="statTotal" class="text-2xl font-bold text-slate-900">—</div>
+    <div class="min-w-0">
+      <div class="text-xs text-slate-500">Supervisi</div>
+      <div id="statSupervisi" class="text-2xl font-bold text-slate-900">—</div>
+      <div id="statSupervisiSub" class="text-xs text-slate-500 mt-0.5">—</div>
     </div>
   </div>
   <div class="stat-card">
-    <div class="stat-icon bg-emerald-50 text-emerald-600"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
-    <div>
-      <div class="text-xs text-slate-500">Terkirim</div>
-      <div id="statTerkirim" class="text-2xl font-bold text-slate-900">—</div>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-icon bg-purple-50 text-purple-600"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
-    <div>
+    <div class="stat-icon bg-emerald-50 text-emerald-600"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
+    <div class="min-w-0">
       <div class="text-xs text-slate-500">Rata Skor</div>
-      <div id="statSkor" class="text-2xl font-bold text-slate-900">—</div>
+      <div class="flex items-baseline gap-1">
+        <span id="statSkor" class="text-2xl font-bold text-slate-900">—</span>
+        <span class="text-xs text-slate-400">/76</span>
+      </div>
+      <div id="statSkorSub" class="text-xs text-slate-500 mt-0.5">—</div>
     </div>
   </div>
 </div>
 
+<!-- ================== CHARTS ================== -->
+<div class="grid lg:grid-cols-3 gap-4 mb-8">
+  <div class="card lg:col-span-2">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="line-chart" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Tren Bulanan</h2>
+      </div>
+      <div class="flex items-center gap-3 text-xs text-slate-500">
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span> Supervisi</span>
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span> Coaching</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="chart-box">
+        <canvas id="chartTren"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="pie-chart" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Distribusi Kategori</h2>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="chart-box chart-box-sm">
+        <canvas id="chartKategori"></canvas>
+      </div>
+      <div id="kategoriLegend" class="mt-3 space-y-1.5 text-xs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== PERLU PERHATIAN ================== -->
+<div class="card mb-8">
+  <div class="card-header">
+    <div class="flex items-center gap-2">
+      <i data-lucide="alert-circle" class="w-4 h-4 text-amber-500"></i>
+      <h2 class="font-semibold text-slate-900 text-sm">Perlu Perhatian</h2>
+      <span id="attentionCount" class="badge badge-warning">0</span>
+    </div>
+  </div>
+  <div id="attentionList" class="card-body space-y-2">Memuat...</div>
+</div>
+
+<!-- ================== TABEL REKAP SEKOLAH ================== -->
 <div class="card overflow-hidden">
   <div class="card-header">
     <div class="flex items-center gap-2">
       <i data-lucide="building-2" class="w-4 h-4 text-slate-500"></i>
       <h2 class="font-semibold text-slate-900 text-sm">Rekap per Sekolah</h2>
     </div>
+    <div class="flex items-center gap-2">
+      <div class="relative">
+        <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400">
+          <i data-lucide="search" class="w-3.5 h-3.5"></i>
+        </span>
+        <input type="text" id="searchSekolah" placeholder="Cari sekolah..."
+               class="input text-sm" style="padding-left:2rem;width:200px" />
+      </div>
+    </div>
   </div>
   <div class="overflow-x-auto">
     <table class="table">
       <thead>
         <tr>
-          <th>NPSN</th>
           <th>Sekolah</th>
-          <th class="text-center">Total</th>
-          <th class="text-center">Terkirim</th>
-          <th class="text-center">Rata Skor</th>
+          <th class="text-center">Guru</th>
+          <th class="text-center">Supervisi</th>
+          <th class="text-center">Coaching</th>
+          <th class="text-center">Rata</th>
+          <th class="text-center">Kategori</th>
+          <th class="text-center">Status</th>
           <th class="text-right">Aksi</th>
         </tr>
       </thead>
-      <tbody id="tableBody"></tbody>
+      <tbody id="sekolahTable"></tbody>
     </table>
   </div>
   <div id="emptyState" class="hidden empty-state">
     <div class="empty-state-icon"><i data-lucide="building-2" class="w-6 h-6"></i></div>
-    <h3 class="font-semibold text-slate-900 mb-1">Belum ada data</h3>
-    <p class="text-sm text-slate-500">Sekolah binaan belum mengirim supervisi.</p>
+    <h3 class="font-semibold text-slate-900 mb-1">Belum ada sekolah binaan</h3>
+    <p class="text-sm text-slate-500">Hubungi administrator untuk mengatur sekolah binaan.</p>
   </div>
 </div>
+
+<!-- ================== END ================== -->
 
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/api.js"></script>
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
+  /* ============================================================
+     INIT
+     ============================================================ */
   const user = sispaRequireLogin(['Pengawas', 'Admin']);
-  if (user) { mountShell('dashboard'); load(); }
+  if (user) {
+    mountShell('dashboard');
+    loadDashboard();
+  }
 
-  async function load() {
-    await withLoading('Memuat data...', async () => {
+  let data = null;
+  let chartTren = null;
+  let chartKategori = null;
+  let filterSekolahText = '';
+
+  /* ============================================================
+     LOAD DATA
+     ============================================================ */
+  async function loadDashboard() {
+    await withLoading('Memuat dashboard pengawas...', async () => {
       try {
-        const data = await sispaRequest('dashboard.pengawas', {});
-        el('statSekolah').textContent = data.jumlah_sekolah;
-        el('statTotal').textContent = data.total_supervisi;
-        el('statTerkirim').textContent = data.total_terkirim;
-        const avg = data.sekolah.length
-          ? Math.round(data.sekolah.reduce((a, s) => a + (s.rata_skor || 0), 0) / data.sekolah.length)
-          : 0;
-        el('statSkor').textContent = avg;
-
-        const tbody = el('tableBody');
-        const empty = el('emptyState');
-        const table = tbody.closest('.card').querySelector('.overflow-x-auto');
-
-        if (!data.sekolah.length) {
-          table.classList.add('hidden');
-          empty.classList.remove('hidden');
-          refreshIcons();
-          return;
-        }
-        table.classList.remove('hidden');
-        empty.classList.add('hidden');
-
-        tbody.innerHTML = data.sekolah.map(s => `
-          <tr>
-            <td class="text-mono text-xs">${escapeHtml(s.npsn)}</td>
-            <td class="font-medium text-slate-900">${escapeHtml(s.nama_sekolah)}</td>
-            <td class="text-center">${s.total_supervisi}</td>
-            <td class="text-center">${s.supervisi_terkirim}</td>
-            <td class="text-center text-mono font-medium">${s.rata_skor}</td>
-            <td class="text-right">
-              <a href="./sekolah.html?npsn=${encodeURIComponent(s.npsn)}" class="btn btn-ghost text-xs">
-                <span>Detail</span>
-                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-              </a>
-            </td>
-          </tr>`).join('');
-        refreshIcons();
-      } catch (err) { handleApiError(err); }
+        const payload = resolvePeriodePayload();
+        data = await sispaRequest('dashboard.pengawas', payload);
+        renderAll();
+      } catch (err) {
+        handleApiError(err);
+      }
     });
   }
+
+  function resolvePeriodePayload() {
+    const p = el('filterPeriode').value;
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+
+    if (p === 'semester_lalu') {
+      if (m >= 7) {
+        // Ganjil sekarang → semester lalu = Genap (Jan-Jun tahun ini)
+        return { dari: y + '-01-01', sampai: y + '-06-30', label: 'Semester Genap ' + (y-1) + '/' + y };
+      } else {
+        // Genap sekarang → semester lalu = Ganjil (Jul-Des tahun lalu)
+        return { dari: (y-1) + '-07-01', sampai: (y-1) + '-12-31', label: 'Semester Ganjil ' + (y-1) + '/' + y };
+      }
+    }
+    if (p === 'tahun') {
+      // Tahun ajaran: Jul tahun ini (atau sebelumnya) s.d. Jun tahun depan
+      if (m >= 7) return { dari: y + '-07-01', sampai: (y+1) + '-06-30', label: 'Tahun Ajaran ' + y + '/' + (y+1) };
+      return { dari: (y-1) + '-07-01', sampai: y + '-06-30', label: 'Tahun Ajaran ' + (y-1) + '/' + y };
+    }
+    // default: semester berjalan → biar backend hitung sendiri
+    return {};
+  }
+
+  /* ============================================================
+     RENDER ALL
+     ============================================================ */
+  function renderAll() {
+    renderPeriode();
+    renderStat();
+    renderChartTren();
+    renderChartKategori();
+    renderAttention();
+    renderSekolahTable();
+    refreshIcons();
+  }
+
+  function renderPeriode() {
+    el('periodeLabel').textContent = data.periode.label;
+    const p = data.periode;
+    el('periodeInfo').querySelector('div.text-sm').innerHTML =
+      '<div class="text-slate-500">Periode Aktif</div>' +
+      '<div class="font-semibold text-slate-900">' + escapeHtml(p.label) + '</div>' +
+      '<div class="text-xs text-slate-500 mt-0.5">' + formatTanggalIndo(p.dari) + ' — ' + formatTanggalIndo(p.sampai) + '</div>';
+  }
+
+  function renderStat() {
+    const g = data.global;
+
+    el('statSekolah').textContent = g.total_sekolah;
+    const aktif = data.sekolah.filter(s => s.status === 'aktif').length;
+    const pasif = g.total_sekolah - aktif;
+    el('statSekolahSub').innerHTML = aktif + ' aktif · ' + pasif + ' pasif';
+
+    el('statGuru').textContent = g.total_guru;
+    el('statGuruSub').textContent = g.total_guru + ' guru terdaftar';
+
+    el('statSupervisi').textContent = g.total_supervisi;
+    el('statSupervisiSub').innerHTML = g.total_supervisi_terkirim + ' terkirim · ' +
+      g.total_supervisi_draft + ' draft';
+
+    el('statSkor').textContent = g.rata_skor || 0;
+    const kat = g.kategori_dominan || '-';
+    const katCls = kat === 'Mahir' ? 'text-emerald-600'
+                  : kat === 'Berkembang' ? 'text-blue-600'
+                  : kat === 'Mulai Terlihat' ? 'text-amber-600'
+                  : 'text-slate-500';
+    el('statSkorSub').innerHTML = '<span class="' + katCls + ' font-medium">' + escapeHtml(kat) + '</span>';
+  }
+
+  /* ============================================================
+     CHART — TREN BULANAN
+     ============================================================ */
+  function renderChartTren() {
+    const ctx = el('chartTren').getContext('2d');
+    const labels = data.tren_bulanan.map(b => b.label);
+    const supData = data.tren_bulanan.map(b => b.supervisi);
+    const coachData = data.tren_bulanan.map(b => b.coaching);
+
+    if (chartTren) chartTren.destroy();
+    chartTren = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Supervisi',
+            data: supData,
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99,102,241,0.1)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#6366f1',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.35,
+            fill: true
+          },
+          {
+            label: 'Coaching',
+            data: coachData,
+            borderColor: '#a855f7',
+            backgroundColor: 'rgba(168,85,247,0.1)',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#a855f7',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.35,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            padding: 10,
+            cornerRadius: 8,
+            titleFont: { family: 'Inter', size: 12 },
+            bodyFont: { family: 'Inter', size: 12 }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { family: 'Inter', size: 11 }, color: '#64748b' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, font: { family: 'Inter', size: 11 }, color: '#64748b' },
+            grid: { color: '#f1f5f9' }
+          }
+        }
+      }
+    });
+  }
+
+  /* ============================================================
+     CHART — DISTRIBUSI KATEGORI
+     ============================================================ */
+  function renderChartKategori() {
+    const dist = data.distribusi_kategori || {};
+    const keys = Object.keys(dist);
+
+    // Warna per kategori
+    const warnaMap = {
+      'Mahir':            '#10b981',
+      'Berkembang':       '#6366f1',
+      'Mulai Terlihat':   '#f59e0b',
+      'Belum Terlihat':   '#ef4444',
+      'Konsisten/Optimal':'#10b981',
+      'Mulai Tampak':     '#f59e0b',
+      'Belum Tampak':     '#ef4444'
+    };
+
+    const labels = keys.length ? keys : ['Belum ada data'];
+    const values = keys.length ? keys.map(k => dist[k]) : [1];
+    const colors = keys.length ? keys.map(k => warnaMap[k] || '#94a3b8') : ['#e2e8f0'];
+
+    const ctx = el('chartKategori').getContext('2d');
+    if (chartKategori) chartKategori.destroy();
+
+    chartKategori = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors,
+          borderColor: '#fff',
+          borderWidth: 2,
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: keys.length > 0,
+            backgroundColor: '#0f172a',
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              label: (ctx) => ' ' + ctx.label + ': ' + ctx.parsed
+            }
+          }
+        }
+      }
+    });
+
+    // Legend custom
+    const legend = el('kategoriLegend');
+    if (!keys.length) {
+      legend.innerHTML = '<div class="text-center text-slate-400 italic text-xs py-4">Belum ada data supervisi</div>';
+      return;
+    }
+    const total = values.reduce((a, b) => a + b, 0);
+    legend.innerHTML = keys.map((k, i) => {
+      const pct = Math.round((dist[k] / total) * 100);
+      return `
+        <div class="flex items-center justify-between">
+          <span class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full" style="background:${colors[i]}"></span>
+            <span class="text-slate-700">${escapeHtml(k)}</span>
+          </span>
+          <span class="text-slate-500 font-medium">${dist[k]} <span class="text-slate-400">(${pct}%)</span></span>
+        </div>`;
+    }).join('');
+  }
+
+  /* ============================================================
+     PERLU PERHATIAN
+     ============================================================ */
+  function renderAttention() {
+    const list = el('attentionList');
+    const items = data.perlu_perhatian || [];
+    el('attentionCount').textContent = items.length;
+
+    if (!items.length) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon" style="background:#dcfce7;color:#16a34a">
+            <i data-lucide="check-circle" class="w-6 h-6"></i>
+          </div>
+          <div class="text-sm text-slate-600 font-medium">Semua sekolah aktif 🎉</div>
+          <div class="text-xs text-slate-500 mt-1">Tidak ada yang perlu perhatian khusus saat ini.</div>
+        </div>`;
+      return;
+    }
+
+    const iconMap = {
+      sekolah_pasif: { icon: 'building-2', color: 'text-red-600', bg: 'bg-red-50' },
+      draft_menumpuk: { icon: 'file-edit', color: 'text-amber-600', bg: 'bg-amber-50' },
+      guru_belum: { icon: 'user-x', color: 'text-indigo-600', bg: 'bg-indigo-50' }
+    };
+
+    list.innerHTML = items.map(it => {
+      const meta = iconMap[it.tipe] || { icon: 'alert-circle', color: 'text-slate-600', bg: 'bg-slate-100' };
+      const judul = it.nama_sekolah ? escapeHtml(it.nama_sekolah) : 'Ringkasan';
+      return `
+        <div class="flex items-start gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition">
+          <div class="w-9 h-9 rounded-lg ${meta.bg} ${meta.color} flex items-center justify-center flex-shrink-0">
+            <i data-lucide="${meta.icon}" class="w-4 h-4"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-slate-900 text-sm">${judul}</div>
+            <div class="text-xs text-slate-500 mt-0.5">${escapeHtml(it.pesan)}</div>
+          </div>
+          <a href="${sispaUrl(it.aksi)}" class="btn btn-ghost text-xs flex-shrink-0">
+            <span>Lihat</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>`;
+    }).join('');
+  }
+
+  /* ============================================================
+     TABEL REKAP SEKOLAH
+     ============================================================ */
+  function renderSekolahTable() {
+    const tbody = el('sekolahTable');
+    const empty = el('emptyState');
+    const table = tbody.closest('.card').querySelector('.overflow-x-auto');
+
+    let rows = data.sekolah;
+    if (filterSekolahText) {
+      const q = filterSekolahText.toLowerCase();
+      rows = rows.filter(s => s.nama_sekolah.toLowerCase().includes(q) ||
+                              s.npsn.includes(q) ||
+                              (s.kecamatan || '').toLowerCase().includes(q));
+    }
+
+    if (!rows.length) {
+      table.classList.add('hidden');
+      empty.classList.remove('hidden');
+      refreshIcons();
+      return;
+    }
+    table.classList.remove('hidden');
+    empty.classList.add('hidden');
+
+    tbody.innerHTML = rows.map(s => {
+      const statusCls = s.status === 'aktif' ? 'badge-success' : 'badge-neutral';
+      const statusLabel = s.status === 'aktif' ? 'Aktif' : 'Pasif';
+
+      const katCls = s.kategori_dominan === 'Mahir' ? 'badge-success'
+                    : s.kategori_dominan === 'Berkembang' ? 'badge-info'
+                    : s.kategori_dominan === 'Mulai Terlihat' ? 'badge-warning'
+                    : 'badge-neutral';
+
+      return `
+        <tr class="hover:bg-slate-50 cursor-pointer" data-npsn="${escapeHtml(s.npsn)}">
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                ${escapeHtml((s.nama_sekolah || 'S').charAt(0).toUpperCase())}
+              </div>
+              <div class="min-w-0">
+                <div class="font-medium text-slate-900 truncate">${escapeHtml(s.nama_sekolah)}</div>
+                <div class="text-xs text-slate-500">${escapeHtml(s.npsn)} · ${escapeHtml(s.kecamatan || '-')}</div>
+              </div>
+            </div>
+          </td>
+          <td class="text-center">${s.jumlah_guru}</td>
+          <td class="text-center">
+            <span class="font-mono">${s.total_terkirim}</span>
+            ${s.total_draft > 0 ? `<span class="text-xs text-amber-600 ml-1">(+${s.total_draft})</span>` : ''}
+          </td>
+          <td class="text-center">${s.total_coaching}</td>
+          <td class="text-center font-mono font-medium">${s.rata_skor || '—'}</td>
+          <td class="text-center"><span class="badge ${katCls}">${escapeHtml(s.kategori_dominan)}</span></td>
+          <td class="text-center"><span class="badge ${statusCls}">${statusLabel}</span></td>
+          <td class="text-right">
+            <a href="./sekolah.html?npsn=${encodeURIComponent(s.npsn)}" class="btn btn-ghost text-xs" onclick="event.stopPropagation()">
+              <span>Detail</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </a>
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('tr[data-npsn]').forEach(tr => {
+      tr.addEventListener('click', () => {
+        const npsn = tr.dataset.npsn;
+        window.location.href = sispaUrl('/pengawas/sekolah.html?npsn=' + encodeURIComponent(npsn));
+      });
+    });
+
+    refreshIcons();
+  }
+
+  /* ============================================================
+     UTIL
+     ============================================================ */
+  function formatTanggalIndo(iso) {
+    if (!iso) return '—';
+    const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const d = new Date(iso + 'T00:00:00');
+    if (isNaN(d.getTime())) return String(iso);
+    return d.getDate() + ' ' + bulan[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  /* ============================================================
+     EVENT LISTENER
+     ============================================================ */
+  el('filterPeriode').addEventListener('change', () => loadDashboard());
+
+  el('btnRefresh').addEventListener('click', () => {
+    if (window.clearFrontendCache) clearFrontendCache();
+    loadDashboard();
+  });
+
+  el('searchSekolah').addEventListener('input', (e) => {
+    filterSekolahText = e.target.value;
+    renderSekolahTable();
+  });
 </script>
 </body>
 </html>
