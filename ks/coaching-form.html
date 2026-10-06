@@ -459,6 +459,7 @@
       tanggal: el('fTanggal').value,
       catatan_kekuatan: el('fKekuatan').value,
       catatan_area: el('fArea').value,
+      link_dokumentasi: existing ? (existing.link_dokumentasi || '') : '',
       detail: INSTRUMEN_LK2.map(i => ({
         tahap: i.tahap,
         kode: i.kode,
