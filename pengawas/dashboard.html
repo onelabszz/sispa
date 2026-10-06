@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Dashboard Pengawas</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body class="bg-slate-100 min-h-screen">
+<div id="appHeader"></div>
+
+<main class="max-w-6xl mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold text-slate-800 mb-6">Dashboard Pengawas</h1>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white p-5 rounded-xl shadow-sm">
+      <div class="text-sm text-slate-500">Sekolah Binaan</div>
+      <div id="statSekolah" class="text-3xl font-bold text-slate-800 mt-1">–</div>
+    </div>
+    <div class="bg-white p-5 rounded-xl shadow-sm">
+      <div class="text-sm text-slate-500">Total Supervisi</div>
+      <div id="statTotal" class="text-3xl font-bold text-slate-800 mt-1">–</div>
+    </div>
+    <div class="bg-white p-5 rounded-xl shadow-sm">
+      <div class="text-sm text-slate-500">Terkirim</div>
+      <div id="statTerkirim" class="text-3xl font-bold text-slate-800 mt-1">–</div>
+    </div>
+    <div class="bg-white p-5 rounded-xl shadow-sm">
+      <div class="text-sm text-slate-500">Rata Skor</div>
+      <div id="statSkor" class="text-3xl font-bold text-slate-800 mt-1">–</div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100">
+      <h2 class="font-semibold text-slate-800">Rekap per Sekolah</h2>
+    </div>
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-slate-600 text-left">
+        <tr>
+          <th class="px-4 py-3">NPSN</th>
+          <th class="px-4 py-3">Sekolah</th>
+          <th class="px-4 py-3 text-center">Total</th>
+          <th class="px-4 py-3 text-center">Terkirim</th>
+          <th class="px-4 py-3 text-center">Rata Skor</th>
+          <th class="px-4 py-3 text-right">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+    </table>
+    <div id="emptyState" class="hidden p-8 text-center text-slate-500">Belum ada data.</div>
+  </div>
+</main>
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['Pengawas']);
+  if (user) { mountHeader('/pengawas/dashboard.html'); load(); }
+
+  async function load() {
+    try {
+      const data = await sispaRequest('dashboard.pengawas', {});
+      el('statSekolah').textContent = data.jumlah_sekolah;
+      el('statTotal').textContent = data.total_supervisi;
+      el('statTerkirim').textContent = data.total_terkirim;
+      const avg = data.sekolah.length
+        ? Math.round(data.sekolah.reduce((a, s) => a + (s.rata_skor || 0), 0) / data.sekolah.length)
+        : 0;
+      el('statSkor').textContent = avg;
+
+      const tbody = el('tableBody');
+      if (!data.sekolah.length) {
+        tbody.innerHTML = '';
+        el('emptyState').classList.remove('hidden');
+        return;
+      }
+      tbody.innerHTML = data.sekolah.map(s => `
+        <tr class="hover:bg-slate-50">
+          <td class="px-4 py-3 font-mono text-xs">${escapeHtml(s.npsn)}</td>
+          <td class="px-4 py-3 font-medium">${escapeHtml(s.nama_sekolah)}</td>
+          <td class="px-4 py-3 text-center">${s.total_supervisi}</td>
+          <td class="px-4 py-3 text-center">${s.supervisi_terkirim}</td>
+          <td class="px-4 py-3 text-center font-mono">${s.rata_skor}</td>
+          <td class="px-4 py-3 text-right">
+            <a href="./sekolah.html?npsn=${encodeURIComponent(s.npsn)}" class="text-indigo-600 hover:underline text-xs">Detail →</a>
+          </td>
+        </tr>`).join('');
+    } catch (err) { handleApiError(err); }
+  }
+</script>
+</body>
+</html>
