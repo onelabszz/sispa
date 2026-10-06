@@ -354,19 +354,23 @@ function mountShell(activeKey) {
   const user = sispaGetUser();
   if (!user) return;
 
+  // Cegah mount ganda
+  if (document.getElementById('sispaShell')) return;
+
+  // Kumpulkan konten halaman (kecuali script)
   const bodyChildren = Array.from(document.body.childNodes);
   const contentNodes = [];
-  const scriptNodes = [];
 
   bodyChildren.forEach(n => {
-    if (n.nodeType === 1 && n.tagName === 'SCRIPT') {
-      scriptNodes.push(n);
-    } else if (n.nodeType === 1 || (n.nodeType === 3 && n.textContent.trim())) {
+    if (n.nodeType === 1 && n.tagName === 'SCRIPT') return;
+    if (n.nodeType === 1 || (n.nodeType === 3 && n.textContent.trim())) {
       contentNodes.push(n);
     }
   });
 
+  // Bangun shell
   const shell = document.createElement('div');
+  shell.id = 'sispaShell';
   shell.innerHTML = `
     ${buildSidebar(user, activeKey)}
     <div class="app-content">
@@ -374,15 +378,16 @@ function mountShell(activeKey) {
       <main id="appMain" class="app-main"></main>
     </div>`;
 
+  // Pindahkan konten ke dalam appMain (appendChild otomatis menghilangkan dari posisi lama)
   const main = shell.querySelector('#appMain');
   contentNodes.forEach(n => main.appendChild(n));
 
-  document.body.innerHTML = '';
-  document.body.appendChild(shell);
-  scriptNodes.forEach(s => document.body.appendChild(s));
+  // Sisipkan shell di awal body (script tetap di tempatnya)
+  document.body.insertBefore(shell, document.body.firstChild);
 
   refreshIcons();
 
+  // Event listeners
   const sidebar = document.getElementById('appSidebar');
   const overlay = document.getElementById('sidebarOverlay');
   const menuBtn = document.getElementById('menuBtn');
