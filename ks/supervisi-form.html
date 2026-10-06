@@ -398,13 +398,11 @@
   }
 
   async function cetakPdf() {
-    await withLoading('Menyiapkan PDF...', async () => {
+    await withLoading('Menyiapkan dokumen...', async () => {
       try {
         const res = await sispaRequest('supervisi.pdf', { id: editId });
         if (res.mode === 'html') {
-          const w = window.open('', '_blank');
-          w.document.write(res.html);
-          w.document.close();
+          openPdfPreview(res);
         } else if (res.mode === 'drive') {
           window.open(res.pdf_url, '_blank');
         }
