@@ -6,17 +6,89 @@
 <title>SISPA — Dashboard</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
 
-<!-- KONTEN HALAMAN -->
 <div class="mb-6">
   <h1 class="text-2xl font-bold text-slate-900">Dashboard</h1>
-  <p class="text-sm text-slate-500 mt-1">Ringkasan aktivitas supervisi di sekolah Anda.</p>
+  <p class="text-sm text-slate-500 mt-1">Selamat datang di SISPA.</p>
 </div>
 
-<div id="statsGrid" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<!-- Profil KS -->
+<div class="card mb-6 overflow-hidden">
+  <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 p-6 text-white">
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 rounded-full bg-white/15 backdrop-blur flex items-center justify-center border border-white/25 text-2xl font-bold">
+          <span id="ksInitial">K</span>
+        </div>
+        <div>
+          <div class="text-xs text-indigo-200 uppercase tracking-wide">Kepala Sekolah</div>
+          <h2 id="ksNama" class="text-xl font-bold mt-1">—</h2>
+          <p id="ksSekolah" class="text-sm text-indigo-100 mt-0.5">—</p>
+        </div>
+      </div>
+      <button id="btnEditProfile" class="btn bg-white/15 hover:bg-white/25 text-white border border-white/25">
+        <i data-lucide="pencil" class="w-4 h-4"></i>
+        <span>Edit Profil</span>
+      </button>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+    <div class="p-4">
+      <div class="text-xs text-slate-500">NIP</div>
+      <div id="ksNip" class="text-sm font-medium text-slate-900 mt-1 text-mono">—</div>
+    </div>
+    <div class="p-4">
+      <div class="text-xs text-slate-500">Pangkat/Gol</div>
+      <div id="ksPangkat" class="text-sm font-medium text-slate-900 mt-1">—</div>
+    </div>
+    <div class="p-4">
+      <div class="text-xs text-slate-500">Status</div>
+      <div id="ksStatusPeg" class="text-sm font-medium text-slate-900 mt-1">—</div>
+    </div>
+    <div class="p-4">
+      <div class="text-xs text-slate-500">Kontak</div>
+      <div id="ksHp" class="text-sm font-medium text-slate-900 mt-1 text-mono">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div class="stat-card">
+    <div class="stat-icon bg-blue-50 text-blue-600"><i data-lucide="users" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Total Guru</div>
+      <div id="statGuru" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-indigo-50 text-indigo-600"><i data-lucide="clipboard-list" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Supervisi</div>
+      <div id="statSupervisi" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-purple-50 text-purple-600"><i data-lucide="message-square" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Coaching</div>
+      <div id="statCoaching" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-emerald-50 text-emerald-600"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Rata Skor</div>
+      <div id="statSkor" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
   <div class="stat-card">
     <div class="stat-icon bg-blue-50 text-blue-600"><i data-lucide="users" class="w-5 h-5"></i></div>
     <div>
@@ -56,7 +128,7 @@
       </div>
       <div class="flex-1">
         <div class="font-semibold text-slate-900 text-sm">Kelola Guru</div>
-        <div class="text-xs text-slate-500 mt-0.5">Tambah, edit, atau hapus data guru</div>
+        <div class="text-xs text-slate-500 mt-0.5">Data & status kepegawaian</div>
       </div>
       <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition"></i>
     </div>
@@ -67,8 +139,8 @@
         <i data-lucide="clipboard-list" class="w-5 h-5"></i>
       </div>
       <div class="flex-1">
-        <div class="font-semibold text-slate-900 text-sm">Supervisi Akademik</div>
-        <div class="text-xs text-slate-500 mt-0.5">Isi instrumen LK1</div>
+        <div class="font-semibold text-slate-900 text-sm">Supervisi</div>
+        <div class="text-xs text-slate-500 mt-0.5">Pilih guru & isi LK1</div>
       </div>
       <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition"></i>
     </div>
@@ -80,7 +152,7 @@
       </div>
       <div class="flex-1">
         <div class="font-semibold text-slate-900 text-sm">Coaching</div>
-        <div class="text-xs text-slate-500 mt-0.5">Isi instrumen LK2 (STAR-GROW)</div>
+        <div class="text-xs text-slate-500 mt-0.5">Pilih guru & isi LK2</div>
       </div>
       <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition"></i>
     </div>
@@ -96,7 +168,6 @@
   </div>
   <div id="aktivitasList" class="card-body text-sm text-slate-500">Memuat...</div>
 </div>
-<!-- END KONTEN -->
 
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/api.js"></script>
@@ -106,8 +177,112 @@
   const user = sispaRequireLogin(['KS', 'Admin']);
   if (user) {
     mountShell('dashboard');
+    renderProfile(user);
     loadDashboard();
   }
+
+  function renderProfile(u) {
+    el('ksNama').textContent = u.nama || '(Belum diisi)';
+    el('ksSekolah').textContent = u.nama_sekolah || u.npsn;
+    el('ksNip').textContent = u.nip || '—';
+    el('ksPangkat').textContent = u.pangkat_golongan || '—';
+    el('ksStatusPeg').textContent = u.status_kepegawaian || '—';
+    el('ksHp').textContent = u.no_hp || '—';
+    el('ksInitial').textContent = (u.nama || u.nama_sekolah || 'K').charAt(0).toUpperCase();
+  }
+
+  el('btnEditProfile').addEventListener('click', () => {
+    const u = sispaGetUser();
+    openModal({
+      title: 'Edit Profil',
+      body: `
+        <form id="profileForm" class="space-y-4">
+          <div>
+            <label class="label" for="pNama">Nama Lengkap &amp; Gelar <span class="text-red-500">*</span></label>
+            <input type="text" id="pNama" class="input" required value="${escapeHtml(u.nama || '')}" placeholder="Contoh: Dra. Siti Aminah, M.Pd" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="pNip">NIP</label>
+              <input type="text" id="pNip" class="input text-mono" value="${escapeHtml(u.nip || '')}" />
+            </div>
+            <div>
+              <label class="label" for="pJk">Jenis Kelamin</label>
+              <select id="pJk" class="select">
+                <option value="">—</option>
+                <option value="L" ${u.jenis_kelamin === 'L' ? 'selected' : ''}>Laki-laki</option>
+                <option value="P" ${u.jenis_kelamin === 'P' ? 'selected' : ''}>Perempuan</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="label" for="pPangkat">Pangkat / Golongan</label>
+            <input type="text" id="pPangkat" class="input" value="${escapeHtml(u.pangkat_golongan || '')}" placeholder="Contoh: Pembina / IV a" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="pJabatan">Jabatan</label>
+              <input type="text" id="pJabatan" class="input" value="${escapeHtml(u.jabatan || 'Kepala Sekolah')}" />
+            </div>
+            <div>
+              <label class="label" for="pStatus">Status Kepegawaian</label>
+              <select id="pStatus" class="select">
+                <option value="">—</option>
+                <option value="PNS" ${u.status_kepegawaian === 'PNS' ? 'selected' : ''}>PNS</option>
+                <option value="PPPK" ${u.status_kepegawaian === 'PPPK' ? 'selected' : ''}>PPPK</option>
+                <option value="Non ASN" ${u.status_kepegawaian === 'Non ASN' ? 'selected' : ''}>Non ASN</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="pHp">No. HP</label>
+              <input type="tel" id="pHp" class="input text-mono" value="${escapeHtml(u.no_hp || '')}" />
+            </div>
+            <div>
+              <label class="label" for="pEmail">Email</label>
+              <input type="email" id="pEmail" class="input" value="${escapeHtml(u.email || '')}" />
+            </div>
+          </div>
+        </form>`,
+      footer: `
+        <button class="btn btn-secondary" data-close>Batal</button>
+        <button class="btn btn-primary" id="btnSaveProfile">
+          <i data-lucide="save" class="w-4 h-4"></i>
+          <span>Simpan</span>
+        </button>`
+    });
+
+    el('btnSaveProfile').addEventListener('click', async () => {
+      const nama = el('pNama').value.trim();
+      if (!nama) return swalError('Nama wajib diisi');
+
+      swalLoading('Menyimpan profil...');
+      try {
+        const payload = {
+          nama,
+          nip: el('pNip').value.trim(),
+          jenis_kelamin: el('pJk').value,
+          pangkat_golongan: el('pPangkat').value.trim(),
+          jabatan: el('pJabatan').value.trim(),
+          status_kepegawaian: el('pStatus').value,
+          no_hp: el('pHp').value.trim(),
+          email: el('pEmail').value.trim()
+        };
+        const updated = await sispaRequest('auth.updateProfile', { payload });
+        localStorage.setItem(SISPA_CONFIG.STORAGE_KEYS.USER, JSON.stringify(updated));
+        Swal2.close();
+        await swalSuccess('Profil tersimpan', 'Data profil berhasil diperbarui.');
+        closeModal();
+        renderProfile(updated);
+        // Refresh header juga
+        location.reload();
+      } catch (err) {
+        Swal2.close();
+        swalError('Gagal menyimpan', err.message);
+      }
+    });
+  });
 
   async function loadDashboard() {
     try {
@@ -137,9 +312,7 @@
               </div>
             </div>
             <div class="flex items-center gap-3">
-              <span class="badge ${a.status === 'terkirim' ? 'badge-success' : 'badge-neutral'}">
-                ${escapeHtml(a.status)}
-              </span>
+              <span class="badge ${a.status === 'terkirim' ? 'badge-success' : 'badge-neutral'}">${escapeHtml(a.status)}</span>
               <span class="text-mono text-sm font-medium text-slate-700">${a.skor_total}</span>
             </div>
           </div>`).join('');
