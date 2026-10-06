@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Dashboard KS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body class="bg-slate-100 min-h-screen">
+<div id="appHeader"></div>
+
+<main class="max-w-6xl mx-auto px-4 py-8">
+  <h1 class="text-2xl font-bold text-slate-800 mb-6">Dashboard Kepala Sekolah</h1>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white p-5 rounded-xl shadow-sm">
+      <div class="text-sm text-slate-500">Guru</div>
+      <div id="statGuru" class="text-3xl font-bold text-slate-800 mt-1">–</div>
+    </div>
+    <div class="bg-white p-5 rounded-xl shadow-sm">
+      <div class="text-sm text-slate-500">Supervisi</div>
+      <div id="statSupervisi" class="text-3xl font-bold text-slate-800 mt-1">–</div>
+    </div>
+    <div class="bg-white p-5 rounded-xl shadow-sm">
+      <div class="text-sm text-slate-500">Coaching</div>
+      <div id="statCoaching" class="text-3xl font-bold text-slate-800 mt-1">–</div>
+    </div>
+    <div class="bg-white p-5 rounded-xl shadow-sm">
+      <div class="text-sm text-slate-500">Rata Skor</div>
+      <div id="statSkor" class="text-3xl font-bold text-slate-800 mt-1">–</div>
+    </div>
+  </div>
+
+  <div class="grid md:grid-cols-3 gap-4 mb-8">
+    <a href="./guru.html" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition">
+      <div class="text-2xl mb-2">👥</div>
+      <div class="font-semibold text-slate-800">Kelola Guru</div>
+      <div class="text-sm text-slate-500">Tambah, edit, hapus data guru</div>
+    </a>
+    <a href="./supervisi.html" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition">
+      <div class="text-2xl mb-2">📋</div>
+      <div class="font-semibold text-slate-800">Supervisi Akademik</div>
+      <div class="text-sm text-slate-500">Isi instrumen LK1</div>
+    </a>
+    <a href="./coaching.html" class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition">
+      <div class="text-2xl mb-2">💬</div>
+      <div class="font-semibold text-slate-800">Coaching</div>
+      <div class="text-sm text-slate-500">Isi instrumen LK2 (STAR-GROW)</div>
+    </a>
+  </div>
+
+  <div class="bg-white p-6 rounded-xl shadow-sm">
+    <h2 class="font-semibold text-slate-800 mb-3">Aktivitas Terakhir</h2>
+    <div id="aktivitasList" class="text-sm text-slate-500">Memuat...</div>
+  </div>
+</main>
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['KS']);
+  if (user) { mountHeader('/ks/dashboard.html'); loadDashboard(); }
+
+  async function loadDashboard() {
+    try {
+      const data = await sispaRequest('dashboard.ks', {});
+      el('statGuru').textContent = data.jumlah_guru;
+      el('statSupervisi').textContent = data.jumlah_supervisi;
+      el('statCoaching').textContent = data.jumlah_coaching;
+      el('statSkor').textContent = data.rata_skor_supervisi;
+
+      const list = el('aktivitasList');
+      if (!data.aktivitas_terakhir || data.aktivitas_terakhir.length === 0) {
+        list.innerHTML = '<div class="italic">Belum ada aktivitas.</div>';
+      } else {
+        list.innerHTML = data.aktivitas_terakhir.map(a => `
+          <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+            <span>${formatTanggal(a.tanggal)} · ${escapeHtml(a.guru_id)}</span>
+            <span class="text-xs px-2 py-1 rounded ${a.status === 'terkirim' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}">${escapeHtml(a.status)}</span>
+            <span class="font-mono text-slate-700">${a.skor_total}</span>
+          </div>`).join('');
+      }
+    } catch (err) { handleApiError(err); }
+  }
+</script>
+</body>
+</html>
