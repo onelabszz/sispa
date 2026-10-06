@@ -5,87 +5,129 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SISPA — Form Supervisi LK1</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
-<body class="bg-slate-100 min-h-screen">
-<div id="appHeader"></div>
+<body>
 
-<main class="max-w-5xl mx-auto px-4 py-8" id="app">
-  <div class="flex items-center justify-between mb-6">
-    <h1 id="pageTitle" class="text-2xl font-bold text-slate-800">Supervisi Baru</h1>
-    <a href="./supervisi.html" class="text-sm text-indigo-600 hover:underline">← Kembali</a>
+<div class="flex items-center justify-between mb-6 gap-4">
+  <div>
+    <h1 id="pageTitle" class="text-2xl font-bold text-slate-900">Supervisi Baru</h1>
+    <p class="text-sm text-slate-500 mt-1">Instrumen LK1 · 19 indikator</p>
   </div>
+  <a href="./supervisi.html" class="btn btn-ghost">
+    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    <span>Kembali</span>
+  </a>
+</div>
 
-  <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-    <h2 class="font-semibold text-slate-800 mb-4">Identitas</h2>
-    <div class="grid md:grid-cols-2 gap-4">
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Guru <span class="text-red-500">*</span></label>
-        <select id="fGuru" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-          <option value="">— Pilih Guru —</option>
-        </select>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal <span class="text-red-500">*</span></label>
-        <input type="date" id="fTanggal" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Mata Pelajaran</label>
-        <input type="text" id="fMapel" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Materi</label>
-        <input type="text" id="fMateri" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Durasi (menit)</label>
-        <input type="number" id="fDurasi" min="1" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Link Dokumentasi</label>
-        <input type="url" id="fLink" placeholder="https://drive.google.com/..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+<!-- Identitas -->
+<div class="card mb-6">
+  <div class="card-header">
+    <div class="flex items-center gap-2">
+      <i data-lucide="info" class="w-4 h-4 text-slate-500"></i>
+      <h2 class="font-semibold text-slate-900 text-sm">Identitas Supervisi</h2>
+    </div>
+  </div>
+  <div class="card-body grid md:grid-cols-2 gap-4">
+    <div>
+      <label class="label" for="fGuru">Guru <span class="text-red-500">*</span></label>
+      <select id="fGuru" required class="select">
+        <option value="">— Pilih Guru —</option>
+      </select>
+    </div>
+    <div>
+      <label class="label" for="fTanggal">Tanggal <span class="text-red-500">*</span></label>
+      <input type="date" id="fTanggal" required class="input" />
+    </div>
+    <div>
+      <label class="label" for="fMapel">Mata Pelajaran</label>
+      <input type="text" id="fMapel" class="input" />
+    </div>
+    <div>
+      <label class="label" for="fMateri">Materi</label>
+      <input type="text" id="fMateri" class="input" />
+    </div>
+    <div>
+      <label class="label" for="fDurasi">Durasi (menit)</label>
+      <input type="number" id="fDurasi" min="1" class="input" />
+    </div>
+    <div>
+      <label class="label" for="fLink">Link Dokumentasi</label>
+      <div class="relative">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+          <i data-lucide="link" class="w-4 h-4"></i>
+        </span>
+        <input type="url" id="fLink" placeholder="https://drive.google.com/..." class="input" style="padding-left: 2.4rem" />
       </div>
     </div>
   </div>
+</div>
 
-  <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="font-semibold text-slate-800">Instrumen LK1 (19 Indikator)</h2>
-      <div class="text-sm">Skor: <span id="totalSkor" class="font-bold text-indigo-700">0</span>/76 · <span id="kategori" class="font-medium">-</span></div>
+<!-- Instrumen -->
+<div class="card mb-6">
+  <div class="card-header sticky top-16 z-20 bg-white rounded-t-2xl">
+    <div class="flex items-center gap-2">
+      <i data-lucide="list-checks" class="w-4 h-4 text-slate-500"></i>
+      <h2 class="font-semibold text-slate-900 text-sm">Instrumen Penilaian</h2>
     </div>
+    <div class="flex items-center gap-3 text-sm">
+      <span class="text-slate-500">Skor:</span>
+      <span id="totalSkor" class="text-mono font-bold text-indigo-600 text-lg">0</span>
+      <span class="text-slate-400">/76</span>
+      <span id="kategori" class="badge badge-neutral">—</span>
+    </div>
+  </div>
+  <div class="card-body">
     <div id="instrumenContainer" class="space-y-6"></div>
   </div>
+</div>
 
-  <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-    <h2 class="font-semibold text-slate-800 mb-4">Catatan Kualitatif</h2>
-    <div class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Catatan Tambahan</label>
-        <textarea id="fCatatan" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Kekuatan / Praktik Baik</label>
-        <textarea id="fKekuatan" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Area yang Perlu Dikembangkan</label>
-        <textarea id="fArea" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Rencana Pembinaan Tindak Lanjut</label>
-        <textarea id="fRencana" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
-      </div>
+<!-- Catatan Kualitatif -->
+<div class="card mb-6">
+  <div class="card-header">
+    <div class="flex items-center gap-2">
+      <i data-lucide="file-edit" class="w-4 h-4 text-slate-500"></i>
+      <h2 class="font-semibold text-slate-900 text-sm">Catatan Kualitatif</h2>
     </div>
   </div>
-
-  <div class="flex justify-between gap-3 mb-10">
-    <button id="btnBack" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-lg font-medium">Batal</button>
-    <div class="flex gap-3">
-      <button id="btnSave" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">Simpan Draft</button>
-      <button id="btnSubmit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">Simpan &amp; Kirim</button>
+  <div class="card-body space-y-4">
+    <div>
+      <label class="label" for="fCatatan">Catatan Tambahan</label>
+      <textarea id="fCatatan" rows="2" class="textarea"></textarea>
+    </div>
+    <div>
+      <label class="label" for="fKekuatan">Kekuatan / Praktik Baik</label>
+      <textarea id="fKekuatan" rows="2" class="textarea"></textarea>
+    </div>
+    <div>
+      <label class="label" for="fArea">Area yang Perlu Dikembangkan</label>
+      <textarea id="fArea" rows="2" class="textarea"></textarea>
+    </div>
+    <div>
+      <label class="label" for="fRencana">Rencana Pembinaan Tindak Lanjut</label>
+      <textarea id="fRencana" rows="2" class="textarea"></textarea>
     </div>
   </div>
-</main>
+</div>
+
+<!-- Actions -->
+<div class="flex flex-wrap justify-between gap-3 mb-10">
+  <a href="./supervisi.html" class="btn btn-ghost">
+    <i data-lucide="x" class="w-4 h-4"></i>
+    <span>Batal</span>
+  </a>
+  <div class="flex flex-wrap gap-3">
+    <button id="btnSave" class="btn btn-secondary">
+      <i data-lucide="save" class="w-4 h-4"></i>
+      <span>Simpan Draft</span>
+    </button>
+    <button id="btnSubmit" class="btn btn-primary">
+      <i data-lucide="send" class="w-4 h-4"></i>
+      <span>Simpan &amp; Kirim</span>
+    </button>
+  </div>
+</div>
 
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/api.js"></script>
@@ -93,58 +135,62 @@
 <script src="../assets/js/instruments.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
-  const user = sispaRequireLogin(['KS']);
+  const user = sispaRequireLogin(['KS', 'Admin']);
   if (!user) throw new Error('Unauthorized');
-  mountHeader('/ks/supervisi.html');
+  mountShell('supervisi');
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const editId = urlParams.get('id');
+  const editId = new URLSearchParams(window.location.search).get('id');
   let existing = null;
-  let detailMap = {};
+  const detailMap = {};
 
-  if (editId) el('pageTitle').textContent = 'Edit / Lihat Supervisi';
+  if (editId) el('pageTitle').textContent = 'Edit Supervisi';
 
   renderInstrumen();
 
   (async function init() {
-    try {
-      const guru = await sispaRequest('guru.list', {});
-      const sel = el('fGuru');
-      guru.forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g.id; opt.textContent = g.nama + (g.mapel ? ' — ' + g.mapel : '');
-        sel.appendChild(opt);
-      });
+    await withLoading('Memuat data...', async () => {
+      try {
+        const guru = await sispaRequest('guru.list', {});
+        const sel = el('fGuru');
+        guru.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.id;
+          opt.textContent = g.nama + (g.mapel ? ' — ' + g.mapel : '');
+          sel.appendChild(opt);
+        });
 
-      if (editId) {
-        const data = await sispaRequest('supervisi.get', { id: editId });
-        existing = data.header;
-        (data.detail || []).forEach(d => detailMap[d.kode_indikator] = d);
-        populateForm();
-      } else {
-        el('fTanggal').value = todayIso();
-      }
-      updateTotal();
-    } catch (err) { handleApiError(err); }
+        if (editId) {
+          const data = await sispaRequest('supervisi.get', { id: editId });
+          existing = data.header;
+          (data.detail || []).forEach(d => detailMap[d.kode_indikator] = d);
+          populateForm();
+        } else {
+          el('fTanggal').value = todayIso();
+        }
+        updateTotal();
+      } catch (err) { handleApiError(err); }
+    });
   })();
 
   function renderInstrumen() {
     const container = el('instrumenContainer');
     let currentSection = '';
     let html = '';
-    INSTRUMEN_LK1.forEach((ind, idx) => {
+    INSTRUMEN_LK1.forEach(ind => {
       if (ind.section !== currentSection) {
         if (currentSection) html += '</div>';
-        html += `<div><h3 class="font-semibold text-slate-700 mb-3 pb-2 border-b border-slate-200">${escapeHtml(ind.section)}</h3>`;
+        html += `<div>
+          <h3 class="font-semibold text-slate-800 text-sm mb-3 pb-2 border-b border-slate-200 flex items-center gap-2">
+            <i data-lucide="chevron-right" class="w-4 h-4 text-indigo-500"></i>
+            ${escapeHtml(ind.section)}
+          </h3>`;
         currentSection = ind.section;
       }
       html += `
-        <div class="border border-slate-200 rounded-lg p-4 mb-3" data-kode="${ind.kode}">
-          <div class="flex items-start justify-between gap-3 mb-3">
-            <div class="flex-1">
-              <div class="text-xs font-mono text-indigo-600 mb-1">${ind.kode}</div>
-              <div class="text-sm text-slate-700">${escapeHtml(ind.teks)}</div>
-            </div>
+        <div class="border border-slate-200 rounded-lg p-4 mb-3 hover:border-slate-300 transition" data-kode="${ind.kode}">
+          <div class="flex items-start gap-3 mb-3">
+            <span class="text-mono text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">${ind.kode}</span>
+            <p class="text-sm text-slate-700 flex-1">${escapeHtml(ind.teks)}</p>
           </div>
           <div class="grid md:grid-cols-[180px_1fr] gap-3">
             <div>
@@ -152,20 +198,21 @@
               <div class="flex gap-1">
                 ${[1,2,3,4].map(n => `
                   <button type="button" data-skor="${n}" data-target="${ind.kode}"
-                          class="skor-btn flex-1 py-2 border border-slate-300 rounded text-sm hover:bg-indigo-50">${n}</button>
+                          class="skor-btn">${n}</button>
                 `).join('')}
               </div>
             </div>
             <div>
               <label class="block text-xs text-slate-500 mb-1">Catatan / Bukti</label>
               <textarea data-catatan="${ind.kode}" rows="1"
-                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"></textarea>
+                        class="textarea text-sm"></textarea>
             </div>
           </div>
         </div>`;
     });
     html += '</div>';
     container.innerHTML = html;
+    refreshIcons();
 
     container.querySelectorAll('.skor-btn').forEach(btn =>
       btn.addEventListener('click', () => setSkor(btn.dataset.target, parseInt(btn.dataset.skor, 10))));
@@ -175,8 +222,7 @@
     const block = document.querySelector(`[data-kode="${kode}"]`);
     block.querySelectorAll('.skor-btn').forEach(b => {
       const v = parseInt(b.dataset.skor, 10);
-      b.className = 'skor-btn flex-1 py-2 border rounded text-sm transition ' +
-        (v === val ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-300 hover:bg-indigo-50');
+      b.classList.toggle('active', v === val);
     });
     block.dataset.skor = val;
     updateTotal();
@@ -194,29 +240,40 @@
       if (s > 0) { total += s; terisi++; }
     });
     el('totalSkor').textContent = total;
-    el('kategori').textContent = terisi === 19 ? tentukanKategoriLK1(total) : '(' + terisi + '/19 terisi)';
+    const kat = el('kategori');
+    if (terisi === 19) {
+      kat.textContent = tentukanKategoriLK1(total);
+      kat.className = 'badge ' + (
+        total >= 66 ? 'badge-success' :
+        total >= 51 ? 'badge-info' :
+        total >= 26 ? 'badge-warning' : 'badge-danger'
+      );
+    } else {
+      kat.textContent = `${terisi}/19`;
+      kat.className = 'badge badge-neutral';
+    }
   }
 
   function populateForm() {
-  el('fGuru').value = existing.guru_id || '';
-  el('fTanggal').value = (existing.tanggal || '').slice(0, 10);
-  el('fMapel').value = existing.mapel || '';
-  el('fMateri').value = existing.materi || '';
-  el('fDurasi').value = existing.durasi || '';
-  el('fLink').value = existing.link_dokumentasi || '';
-  el('fCatatan').value = existing.catatan_tambahan || '';     // ← BARU
-  el('fKekuatan').value = existing.kekuatan || '';            // ← BARU
-  el('fArea').value = existing.area_pengembangan || '';       // ← BARU
-  el('fRencana').value = existing.rencana_pembinaan || '';    // ← BARU
+    el('fGuru').value = existing.guru_id || '';
+    el('fTanggal').value = (existing.tanggal || '').slice(0, 10);
+    el('fMapel').value = existing.mapel || '';
+    el('fMateri').value = existing.materi || '';
+    el('fDurasi').value = existing.durasi || '';
+    el('fLink').value = existing.link_dokumentasi || '';
+    el('fCatatan').value = existing.catatan_tambahan || '';
+    el('fKekuatan').value = existing.kekuatan || '';
+    el('fArea').value = existing.area_pengembangan || '';
+    el('fRencana').value = existing.rencana_pembinaan || '';
 
-  INSTRUMEN_LK1.forEach(i => {
-    const d = detailMap[i.kode];
-    if (!d) return;
-    if (d.skor > 0) setSkor(i.kode, d.skor);
-    const ta = document.querySelector(`[data-catatan="${i.kode}"]`);
-    if (ta) ta.value = d.catatan || '';
-  });
-}
+    INSTRUMEN_LK1.forEach(i => {
+      const d = detailMap[i.kode];
+      if (!d) return;
+      if (d.skor > 0) setSkor(i.kode, d.skor);
+      const ta = document.querySelector(`[data-catatan="${i.kode}"]`);
+      if (ta) ta.value = d.catatan || '';
+    });
+  }
 
   async function save(submit) {
     const payload = {
@@ -240,27 +297,32 @@
 
     if (!payload.guru_id) return showToast('Pilih guru terlebih dahulu', 'error');
     if (!payload.tanggal) return showToast('Tanggal wajib diisi', 'error');
+
     const belum = payload.detail.filter(d => d.skor === 0).length;
-    if (belum > 0 && !confirm('Masih ada ' + belum + ' indikator yang belum diberi skor. Lanjutkan?')) return;
+    if (belum > 0 && !confirm(`Masih ada ${belum} indikator yang belum diberi skor. Lanjutkan?`)) return;
 
     const btnSave = el('btnSave'), btnSubmit = el('btnSubmit');
     btnSave.disabled = btnSubmit.disabled = true;
+    showLoading(submit ? 'Mengirim...' : 'Menyimpan...');
 
     try {
       const res = await sispaRequest('supervisi.save', payload);
-      showToast('Tersimpan (skor ' + res.skor_total + ', ' + res.kategori + ')', 'success');
       if (submit) {
         await sispaRequest('supervisi.submit', { id: res.id });
-        showToast('Terkirim ke Pengawas', 'success');
+        showToast('Supervisi terkirim ke Pengawas', 'success');
+      } else {
+        showToast(`Draft tersimpan (skor ${res.skor_total}, ${res.kategori})`, 'success');
       }
-      setTimeout(() => window.location.href = sispaUrl('/ks/supervisi.html'), 800);
-    } catch (err) { handleApiError(err); }
-    finally { btnSave.disabled = btnSubmit.disabled = false; }
+      setTimeout(() => window.location.href = sispaUrl('/ks/supervisi.html'), 900);
+    } catch (err) {
+      handleApiError(err);
+      btnSave.disabled = btnSubmit.disabled = false;
+      hideLoading();
+    }
   }
 
   el('btnSave').addEventListener('click', () => save(false));
   el('btnSubmit').addEventListener('click', () => save(true));
-  el('btnBack').addEventListener('click', () => window.location.href = sispaUrl('/ks/supervisi.html'));
 </script>
 </body>
 </html>
