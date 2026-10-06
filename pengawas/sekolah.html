@@ -304,12 +304,18 @@
      RENDER ALL
      ============================================================ */
   function renderAll() {
-    renderHeader();
-    renderKS();
-    renderStat();
-    renderChartKategori();
-    renderProgress();
-    renderGuruTable();
+    const tasks = [
+      ['Header', renderHeader],
+      ['KS', renderKS],
+      ['Stat', renderStat],
+      ['Chart Kategori', renderChartKategori],
+      ['Progress', renderProgress],
+      ['Tabel Guru', renderGuruTable]
+    ];
+    tasks.forEach(([label, fn]) => {
+      try { fn(); }
+      catch (err) { console.error('[SISPA] render' + label + ' gagal:', err); }
+    });
     refreshIcons();
   }
 
