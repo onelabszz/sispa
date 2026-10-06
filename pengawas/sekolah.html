@@ -252,12 +252,6 @@
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
-  const user = sispaRequireLogin(['Pengawas', 'KS', 'Admin']);
-  if (user) {
-    mountShell('dashboard');
-    initPage();
-  }
-
   const params = new URLSearchParams(window.location.search);
   const npsn = params.get('npsn');
 
@@ -265,6 +259,12 @@
   let chartKategori = null;
   let filterText = '';
   let filterStatus = '';
+
+  const user = sispaRequireLogin(['Pengawas', 'KS', 'Admin']);
+  if (user) {
+    mountShell('dashboard');
+    initPage();
+  }
 
   /* ============================================================
      INIT
