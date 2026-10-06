@@ -229,6 +229,9 @@
           if (g) showGuruInfo(g);
         }
 
+        // RENDER INSTRUMEN DULU sebelum populateForm
+        renderInstrumen();
+
         if (editId) {
           const data = await sispaRequest('coaching.get', { id: editId });
           existing = data.header;
@@ -249,7 +252,6 @@
           el('fTanggal').value = todayIso();
         }
 
-        renderInstrumen();
         updateProgress();
       } catch (err) { handleApiError(err); }
     });
