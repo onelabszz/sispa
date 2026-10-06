@@ -449,7 +449,7 @@
     swalLoading(submit ? 'Mengirim...' : 'Menyimpan...');
 
     try {
-      const res = await sispaRequest('supervisi.save', payload);
+      const res = await sispaRequest('supervisi.save', { payload: payload });
       if (submit) {
         await sispaRequest('supervisi.submit', { id: res.id });
         Swal2.close();
