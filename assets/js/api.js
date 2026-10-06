@@ -13,9 +13,14 @@ async function sispaRequest(action, payload = {}) {
     action: action,
     version: 'v1',
     token: token || '',
-    client_request_id: generateRequestId(),
-    payload: payload
+    client_request_id: generateRequestId()
   });
+
+  // Jika caller tidak mengirim nested `payload`, buat dari top-level.
+  // Jika caller sudah kirim nested (mis. { id, payload: {...} }), biarkan.
+  if (body.payload === undefined) {
+    body.payload = payload;
+  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(
