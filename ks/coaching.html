@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Coaching</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body class="bg-slate-100 min-h-screen">
+<div id="appHeader"></div>
+
+<main class="max-w-6xl mx-auto px-4 py-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">Coaching (LK2 — STAR-GROW)</h1>
+    <a href="./coaching-form.html" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition">+ Coaching Baru</a>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-slate-600 text-left">
+        <tr>
+          <th class="px-4 py-3">Tanggal</th>
+          <th class="px-4 py-3">Guru</th>
+          <th class="px-4 py-3 text-center">Skor</th>
+          <th class="px-4 py-3">Kategori</th>
+          <th class="px-4 py-3">Status</th>
+          <th class="px-4 py-3 text-right">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+    </table>
+    <div id="emptyState" class="hidden p-8 text-center text-slate-500">Belum ada sesi coaching.</div>
+  </div>
+</main>
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['KS']);
+  if (user) { mountHeader('/ks/coaching.html'); loadData(); }
+
+  let guruMap = {};
+
+  async function loadData() {
+    try {
+      const [guru, cch] = await Promise.all([
+        sispaRequest('guru.list', {}),
+        sispaRequest('coaching.list', {})
+      ]);
+      guru.forEach(g => guruMap[g.id] = g.nama);
+      render(cch.items || []);
+    } catch (err) { handleApiError(err); }
+  }
+
+  function render(items) {
+    const tbody = el('tableBody');
+    const empty = el('emptyState');
+    if (!items.length) {
+      tbody.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+    tbody.innerHTML = items.map(c => `
+      <tr class="hover:bg-slate-50">
+        <td class="px-4 py-3">${formatTanggal(c.tanggal)}</td>
+        <td class="px-4 py-3 font-medium">${escapeHtml(guruMap[c.guru_id] || c.guru_id)}</td>
+        <td class="px-4 py-3 text-center font-mono">${c.skor_total}</td>
+        <td class="px-4 py-3 text-xs">${escapeHtml(c.kategori)}</td>
+        <td class="px-4 py-3">
+          <span class="text-xs px-2 py-1 rounded ${c.status === 'terkirim' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
+            ${escapeHtml(c.status)}
+          </span>
+        </td>
+        <td class="px-4 py-3 text-right whitespace-nowrap">
+          <a href="./coaching-form.html?id=${c.id}" class="text-indigo-600 hover:underline text-xs mr-2">${c.status === 'draft' ? 'Lanjutkan' : 'Lihat'}</a>
+          <button data-pdf="${c.id}" class="text-slate-600 hover:underline text-xs mr-2">PDF</button>
+          ${c.status === 'draft' ? `<button data-submit="${c.id}" class="text-green-600 hover:underline text-xs">Kirim</button>` : ''}
+        </td>
+      </tr>`).join('');
+
+    tbody.querySelectorAll('[data-pdf]').forEach(b =>
+      b.addEventListener('click', () => cetakPdf(b.dataset.pdf)));
+    tbody.querySelectorAll('[data-submit]').forEach(b =>
+      b.addEventListener('click', () => kirim(b.dataset.submit)));
+  }
+
+  async function kirim(id) {
+    if (!confirm('Kirim coaching ini ke Pengawas?')) return;
+    try {
+      await sispaRequest('coaching.submit', { id });
+      showToast('Coaching terkirim', 'success');
+      loadData();
+    } catch (err) { handleApiError(err); }
+  }
+
+  async function cetakPdf(id) {
+    try {
+      const res = await sispaRequest('coaching.pdf', { id });
+      if (res.mode === 'html') {
+        const w = window.open('', '_blank');
+        w.document.write(res.html);
+        w.document.close();
+      } else if (res.mode === 'drive') {
+        window.open(res.pdf_url, '_blank');
+      }
+    } catch (err) { handleApiError(err); }
+  }
+</script>
+</body>
+</html>
