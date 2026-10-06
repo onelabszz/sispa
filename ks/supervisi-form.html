@@ -215,11 +215,13 @@
   let existing = null;
   let isReadonly = false;
   const detailMap = {};
+  let guruList = [];
 
   (async function init() {
     await withLoading('Memuat data...', async () => {
       try {
         const guru = await sispaRequest('guru.list', {});
+        guruList = guru;
         const sel = el('fGuru');
         sel.innerHTML = '<option value="">— Pilih Guru —</option>';
         guru.forEach(g => {
@@ -236,6 +238,9 @@
           if (g) showGuruInfo(g);
         }
 
+        // RENDER INSTRUMEN DULU sebelum populateForm
+        renderInstrumen();
+
         if (editId) {
           const data = await sispaRequest('supervisi.get', { id: editId });
           existing = data.header;
@@ -251,7 +256,6 @@
           el('fTanggal').value = todayIso();
         }
 
-        renderInstrumen();
         updateProgress();
       } catch (err) { handleApiError(err); }
     });
@@ -363,10 +367,9 @@
     el('fRencana').value = existing.rencana_pembinaan || '';
 
     // Tampilkan guru info (readonly)
-    const sel = el('fGuru');
-    const g = sel.querySelector(`option[value="${existing.guru_id}"]`);
-    if (g) {
-      showGuruInfo({ id: existing.guru_id, nama: g.textContent.split(' — ')[0], mapel: existing.mapel, kelas: '', nip: '' });
+    const gData = guruList.find(x => x.id === existing.guru_id);
+    if (gData) {
+      showGuruInfo(gData);
     }
 
     INSTRUMEN_LK1.forEach(i => {
@@ -382,9 +385,9 @@
     if (!isReadonly) return;
     el('readonlyBanner').classList.remove('hidden');
     // Disable semua input
-    document.querySelectorAll('input, select, textarea, .skor-btn').forEach(el => {
-      el.disabled = true;
-      el.classList.add('opacity-70');
+    document.querySelectorAll('input, select, textarea, .skor-btn').forEach(elem => {
+      elem.disabled = true;
+      elem.classList.add('opacity-70');
     });
     document.querySelectorAll('.indicator-row').forEach(r => r.classList.add('readonly'));
     // Sembunyikan tombol simpan/kirim
@@ -421,6 +424,7 @@
       kekuatan: el('fKekuatan').value,
       area_pengembangan: el('fArea').value,
       rencana_pembinaan: el('fRencana').value,
+      link_dokumentasi: existing ? (existing.link_dokumentasi || '') : '',
       detail: INSTRUMEN_LK1.map(i => ({
         kode_indikator: i.kode,
         skor: getSkor(i.kode) || 0,
