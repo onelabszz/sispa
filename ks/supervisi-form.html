@@ -3,17 +3,50 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SISPA — Form Supervisi LK1</title>
+<title>SISPA — Form Supervisi</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="../assets/css/style.css" />
+<style>
+  .indicator-row {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    background: white;
+    transition: border-color .15s;
+  }
+  .indicator-row:hover { border-color: var(--slate-300); }
+  .indicator-row.filled { border-color: #a5b4fc; background: #f5f3ff; }
+  .indicator-row.readonly { background: #f8fafc; }
+  .indicator-row.readonly .skor-btn { cursor: default; opacity: .85; }
+  @media (max-width: 640px) {
+    .indicator-row { grid-template-columns: 1fr; }
+  }
+  .sticky-summary {
+    position: sticky;
+    top: 80px;
+  }
+</style>
 </head>
 <body>
+
+<!-- Banner read-only -->
+<div id="readonlyBanner" class="hidden mb-4 p-3 rounded-lg bg-green-50 border border-green-200 flex items-start gap-2 text-sm text-green-800">
+  <i data-lucide="check-circle" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
+  <div>
+    <strong>Supervisi sudah dikirim ke Pengawas.</strong>
+    Data tidak dapat diubah. Hubungi pengawas jika perlu revisi.
+  </div>
+</div>
 
 <div class="flex items-center justify-between mb-6 gap-4">
   <div>
     <h1 id="pageTitle" class="text-2xl font-bold text-slate-900">Supervisi Baru</h1>
-    <p class="text-sm text-slate-500 mt-1">Instrumen LK1 · 19 indikator</p>
+    <p id="pageSubtitle" class="text-sm text-slate-500 mt-1">Isi 19 indikator</p>
   </div>
   <a href="./supervisi.html" class="btn btn-ghost">
     <i data-lucide="arrow-left" class="w-4 h-4"></i>
@@ -21,111 +54,147 @@
   </a>
 </div>
 
-<!-- Identitas -->
-<div class="card mb-6">
-  <div class="card-header">
-    <div class="flex items-center gap-2">
-      <i data-lucide="info" class="w-4 h-4 text-slate-500"></i>
-      <h2 class="font-semibold text-slate-900 text-sm">Identitas Supervisi</h2>
+<!-- Info Guru (jika dari pilih guru) -->
+<div id="guruInfo" class="hidden card mb-6">
+  <div class="card-body flex items-center gap-4">
+    <div class="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold text-lg" id="guruInitial">—</div>
+    <div>
+      <div class="font-semibold text-slate-900" id="guruNama">—</div>
+      <div class="text-xs text-slate-500" id="guruMeta">—</div>
     </div>
   </div>
-  <div class="card-body grid md:grid-cols-2 gap-4">
-    <div>
-      <label class="label" for="fGuru">Guru <span class="text-red-500">*</span></label>
-      <select id="fGuru" required class="select">
-        <option value="">— Pilih Guru —</option>
-      </select>
+</div>
+
+<div class="grid lg:grid-cols-[1fr_320px] gap-6">
+
+  <!-- KOLOM KIRI: Form Utama -->
+  <div class="space-y-6">
+
+    <!-- Identitas -->
+    <div class="card">
+      <div class="card-header">
+        <div class="flex items-center gap-2">
+          <i data-lucide="info" class="w-4 h-4 text-slate-500"></i>
+          <h2 class="font-semibold text-slate-900 text-sm">Identitas Supervisi</h2>
+        </div>
+      </div>
+      <div class="card-body grid md:grid-cols-2 gap-4">
+        <div id="guruSelectWrap">
+          <label class="label" for="fGuru">Guru <span class="text-red-500">*</span></label>
+          <select id="fGuru" required class="select"></select>
+        </div>
+        <div>
+          <label class="label" for="fTanggal">Tanggal <span class="text-red-500">*</span></label>
+          <input type="date" id="fTanggal" required class="input" />
+        </div>
+        <div>
+          <label class="label" for="fMapel">Mata Pelajaran</label>
+          <input type="text" id="fMapel" class="input" />
+        </div>
+        <div>
+          <label class="label" for="fMateri">Materi</label>
+          <input type="text" id="fMateri" class="input" />
+        </div>
+        <div>
+          <label class="label" for="fDurasi">Durasi (menit)</label>
+          <input type="number" id="fDurasi" min="1" class="input" />
+        </div>
+      </div>
     </div>
-    <div>
-      <label class="label" for="fTanggal">Tanggal <span class="text-red-500">*</span></label>
-      <input type="date" id="fTanggal" required class="input" />
+
+    <!-- Instrumen -->
+    <div class="card">
+      <div class="card-header">
+        <div class="flex items-center gap-2">
+          <i data-lucide="list-checks" class="w-4 h-4 text-slate-500"></i>
+          <h2 class="font-semibold text-slate-900 text-sm">Penilaian Indikator</h2>
+        </div>
+      </div>
+      <div class="card-body">
+        <div id="instrumenContainer" class="space-y-6"></div>
+      </div>
     </div>
-    <div>
-      <label class="label" for="fMapel">Mata Pelajaran</label>
-      <input type="text" id="fMapel" class="input" />
-    </div>
-    <div>
-      <label class="label" for="fMateri">Materi</label>
-      <input type="text" id="fMateri" class="input" />
-    </div>
-    <div>
-      <label class="label" for="fDurasi">Durasi (menit)</label>
-      <input type="number" id="fDurasi" min="1" class="input" />
-    </div>
-    <div>
-      <label class="label" for="fLink">Link Dokumentasi</label>
-      <div class="relative">
-        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-          <i data-lucide="link" class="w-4 h-4"></i>
-        </span>
-        <input type="url" id="fLink" placeholder="https://drive.google.com/..." class="input" style="padding-left: 2.4rem" />
+
+    <!-- Catatan Kualitatif -->
+    <div class="card">
+      <div class="card-header">
+        <div class="flex items-center gap-2">
+          <i data-lucide="file-edit" class="w-4 h-4 text-slate-500"></i>
+          <h2 class="font-semibold text-slate-900 text-sm">Catatan Kualitatif</h2>
+        </div>
+      </div>
+      <div class="card-body space-y-4">
+        <div>
+          <label class="label" for="fKekuatan">Kekuatan / Praktik Baik</label>
+          <textarea id="fKekuatan" rows="2" class="textarea"></textarea>
+        </div>
+        <div>
+          <label class="label" for="fArea">Area yang Perlu Dikembangkan</label>
+          <textarea id="fArea" rows="2" class="textarea"></textarea>
+        </div>
+        <div>
+          <label class="label" for="fRencana">Rencana Pembinaan Tindak Lanjut</label>
+          <textarea id="fRencana" rows="2" class="textarea"></textarea>
+        </div>
+        <div>
+          <label class="label" for="fCatatan">Catatan Tambahan</label>
+          <textarea id="fCatatan" rows="2" class="textarea"></textarea>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- Instrumen -->
-<div class="card mb-6">
-  <div class="card-header sticky top-16 z-20 bg-white rounded-t-2xl">
-    <div class="flex items-center gap-2">
-      <i data-lucide="list-checks" class="w-4 h-4 text-slate-500"></i>
-      <h2 class="font-semibold text-slate-900 text-sm">Instrumen Penilaian</h2>
-    </div>
-    <div class="flex items-center gap-3 text-sm">
-      <span class="text-slate-500">Skor:</span>
-      <span id="totalSkor" class="text-mono font-bold text-indigo-600 text-lg">0</span>
-      <span class="text-slate-400">/76</span>
-      <span id="kategori" class="badge badge-neutral">—</span>
-    </div>
-  </div>
-  <div class="card-body">
-    <div id="instrumenContainer" class="space-y-6"></div>
-  </div>
-</div>
+  <!-- KOLOM KANAN: Sticky Summary -->
+  <div>
+    <div class="sticky-summary space-y-4">
 
-<!-- Catatan Kualitatif -->
-<div class="card mb-6">
-  <div class="card-header">
-    <div class="flex items-center gap-2">
-      <i data-lucide="file-edit" class="w-4 h-4 text-slate-500"></i>
-      <h2 class="font-semibold text-slate-900 text-sm">Catatan Kualitatif</h2>
-    </div>
-  </div>
-  <div class="card-body space-y-4">
-    <div>
-      <label class="label" for="fCatatan">Catatan Tambahan</label>
-      <textarea id="fCatatan" rows="2" class="textarea"></textarea>
-    </div>
-    <div>
-      <label class="label" for="fKekuatan">Kekuatan / Praktik Baik</label>
-      <textarea id="fKekuatan" rows="2" class="textarea"></textarea>
-    </div>
-    <div>
-      <label class="label" for="fArea">Area yang Perlu Dikembangkan</label>
-      <textarea id="fArea" rows="2" class="textarea"></textarea>
-    </div>
-    <div>
-      <label class="label" for="fRencana">Rencana Pembinaan Tindak Lanjut</label>
-      <textarea id="fRencana" rows="2" class="textarea"></textarea>
-    </div>
-  </div>
-</div>
+      <!-- Progress & Skor -->
+      <div class="card">
+        <div class="card-body text-center">
+          <div class="text-xs text-slate-500 uppercase tracking-wide">Total Skor</div>
+          <div class="flex items-baseline justify-center gap-1 mt-2">
+            <span id="totalSkor" class="text-4xl font-bold text-indigo-600">0</span>
+            <span class="text-slate-400 text-sm">/ 76</span>
+          </div>
+          <div id="kategori" class="badge badge-neutral mt-3 inline-block">Belum diisi</div>
 
-<!-- Actions -->
-<div class="flex flex-wrap justify-between gap-3 mb-10">
-  <a href="./supervisi.html" class="btn btn-ghost">
-    <i data-lucide="x" class="w-4 h-4"></i>
-    <span>Batal</span>
-  </a>
-  <div class="flex flex-wrap gap-3">
-    <button id="btnSave" class="btn btn-secondary">
-      <i data-lucide="save" class="w-4 h-4"></i>
-      <span>Simpan Draft</span>
-    </button>
-    <button id="btnSubmit" class="btn btn-primary">
-      <i data-lucide="send" class="w-4 h-4"></i>
-      <span>Simpan &amp; Kirim</span>
-    </button>
+          <div class="divider"></div>
+
+          <div class="text-xs text-slate-500 flex items-center justify-between">
+            <span>Progress</span>
+            <span class="font-medium text-slate-700"><span id="progressCount">0</span> / 19</span>
+          </div>
+          <div class="mt-2 w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div id="progressBar" class="h-full bg-indigo-500 transition-all" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Aksi -->
+      <div class="card">
+        <div class="card-body space-y-2">
+          <button id="btnSave" class="btn btn-secondary w-full justify-center">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>Simpan Draft</span>
+          </button>
+          <button id="btnSubmit" class="btn btn-primary w-full justify-center">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>Kirim ke Pengawas</span>
+          </button>
+          <div id="pdfSection" class="hidden pt-2 border-t border-slate-100">
+            <button id="btnPdf" class="btn btn-ghost w-full justify-center text-slate-700">
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+              <span>Cetak Laporan PDF</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-xs text-slate-400 text-center">
+        <i data-lucide="info" class="w-3 h-3 inline-block align-middle"></i>
+        Link dokumentasi dapat ditambahkan kapan saja
+      </div>
+    </div>
   </div>
 </div>
 
@@ -139,19 +208,20 @@
   if (!user) throw new Error('Unauthorized');
   mountShell('supervisi');
 
-  const editId = new URLSearchParams(window.location.search).get('id');
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get('id');
+  const guruFromParam = params.get('guru');
+
   let existing = null;
+  let isReadonly = false;
   const detailMap = {};
-
-  if (editId) el('pageTitle').textContent = 'Edit Supervisi';
-
-  renderInstrumen();
 
   (async function init() {
     await withLoading('Memuat data...', async () => {
       try {
         const guru = await sispaRequest('guru.list', {});
         const sel = el('fGuru');
+        sel.innerHTML = '<option value="">— Pilih Guru —</option>';
         guru.forEach(g => {
           const opt = document.createElement('option');
           opt.value = g.id;
@@ -159,18 +229,41 @@
           sel.appendChild(opt);
         });
 
+        // Pre-select guru dari param
+        if (guruFromParam) {
+          sel.value = guruFromParam;
+          const g = guru.find(x => x.id === guruFromParam);
+          if (g) showGuruInfo(g);
+        }
+
         if (editId) {
           const data = await sispaRequest('supervisi.get', { id: editId });
           existing = data.header;
           (data.detail || []).forEach(d => detailMap[d.kode_indikator] = d);
+          isReadonly = existing.status === 'terkirim';
+          el('pageTitle').textContent = isReadonly ? 'Detail Supervisi' : 'Edit Supervisi';
+          el('pageSubtitle').textContent = isReadonly
+            ? 'Data terkirim · tidak dapat diubah'
+            : 'Lanjutkan pengisian';
           populateForm();
+          applyReadonly();
         } else {
           el('fTanggal').value = todayIso();
         }
-        updateTotal();
+
+        renderInstrumen();
+        updateProgress();
       } catch (err) { handleApiError(err); }
     });
   })();
+
+  function showGuruInfo(g) {
+    el('guruInfo').classList.remove('hidden');
+    el('guruInitial').textContent = g.nama.charAt(0).toUpperCase();
+    el('guruNama').textContent = g.nama;
+    el('guruMeta').textContent = (g.mapel || '—') + ' · ' + (g.kelas || '—') + ' · NIP ' + (g.nip || '—');
+    el('guruSelectWrap').classList.add('hidden');
+  }
 
   function renderInstrumen() {
     const container = el('instrumenContainer');
@@ -187,25 +280,21 @@
         currentSection = ind.section;
       }
       html += `
-        <div class="border border-slate-200 rounded-lg p-4 mb-3 hover:border-slate-300 transition" data-kode="${ind.kode}">
-          <div class="flex items-start gap-3 mb-3">
-            <span class="text-mono text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-1 rounded">${ind.kode}</span>
-            <p class="text-sm text-slate-700 flex-1">${escapeHtml(ind.teks)}</p>
-          </div>
-          <div class="grid md:grid-cols-[180px_1fr] gap-3">
-            <div>
-              <label class="block text-xs text-slate-500 mb-1">Skor (1–4)</label>
-              <div class="flex gap-1">
-                ${[1,2,3,4].map(n => `
-                  <button type="button" data-skor="${n}" data-target="${ind.kode}"
-                          class="skor-btn">${n}</button>
-                `).join('')}
-              </div>
+        <div class="indicator-row" data-kode="${ind.kode}">
+          <div>
+            <div class="flex items-start gap-2 mb-2">
+              <span class="text-mono text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">${ind.kode}</span>
             </div>
-            <div>
-              <label class="block text-xs text-slate-500 mb-1">Catatan / Bukti</label>
-              <textarea data-catatan="${ind.kode}" rows="1"
-                        class="textarea text-sm"></textarea>
+            <p class="text-sm text-slate-700 leading-relaxed">${escapeHtml(ind.teks)}</p>
+            <textarea data-catatan="${ind.kode}" rows="2" placeholder="Catatan / bukti observasi (opsional)..."
+                      class="textarea text-sm mt-3"></textarea>
+          </div>
+          <div class="flex flex-col justify-start">
+            <label class="block text-xs text-slate-500 mb-1.5">Skor</label>
+            <div class="flex gap-1.5">
+              ${[1,2,3,4].map(n => `
+                <button type="button" data-skor="${n}" data-target="${ind.kode}" class="skor-btn">${n}</button>
+              `).join('')}
             </div>
           </div>
         </div>`;
@@ -215,42 +304,50 @@
     refreshIcons();
 
     container.querySelectorAll('.skor-btn').forEach(btn =>
-      btn.addEventListener('click', () => setSkor(btn.dataset.target, parseInt(btn.dataset.skor, 10))));
+      btn.addEventListener('click', () => {
+        if (isReadonly) return;
+        setSkor(btn.dataset.target, parseInt(btn.dataset.skor, 10));
+      }));
   }
 
   function setSkor(kode, val) {
     const block = document.querySelector(`[data-kode="${kode}"]`);
+    if (!block) return;
     block.querySelectorAll('.skor-btn').forEach(b => {
       const v = parseInt(b.dataset.skor, 10);
       b.classList.toggle('active', v === val);
     });
     block.dataset.skor = val;
-    updateTotal();
+    block.classList.toggle('filled', val > 0);
+    updateProgress();
   }
-
   function getSkor(kode) {
     const block = document.querySelector(`[data-kode="${kode}"]`);
     return block && block.dataset.skor ? parseInt(block.dataset.skor, 10) : 0;
   }
 
-  function updateTotal() {
+  function updateProgress() {
     let total = 0, terisi = 0;
     INSTRUMEN_LK1.forEach(i => {
       const s = getSkor(i.kode);
       if (s > 0) { total += s; terisi++; }
     });
     el('totalSkor').textContent = total;
+    el('progressCount').textContent = terisi;
+    el('progressBar').style.width = ((terisi / 19) * 100) + '%';
+
     const kat = el('kategori');
     if (terisi === 19) {
-      kat.textContent = tentukanKategoriLK1(total);
-      kat.className = 'badge ' + (
+      const label = tentukanKategoriLK1(total);
+      kat.textContent = label;
+      kat.className = 'badge mt-3 inline-block ' + (
         total >= 66 ? 'badge-success' :
         total >= 51 ? 'badge-info' :
         total >= 26 ? 'badge-warning' : 'badge-danger'
       );
     } else {
-      kat.textContent = `${terisi}/19`;
-      kat.className = 'badge badge-neutral';
+      kat.textContent = 'Belum lengkap';
+      kat.className = 'badge badge-neutral mt-3 inline-block';
     }
   }
 
@@ -260,11 +357,17 @@
     el('fMapel').value = existing.mapel || '';
     el('fMateri').value = existing.materi || '';
     el('fDurasi').value = existing.durasi || '';
-    el('fLink').value = existing.link_dokumentasi || '';
     el('fCatatan').value = existing.catatan_tambahan || '';
     el('fKekuatan').value = existing.kekuatan || '';
     el('fArea').value = existing.area_pengembangan || '';
     el('fRencana').value = existing.rencana_pembinaan || '';
+
+    // Tampilkan guru info (readonly)
+    const sel = el('fGuru');
+    const g = sel.querySelector(`option[value="${existing.guru_id}"]`);
+    if (g) {
+      showGuruInfo({ id: existing.guru_id, nama: g.textContent.split(' — ')[0], mapel: existing.mapel, kelas: '', nip: '' });
+    }
 
     INSTRUMEN_LK1.forEach(i => {
       const d = detailMap[i.kode];
@@ -272,6 +375,37 @@
       if (d.skor > 0) setSkor(i.kode, d.skor);
       const ta = document.querySelector(`[data-catatan="${i.kode}"]`);
       if (ta) ta.value = d.catatan || '';
+    });
+  }
+
+  function applyReadonly() {
+    if (!isReadonly) return;
+    el('readonlyBanner').classList.remove('hidden');
+    // Disable semua input
+    document.querySelectorAll('input, select, textarea, .skor-btn').forEach(el => {
+      el.disabled = true;
+      el.classList.add('opacity-70');
+    });
+    document.querySelectorAll('.indicator-row').forEach(r => r.classList.add('readonly'));
+    // Sembunyikan tombol simpan/kirim
+    el('btnSave').classList.add('hidden');
+    el('btnSubmit').classList.add('hidden');
+    el('pdfSection').classList.remove('hidden');
+    el('btnPdf').addEventListener('click', cetakPdf);
+  }
+
+  async function cetakPdf() {
+    await withLoading('Menyiapkan PDF...', async () => {
+      try {
+        const res = await sispaRequest('supervisi.pdf', { id: editId });
+        if (res.mode === 'html') {
+          const w = window.open('', '_blank');
+          w.document.write(res.html);
+          w.document.close();
+        } else if (res.mode === 'drive') {
+          window.open(res.pdf_url, '_blank');
+        }
+      } catch (err) { handleApiError(err); }
     });
   }
 
@@ -283,7 +417,6 @@
       mapel: el('fMapel').value.trim(),
       materi: el('fMateri').value.trim(),
       durasi: parseInt(el('fDurasi').value || '0', 10),
-      link_dokumentasi: el('fLink').value.trim(),
       catatan_tambahan: el('fCatatan').value,
       kekuatan: el('fKekuatan').value,
       area_pengembangan: el('fArea').value,
@@ -295,29 +428,40 @@
       }))
     };
 
-    if (!payload.guru_id) return showToast('Pilih guru terlebih dahulu', 'error');
-    if (!payload.tanggal) return showToast('Tanggal wajib diisi', 'error');
+    if (!payload.guru_id) return swalError('Belum ada guru dipilih', 'Pilih guru terlebih dahulu.');
+    if (!payload.tanggal) return swalError('Tanggal wajib diisi');
 
-    const belum = payload.detail.filter(d => d.skor === 0).length;
-    if (belum > 0 && !confirm(`Masih ada ${belum} indikator yang belum diberi skor. Lanjutkan?`)) return;
+    if (submit) {
+      const belum = payload.detail.filter(d => d.skor === 0).length;
+      if (belum > 0) {
+        const ok = await swalConfirm(
+          `Ada ${belum} indikator belum diberi skor`,
+          'Apakah Anda yakin ingin mengirim?',
+          { icon: 'warning', confirmText: 'Ya, kirim' }
+        );
+        if (!ok) return;
+      } else {
+        const ok = await swalConfirm('Kirim ke Pengawas?', 'Data tidak dapat diubah setelah dikirim.', { confirmText: 'Ya, kirim' });
+        if (!ok) return;
+      }
+    }
 
-    const btnSave = el('btnSave'), btnSubmit = el('btnSubmit');
-    btnSave.disabled = btnSubmit.disabled = true;
-    showLoading(submit ? 'Mengirim...' : 'Menyimpan...');
+    swalLoading(submit ? 'Mengirim...' : 'Menyimpan...');
 
     try {
       const res = await sispaRequest('supervisi.save', payload);
       if (submit) {
         await sispaRequest('supervisi.submit', { id: res.id });
-        showToast('Supervisi terkirim ke Pengawas', 'success');
+        Swal2.close();
+        await swalSuccess('Terkirim!', 'Supervisi telah dikirim ke Pengawas.');
       } else {
-        showToast(`Draft tersimpan (skor ${res.skor_total}, ${res.kategori})`, 'success');
+        Swal2.close();
+        await swalSuccess('Draft tersimpan', `Skor ${res.skor_total} · ${res.kategori}`);
       }
-      setTimeout(() => window.location.href = sispaUrl('/ks/supervisi.html'), 900);
+      setTimeout(() => window.location.href = sispaUrl('/ks/supervisi.html'), 1200);
     } catch (err) {
-      handleApiError(err);
-      btnSave.disabled = btnSubmit.disabled = false;
-      hideLoading();
+      Swal2.close();
+      swalError('Gagal menyimpan', err.message);
     }
   }
 
