@@ -49,3 +49,13 @@ window.getApiUrl = getApiUrl;
 window.setApiUrl = setApiUrl;
 window.resetApiUrl = resetApiUrl;
 window.isApiUrlCustom = isApiUrlCustom;
+
+function sispaIsAdmin() {
+  const u = sispaGetUser ? sispaGetUser() : null;
+  if (u && u.role === 'Admin') return true;
+  // Fallback: admin via NPSN tertentu (opsional)
+  const adminNpsn = ['11111111'];
+  return u && adminNpsn.includes(String(u.npsn));
+}
+
+window.sispaIsAdmin = sispaIsAdmin;
