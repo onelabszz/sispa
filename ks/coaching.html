@@ -6,47 +6,45 @@
 <title>SISPA — Coaching</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
 
-<div class="flex items-center justify-between mb-6 gap-4">
-  <div>
-    <h1 class="text-2xl font-bold text-slate-900">Coaching</h1>
-    <p class="text-sm text-slate-500 mt-1">Instrumen LK2 · Percakapan STAR–GROW</p>
-  </div>
-  <a href="./coaching-form.html" class="btn btn-primary">
-    <i data-lucide="plus" class="w-4 h-4"></i>
-    <span>Coaching Baru</span>
-  </a>
+<!-- ================== KONTEN ================== -->
+
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-900">Coaching</h1>
+  <p class="text-sm text-slate-500 mt-1">Pilih guru untuk memulai atau melanjutkan sesi coaching (STAR–GROW).</p>
 </div>
 
-<div class="card overflow-hidden">
-  <div class="overflow-x-auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Tanggal</th>
-          <th>Guru</th>
-          <th class="text-center">Skor</th>
-          <th>Kategori</th>
-          <th>Status</th>
-          <th class="text-right">Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-  <div id="emptyState" class="hidden empty-state">
-    <div class="empty-state-icon"><i data-lucide="message-square" class="w-6 h-6"></i></div>
-    <h3 class="font-semibold text-slate-900 mb-1">Belum ada sesi coaching</h3>
-    <p class="text-sm text-slate-500 mb-4">Mulai percakapan coaching dengan guru.</p>
-    <a href="./coaching-form.html" class="btn btn-primary">
-      <i data-lucide="plus" class="w-4 h-4"></i>
-      <span>Coaching Baru</span>
-    </a>
+<!-- Filter -->
+<div class="card mb-4">
+  <div class="card-body flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[240px]">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+        <i data-lucide="search" class="w-4 h-4"></i>
+      </span>
+      <input type="text" id="searchInput" placeholder="Cari nama guru..." class="input" style="padding-left: 2.4rem" />
+    </div>
+    <select id="filterStatus" class="select" style="max-width: 200px">
+      <option value="">Semua Status</option>
+      <option value="belum">Belum Dicoaching</option>
+      <option value="draft">Draft</option>
+      <option value="terkirim">Terkirim</option>
+    </select>
   </div>
 </div>
+
+<div id="guruGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+<div id="emptyState" class="hidden card empty-state">
+  <div class="empty-state-icon"><i data-lucide="users" class="w-6 h-6"></i></div>
+  <h3 class="font-semibold text-slate-900 mb-1">Tidak ada guru</h3>
+  <p class="text-sm text-slate-500">Tambahkan data guru terlebih dahulu.</p>
+</div>
+
+<!-- ================== END ================== -->
 
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/api.js"></script>
@@ -56,7 +54,10 @@
   const user = sispaRequireLogin(['KS', 'Admin']);
   if (user) { mountShell('coaching'); loadData(); }
 
-  let guruMap = {};
+  let guruList = [];
+  let coachingByGuru = {};
+  let filterText = '';
+  let filterStatus = '';
 
   async function loadData() {
     await withLoading('Memuat data coaching...', async () => {
@@ -65,83 +66,104 @@
           sispaRequest('guru.list', {}),
           sispaRequest('coaching.list', {})
         ]);
-        guru.forEach(g => guruMap[g.id] = g.nama);
-        render(cch.items || []);
+        guruList = guru;
+        coachingByGuru = {};
+        (cch.items || []).forEach(c => {
+          if (!coachingByGuru[c.guru_id]) coachingByGuru[c.guru_id] = [];
+          coachingByGuru[c.guru_id].push(c);
+        });
+        render();
       } catch (err) { handleApiError(err); }
     });
   }
 
-  function render(items) {
-    const tbody = el('tableBody');
-    const empty = el('emptyState');
-    const table = tbody.closest('.card').querySelector('.overflow-x-auto');
+  function getLatestForGuru(guruId) {
+    const list = coachingByGuru[guruId] || [];
+    if (!list.length) return null;
+    const draft = list.filter(c => c.status === 'draft')
+      .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+    if (draft.length) return draft[0];
+    return list.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))[0];
+  }
 
-    if (!items.length) {
-      table.classList.add('hidden');
+  function render() {
+    const grid = el('guruGrid');
+    const empty = el('emptyState');
+
+    const filtered = guruList.filter(g => {
+      const matchText = !filterText || (g.nama || '').toLowerCase().includes(filterText.toLowerCase());
+      if (!matchText) return false;
+      if (!filterStatus) return true;
+      const latest = getLatestForGuru(g.id);
+      const status = latest ? latest.status : 'belum';
+      return status === filterStatus;
+    });
+
+    if (!filtered.length) {
+      grid.innerHTML = '';
       empty.classList.remove('hidden');
       refreshIcons();
       return;
     }
-    table.classList.remove('hidden');
     empty.classList.add('hidden');
 
-    tbody.innerHTML = items.map(c => `
-      <tr>
-        <td>${formatTanggal(c.tanggal)}</td>
-        <td class="font-medium text-slate-900">${escapeHtml(guruMap[c.guru_id] || c.guru_id)}</td>
-        <td class="text-center text-mono font-medium">${c.skor_total}</td>
-        <td><span class="badge badge-neutral">${escapeHtml(c.kategori)}</span></td>
-        <td>
-          <span class="badge ${c.status === 'terkirim' ? 'badge-success' : 'badge-warning'}">
-            ${c.status === 'terkirim' ? 'Terkirim' : 'Draft'}
-          </span>
-        </td>
-        <td class="text-right whitespace-nowrap">
-          <a href="./coaching-form.html?id=${c.id}" class="icon-btn" title="${c.status === 'draft' ? 'Lanjutkan' : 'Lihat'}">
-            <i data-lucide="${c.status === 'draft' ? 'pencil' : 'eye'}" class="w-4 h-4"></i>
-          </a>
-          <button class="icon-btn" data-pdf="${c.id}" title="Cetak PDF">
-            <i data-lucide="file-text" class="w-4 h-4"></i>
-          </button>
-          ${c.status === 'draft' ? `
-            <button class="icon-btn text-green-600" data-submit="${c.id}" title="Kirim">
-              <i data-lucide="send" class="w-4 h-4"></i>
-            </button>` : ''}
-        </td>
-      </tr>`).join('');
+    grid.innerHTML = filtered.map(g => {
+      const latest = getLatestForGuru(g.id);
+      const statusKey = latest ? latest.status : 'belum';
+      const statusLabel = statusKey === 'belum' ? 'Belum Dicoaching'
+                        : statusKey === 'draft' ? 'Draft'
+                        : 'Terkirim';
+      const statusCls = statusKey === 'belum' ? 'badge-neutral'
+                      : statusKey === 'draft' ? 'badge-warning'
+                      : 'badge-success';
 
-    tbody.querySelectorAll('[data-pdf]').forEach(b =>
-      b.addEventListener('click', () => cetakPdf(b.dataset.pdf)));
-    tbody.querySelectorAll('[data-submit]').forEach(b =>
-      b.addEventListener('click', () => kirim(b.dataset.submit)));
+      let aksiHtml = '';
+      if (!latest) {
+        aksiHtml = `<a href="./coaching-form.html?guru=${g.id}" class="btn btn-primary w-full justify-center">
+          ${icon('play-circle', 'w-4 h-4')}<span>Mulai Coaching</span></a>`;
+      } else if (latest.status === 'draft') {
+        aksiHtml = `<a href="./coaching-form.html?id=${latest.id}" class="btn btn-primary w-full justify-center">
+          ${icon('pencil', 'w-4 h-4')}<span>Lanjutkan</span></a>
+          <a href="./coaching-form.html?id=${latest.id}" class="btn btn-secondary w-full justify-center mt-2">
+            ${icon('eye', 'w-4 h-4')}<span>Lihat Detail</span></a>`;
+      } else {
+        aksiHtml = `<a href="./coaching-form.html?id=${latest.id}" class="btn btn-secondary w-full justify-center">
+          ${icon('eye', 'w-4 h-4')}<span>Lihat Coaching</span></a>
+          <a href="./coaching-form.html?guru=${g.id}" class="btn btn-ghost w-full justify-center mt-2">
+            ${icon('plus', 'w-4 h-4')}<span>Coaching Baru</span></a>`;
+      }
+
+      return `
+        <div class="card card-body flex flex-col gap-3">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-semibold flex-shrink-0">
+                ${escapeHtml((g.nama || 'U').charAt(0).toUpperCase())}
+              </div>
+              <div class="min-w-0">
+                <div class="font-semibold text-slate-900 truncate">${escapeHtml(g.nama)}</div>
+                <div class="text-xs text-slate-500 truncate">${escapeHtml(g.mapel || '—')} · ${escapeHtml(g.kelas || '—')}</div>
+              </div>
+            </div>
+            <span class="badge ${statusCls} flex-shrink-0">${statusLabel}</span>
+          </div>
+          ${latest ? `
+            <div class="flex items-center justify-between text-xs border-t border-slate-100 pt-2">
+              <span class="text-slate-500">${formatTanggal(latest.tanggal)}</span>
+              <span class="text-mono font-semibold text-purple-600">${latest.skor_total}/32</span>
+            </div>` : `
+            <div class="text-xs text-slate-400 border-t border-slate-100 pt-2 text-center">
+              Belum ada coaching
+            </div>`}
+          <div class="mt-auto">${aksiHtml}</div>
+        </div>`;
+    }).join('');
+
     refreshIcons();
   }
 
-  async function kirim(id) {
-    if (!confirm('Kirim coaching ini ke Pengawas?')) return;
-    await withLoading('Mengirim...', async () => {
-      try {
-        await sispaRequest('coaching.submit', { id });
-        showToast('Coaching terkirim', 'success');
-        await loadData();
-      } catch (err) { handleApiError(err); }
-    });
-  }
-
-  async function cetakPdf(id) {
-    await withLoading('Menyiapkan laporan...', async () => {
-      try {
-        const res = await sispaRequest('coaching.pdf', { id });
-        if (res.mode === 'html') {
-          const w = window.open('', '_blank');
-          w.document.write(res.html);
-          w.document.close();
-        } else if (res.mode === 'drive') {
-          window.open(res.pdf_url, '_blank');
-        }
-      } catch (err) { handleApiError(err); }
-    });
-  }
+  el('searchInput').addEventListener('input', (e) => { filterText = e.target.value; render(); });
+  el('filterStatus').addEventListener('change', (e) => { filterStatus = e.target.value; render(); });
 </script>
 </body>
 </html>
