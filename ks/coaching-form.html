@@ -209,11 +209,13 @@
   let existing = null;
   let isReadonly = false;
   const detailMap = {};
+  let guruList = [];
 
   (async function init() {
     await withLoading('Memuat data...', async () => {
       try {
         const guru = await sispaRequest('guru.list', {});
+        guruList = guru;
         const sel = el('fGuru');
         sel.innerHTML = '<option value="">— Pilih Guru —</option>';
         guru.forEach(g => {
@@ -369,10 +371,9 @@
     el('fArea').value = existing.catatan_area || '';
 
     // Tampilkan guru info (readonly)
-    const sel = el('fGuru');
-    const g = sel.querySelector(`option[value="${existing.guru_id}"]`);
-    if (g) {
-      showGuruInfo({ id: existing.guru_id, nama: g.textContent.split(' — ')[0], mapel: '', kelas: '', nip: '' });
+    const gData = guruList.find(x => x.id === existing.guru_id);
+    if (gData) {
+      showGuruInfo(gData);
     }
 
     INSTRUMEN_LK2.forEach(i => {
@@ -400,13 +401,11 @@
   }
 
   async function cetakPdf() {
-    await withLoading('Menyiapkan PDF...', async () => {
+    await withLoading('Menyiapkan dokumen...', async () => {
       try {
         const res = await sispaRequest('coaching.pdf', { id: editId });
         if (res.mode === 'html') {
-          const w = window.open('', '_blank');
-          w.document.write(res.html);
-          w.document.close();
+          openPdfPreview(res);
         } else if (res.mode === 'drive') {
           window.open(res.pdf_url, '_blank');
         }
