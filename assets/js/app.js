@@ -274,7 +274,9 @@ const SISPA_NAV = {
   ],
   Pengawas: [
     { section: 'Utama' },
-    { key: 'dashboard', href: '/pengawas/dashboard.html', label: 'Dashboard', icon: 'layout-dashboard' }
+    { key: 'dashboard', href: '/pengawas/dashboard.html', label: 'Dashboard', icon: 'layout-dashboard' },
+    { section: 'Monitoring' },
+    { key: 'guru',      href: '/pengawas/guru.html',      label: 'Daftar Guru', icon: 'users' }
   ],
   Admin: [
     { section: 'Utama' },
