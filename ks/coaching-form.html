@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Form Coaching LK2</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body class="bg-slate-100 min-h-screen">
+<div id="appHeader"></div>
+
+<main class="max-w-5xl mx-auto px-4 py-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1 id="pageTitle" class="text-2xl font-bold text-slate-800">Coaching Baru</h1>
+    <a href="./coaching.html" class="text-sm text-indigo-600 hover:underline">← Kembali</a>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <h2 class="font-semibold text-slate-800 mb-4">Identitas</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Guru <span class="text-red-500">*</span></label>
+        <select id="fGuru" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <option value="">— Pilih Guru —</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Tanggal <span class="text-red-500">*</span></label>
+        <input type="date" id="fTanggal" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-slate-700 mb-1">Link Dokumentasi</label>
+        <input type="url" id="fLink" placeholder="https://drive.google.com/..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold text-slate-800">Instrumen LK2 (STAR–GROW, 8 Indikator)</h2>
+      <div class="text-sm">Skor: <span id="totalSkor" class="font-bold text-indigo-700">0</span>/32 · <span id="kategori" class="font-medium">-</span></div>
+    </div>
+    <div id="instrumenContainer" class="space-y-6"></div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <h2 class="font-semibold text-slate-800 mb-4">Catatan Kualitatif</h2>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Kekuatan yang Ditunjukkan</label>
+        <textarea id="fKekuatan" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Area yang Perlu Dikembangkan</label>
+        <textarea id="fArea" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold text-slate-800">Rencana Tindak Lanjut (RTL)</h2>
+      <button type="button" id="btnAddRtl" class="text-sm text-indigo-600 hover:underline">+ Tambah Baris</button>
+    </div>
+    <div id="rtlContainer" class="space-y-3"></div>
+  </div>
+
+  <div class="flex justify-between gap-3 mb-10">
+    <button id="btnBack" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-lg font-medium">Batal</button>
+    <div class="flex gap-3">
+      <button id="btnSave" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium">Simpan Draft</button>
+      <button id="btnSubmit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium">Simpan &amp; Kirim</button>
+    </div>
+  </div>
+</main>
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/instruments.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['KS']);
+  if (!user) throw new Error('Unauthorized');
+  mountHeader('/ks/coaching.html');
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const editId = urlParams.get('id');
+  let detailMap = {};
+  let existing = null;
+
+  if (editId) el('pageTitle').textContent = 'Edit / Lihat Coaching';
+
+  renderInstrumen();
+  addRtlRow();
+
+  (async function init() {
+    try {
+      const guru = await sispaRequest('guru.list', {});
+      const sel = el('fGuru');
+      guru.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.id; opt.textContent = g.nama;
+        sel.appendChild(opt);
+      });
+
+      if (editId) {
+        const data = await sispaRequest('coaching.get', { id: editId });
+        existing = data.header;
+        (data.detail || []).forEach(d => detailMap[d.kode] = d);
+        populate();
+        if (data.rtl && data.rtl.length) {
+          el('rtlContainer').innerHTML = '';
+          data.rtl.forEach(r => addRtlRow(r));
+        }
+      } else {
+        el('fTanggal').value = todayIso();
+      }
+      updateTotal();
+    } catch (err) { handleApiError(err); }
+  })();
+
+  function renderInstrumen() {
+    const container = el('instrumenContainer');
+    let currentTahap = '';
+    let html = '';
+    const tahapLabel = { S:'S — Situation', T:'T — Task', A:'A — Action', R:'R — Result', G:'G — Goal', O:'O — Options', W:'W — Will' };
+
+    INSTRUMEN_LK2.forEach(ind => {
+      if (ind.tahap !== currentTahap) {
+        if (currentTahap) html += '</div>';
+        html += `<div><h3 class="font-semibold text-slate-700 mb-3 pb-2 border-b border-slate-200">${tahapLabel[ind.tahap] || ind.tahap}</h3>`;
+        currentTahap = ind.tahap;
+      }
+      html += `
+        <div class="border border-slate-200 rounded-lg p-4 mb-3" data-kode="${ind.kode}">
+          <div class="mb-3">
+            <div class="text-xs font-mono text-indigo-600 mb-1">${ind.kode}</div>
+            <div class="text-sm text-slate-700">${escapeHtml(ind.teks)}</div>
+          </div>
+          <div class="grid md:grid-cols-[180px_1fr] gap-3">
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Skor (1–4)</label>
+              <div class="flex gap-1">
+                ${[1,2,3,4].map(n => `<button type="button" data-skor="${n}" data-target="${ind.kode}" class="skor-btn flex-1 py-2 border border-slate-300 rounded text-sm hover:bg-indigo-50">${n}</button>`).join('')}
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-500 mb-1">Catatan / Kutipan</label>
+              <textarea data-catatan="${ind.kode}" rows="1" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm"></textarea>
+            </div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+
+    container.querySelectorAll('.skor-btn').forEach(btn =>
+      btn.addEventListener('click', () => setSkor(btn.dataset.target, parseInt(btn.dataset.skor, 10))));
+  }
+
+  function setSkor(kode, val) {
+    const block = document.querySelector(`[data-kode="${kode}"]`);
+    block.querySelectorAll('.skor-btn').forEach(b => {
+      const v = parseInt(b.dataset.skor, 10);
+      b.className = 'skor-btn flex-1 py-2 border rounded text-sm transition ' +
+        (v === val ? 'bg-indigo-600 text-white border-indigo-600' : 'border-slate-300 hover:bg-indigo-50');
+    });
+    block.dataset.skor = val;
+    updateTotal();
+  }
+  function getSkor(kode) {
+    const block = document.querySelector(`[data-kode="${kode}"]`);
+    return block && block.dataset.skor ? parseInt(block.dataset.skor, 10) : 0;
+  }
+  function updateTotal() {
+    let total = 0, terisi = 0;
+    INSTRUMEN_LK2.forEach(i => { const s = getSkor(i.kode); if (s > 0) { total += s; terisi++; } });
+    el('totalSkor').textContent = total;
+    el('kategori').textContent = terisi === 8 ? tentukanKategoriLK2(total) : '(' + terisi + '/8 terisi)';
+  }
+
+  function populate() {
+    el('fGuru').value = existing.guru_id || '';
+    el('fTanggal').value = (existing.tanggal || '').slice(0, 10);
+    el('fLink').value = existing.link_dokumentasi || '';
+    el('fKekuatan').value = existing.catatan_kekuatan || '';
+    el('fArea').value = existing.catatan_area || '';
+    INSTRUMEN_LK2.forEach(i => {
+      const d = detailMap[i.kode];
+      if (!d) return;
+      if (d.skor > 0) setSkor(i.kode, d.skor);
+      const ta = document.querySelector(`[data-catatan="${i.kode}"]`);
+      if (ta) ta.value = d.catatan || '';
+    });
+  }
+
+  function addRtlRow(data) {
+    const d = data || {};
+    const wrap = document.createElement('div');
+    wrap.className = 'rtl-row grid md:grid-cols-[2fr_1fr_1.5fr_1.5fr_auto] gap-2 items-start';
+    wrap.innerHTML = `
+      <textarea data-f="rencana_aksi" rows="2" placeholder="Rencana aksi" class="px-3 py-2 border border-slate-300 rounded-lg text-sm">${escapeHtml(d.rencana_aksi || '')}</textarea>
+      <input data-f="waktu_pelaksanaan" placeholder="Waktu" value="${escapeHtml(d.waktu_pelaksanaan || '')}" class="px-3 py-2 border border-slate-300 rounded-lg text-sm" />
+      <textarea data-f="dukungan" rows="2" placeholder="Dukungan" class="px-3 py-2 border border-slate-300 rounded-lg text-sm">${escapeHtml(d.dukungan || '')}</textarea>
+      <textarea data-f="indikator_keberhasilan" rows="2" placeholder="Indikator keberhasilan" class="px-3 py-2 border border-slate-300 rounded-lg text-sm">${escapeHtml(d.indikator_keberhasilan || '')}</textarea>
+      <button type="button" class="rtl-remove text-red-600 hover:bg-red-50 px-3 py-2 rounded text-sm">✕</button>`;
+    wrap.querySelector('.rtl-remove').addEventListener('click', () => wrap.remove());
+    el('rtlContainer').appendChild(wrap);
+  }
+  el('btnAddRtl').addEventListener('click', () => addRtlRow());
+
+  function getRtlItems() {
+    return Array.from(document.querySelectorAll('.rtl-row')).map(row => {
+      const get = f => (row.querySelector(`[data-f="${f}"]`) || {}).value || '';
+      return {
+        rencana_aksi: get('rencana_aksi'),
+        waktu_pelaksanaan: get('waktu_pelaksanaan'),
+        dukungan: get('dukungan'),
+        indikator_keberhasilan: get('indikator_keberhasilan'),
+        status: 'rencana'
+      };
+    }).filter(x => x.rencana_aksi.trim() !== '');
+  }
+
+  async function save(submit) {
+    const payload = {
+      id: editId || '',
+      guru_id: el('fGuru').value,
+      tanggal: el('fTanggal').value,
+      link_dokumentasi: el('fLink').value.trim(),
+      catatan_kekuatan: el('fKekuatan').value,
+      catatan_area: el('fArea').value,
+      detail: INSTRUMEN_LK2.map(i => ({
+        tahap: i.tahap,
+        kode: i.kode,
+        skor: getSkor(i.kode) || 0,
+        catatan: (document.querySelector(`[data-catatan="${i.kode}"]`) || {}).value || ''
+      }))
+    };
+    if (!payload.guru_id) return showToast('Pilih guru', 'error');
+    if (!payload.tanggal) return showToast('Tanggal wajib diisi', 'error');
+
+    const btnSave = el('btnSave'), btnSubmit = el('btnSubmit');
+    btnSave.disabled = btnSubmit.disabled = true;
+    try {
+      const res = await sispaRequest('coaching.save', payload);
+      const rtl = getRtlItems();
+      if (rtl.length) {
+        await sispaRequest('rtl.save', { supervisi_id: res.id, items: rtl });
+      }
+      showToast('Tersimpan (skor ' + res.skor_total + ')', 'success');
+      if (submit) {
+        await sispaRequest('coaching.submit', { id: res.id });
+        showToast('Terkirim ke Pengawas', 'success');
+      }
+      setTimeout(() => window.location.href = sispaUrl('/ks/coaching.html'), 800);
+    } catch (err) { handleApiError(err); }
+    finally { btnSave.disabled = btnSubmit.disabled = false; }
+  }
+
+  el('btnSave').addEventListener('click', () => save(false));
+  el('btnSubmit').addEventListener('click', () => save(true));
+  el('btnBack').addEventListener('click', () => window.location.href = sispaUrl('/ks/coaching.html'));
+</script>
+</body>
+</html>
