@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Semua Coaching</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+
+<!-- ================== KONTEN ================== -->
+
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-900">Semua Coaching</h1>
+  <p class="text-sm text-slate-500 mt-1">Monitoring sesi coaching lintas sekolah</p>
+</div>
+
+<!-- Info Periode -->
+<div class="card card-body mb-4 flex items-center gap-3">
+  <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+    <i data-lucide="calendar-range" class="w-5 h-5"></i>
+  </div>
+  <div class="text-sm">
+    <div class="text-slate-500">Periode</div>
+    <div id="periodeLabel" class="font-semibold text-slate-900">—</div>
+  </div>
+</div>
+
+<!-- ================== STAT RINGKAS ================== -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="stat-icon bg-purple-50 text-purple-600"><i data-lucide="message-square" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Total Coaching</div>
+      <div id="statTotal" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-emerald-50 text-emerald-600"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Terkirim</div>
+      <div id="statTerkirim" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-amber-50 text-amber-600"><i data-lucide="file-edit" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Draft</div>
+      <div id="statDraft" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-indigo-50 text-indigo-600"><i data-lucide="trending-up" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Rata Skor</div>
+      <div class="flex items-baseline gap-1">
+        <span id="statSkor" class="text-2xl font-bold text-slate-900">—</span>
+        <span class="text-xs text-slate-400">/32</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== FILTER ================== -->
+<div class="card mb-4">
+  <div class="card-body grid md:grid-cols-5 gap-3">
+    <div class="relative md:col-span-2">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+        <i data-lucide="search" class="w-4 h-4"></i>
+      </span>
+      <input type="text" id="searchInput" placeholder="Cari guru / sekolah..."
+             class="input" style="padding-left:2.4rem" />
+    </div>
+    <select id="filterSekolah" class="select">
+      <option value="">Semua Sekolah</option>
+    </select>
+    <select id="filterStatus" class="select">
+      <option value="">Semua Status</option>
+      <option value="terkirim">Terkirim</option>
+      <option value="draft">Draft</option>
+    </select>
+    <select id="filterKategori" class="select">
+      <option value="">Semua Kategori</option>
+      <option value="Konsisten/Optimal">Konsisten/Optimal</option>
+      <option value="Berkembang">Berkembang</option>
+      <option value="Mulai Tampak">Mulai Tampak</option>
+      <option value="Belum Tampak">Belum Tampak</option>
+    </select>
+    <div class="md:col-span-5 flex items-center justify-end gap-2">
+      <button id="btnReset" class="btn btn-ghost text-slate-600">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        <span>Reset Filter</span>
+      </button>
+      <button id="btnRefresh" class="btn btn-secondary">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================== TABEL ================== -->
+<div class="card overflow-hidden">
+  <div class="card-header">
+    <div class="flex items-center gap-2">
+      <i data-lucide="message-square" class="w-4 h-4 text-slate-500"></i>
+      <h2 class="font-semibold text-slate-900 text-sm">Daftar Coaching</h2>
+      <span id="resultCount" class="badge badge-neutral">0</span>
+    </div>
+  </div>
+  <div class="overflow-x-auto" id="tableWrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Guru</th>
+          <th>Sekolah</th>
+          <th class="text-center">Skor</th>
+          <th class="text-center">Kategori</th>
+          <th class="text-center">Status</th>
+          <th class="text-right">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <div id="emptyState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="message-square" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Belum ada coaching</h3>
+    <p class="text-sm text-slate-500">Tidak ada sesi coaching pada periode ini.</p>
+  </div>
+
+  <div id="noResultState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="search-x" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Tidak ada hasil</h3>
+    <p class="text-sm text-slate-500">Coba ubah kata kunci atau filter.</p>
+  </div>
+</div>
+
+<!-- ================== END ================== -->
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['Pengawas', 'Admin']);
+  if (user) {
+    mountShell('coaching');
+    loadData();
+  }
+
+  let allItems = [];
+  let filterText = '';
+  let filterNpsn = '';
+  let filterStatus = '';
+  let filterKategori = '';
+
+  /* ============================================================
+     LOAD
+     ============================================================ */
+  async function loadData() {
+    await withLoading('Memuat data coaching...', async () => {
+      try {
+        const res = await sispaRequest('pengawas.coachingList', {});
+        allItems = res.items || [];
+        el('periodeLabel').textContent = res.periode.label;
+
+        // Daftar sekolah unik
+        const seen = {};
+        const sekolahList = [];
+        allItems.forEach(c => {
+          if (!seen[c.npsn_sekolah]) {
+            seen[c.npsn_sekolah] = true;
+            sekolahList.push({ npsn: c.npsn_sekolah, nama: c.nama_sekolah });
+          }
+        });
+        sekolahList.sort((a, b) => a.nama.localeCompare(b.nama));
+
+        const sel = el('filterSekolah');
+        sel.innerHTML = '<option value="">Semua Sekolah</option>';
+        sekolahList.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.npsn;
+          opt.textContent = s.nama;
+          sel.appendChild(opt);
+        });
+
+        renderStats();
+        renderTable();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  /* ============================================================
+     STAT
+     ============================================================ */
+  function renderStats() {
+    const total = allItems.length;
+    const terkirim = allItems.filter(x => x.status === 'terkirim');
+    const draft = allItems.filter(x => x.status === 'draft').length;
+    const avg = terkirim.length
+      ? Math.round(terkirim.reduce((a, c) => a + (c.skor_total || 0), 0) / terkirim.length)
+      : 0;
+
+    el('statTotal').textContent = total;
+    el('statTerkirim').textContent = terkirim.length;
+    el('statDraft').textContent = draft;
+    el('statSkor').textContent = avg;
+  }
+
+  /* ============================================================
+     RENDER TABEL
+     ============================================================ */
+  function renderTable() {
+    const tbody = el('tableBody');
+    const wrap = el('tableWrap');
+    const emptyState = el('emptyState');
+    const noResultState = el('noResultState');
+
+    wrap.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    noResultState.classList.add('hidden');
+
+    if (!allItems.length) {
+      emptyState.classList.remove('hidden');
+      el('resultCount').textContent = 0;
+      refreshIcons();
+      return;
+    }
+
+    let filtered = allItems.slice();
+
+    if (filterText) {
+      const q = filterText.toLowerCase();
+      filtered = filtered.filter(x =>
+        (x.nama_guru || '').toLowerCase().includes(q) ||
+        (x.nama_sekolah || '').toLowerCase().includes(q)
+      );
+    }
+    if (filterNpsn) filtered = filtered.filter(x => x.npsn_sekolah === filterNpsn);
+    if (filterStatus) filtered = filtered.filter(x => x.status === filterStatus);
+    if (filterKategori) filtered = filtered.filter(x => x.kategori === filterKategori);
+
+    el('resultCount').textContent = filtered.length + ' / ' + allItems.length;
+
+    if (!filtered.length) {
+      noResultState.classList.remove('hidden');
+      refreshIcons();
+      return;
+    }
+    wrap.classList.remove('hidden');
+
+    tbody.innerHTML = filtered.map(c => {
+      const statusBadge = c.status === 'terkirim'
+        ? '<span class="badge badge-success">Terkirim</span>'
+        : '<span class="badge badge-warning">Draft</span>';
+
+      const katCls = c.kategori === 'Konsisten/Optimal' ? 'badge-success'
+                    : c.kategori === 'Berkembang' ? 'badge-info'
+                    : c.kategori === 'Mulai Tampak' ? 'badge-warning'
+                    : 'badge-neutral';
+
+      return `
+        <tr class="hover:bg-slate-50">
+          <td class="text-sm">${formatTanggal(c.tanggal)}</td>
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                ${escapeHtml((c.nama_guru || 'U').charAt(0).toUpperCase())}
+              </div>
+              <div class="font-medium text-slate-900">${escapeHtml(c.nama_guru)}</div>
+            </div>
+          </td>
+          <td>
+            <a href="./sekolah.html?npsn=${encodeURIComponent(c.npsn_sekolah)}"
+               class="text-sm text-indigo-600 hover:underline">
+              ${escapeHtml(c.nama_sekolah)}
+            </a>
+          </td>
+          <td class="text-center text-mono font-medium">${c.skor_total}</td>
+          <td class="text-center"><span class="badge ${katCls}">${escapeHtml(c.kategori || '-')}</span></td>
+          <td class="text-center">${statusBadge}</td>
+          <td class="text-right whitespace-nowrap">
+            ${c.status === 'terkirim'
+              ? `<button class="icon-btn" data-pdf="${escapeHtml(c.id)}" title="Cetak PDF">
+                   ${icon('file-text', 'w-4 h-4')}
+                 </button>`
+              : ''}
+            <a href="${sispaUrl('/ks/coaching-form.html?id=' + encodeURIComponent(c.id))}"
+               class="icon-btn" title="Lihat Detail">
+              ${icon('eye', 'w-4 h-4')}
+            </a>
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('[data-pdf]').forEach(b =>
+      b.addEventListener('click', () => cetakPdf(b.dataset.pdf)));
+
+    refreshIcons();
+  }
+
+  /* ============================================================
+     CETAK PDF
+     ============================================================ */
+  async function cetakPdf(id) {
+    await withLoading('Menyiapkan dokumen...', async () => {
+      try {
+        const res = await sispaRequest('coaching.pdf', { id });
+        if (res.mode === 'html') {
+          openPdfPreview(res);
+        } else if (res.mode === 'drive') {
+          window.open(res.pdf_url, '_blank');
+        }
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  /* ============================================================
+     EVENT LISTENERS
+     ============================================================ */
+  el('searchInput').addEventListener('input', (e) => {
+    filterText = e.target.value; renderTable();
+  });
+  el('filterSekolah').addEventListener('change', (e) => {
+    filterNpsn = e.target.value; renderTable();
+  });
+  el('filterStatus').addEventListener('change', (e) => {
+    filterStatus = e.target.value; renderTable();
+  });
+  el('filterKategori').addEventListener('change', (e) => {
+    filterKategori = e.target.value; renderTable();
+  });
+
+  el('btnReset').addEventListener('click', () => {
+    el('searchInput').value = '';
+    el('filterSekolah').value = '';
+    el('filterStatus').value = '';
+    el('filterKategori').value = '';
+    filterText = filterNpsn = filterStatus = filterKategori = '';
+    renderTable();
+  });
+
+  el('btnRefresh').addEventListener('click', () => {
+    if (window.clearFrontendCache) clearFrontendCache();
+    loadData();
+  });
+</script>
+</body>
+</html>
