@@ -3,85 +3,115 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SISPA — Supervisi Akademik</title>
+<title>SISPA — Supervisi</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
-<body class="bg-slate-100 min-h-screen">
-<div id="appHeader"></div>
+<body>
 
-<main class="max-w-6xl mx-auto px-4 py-8">
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold text-slate-800">Supervisi Akademik (LK1)</h1>
-    <a href="./supervisi-form.html" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition">+ Supervisi Baru</a>
+<div class="flex items-center justify-between mb-6 gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Supervisi Akademik</h1>
+    <p class="text-sm text-slate-500 mt-1">Instrumen LK1 · 19 indikator</p>
   </div>
+  <a href="./supervisi-form.html" class="btn btn-primary">
+    <i data-lucide="plus" class="w-4 h-4"></i>
+    <span>Supervisi Baru</span>
+  </a>
+</div>
 
-  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-50 text-slate-600 text-left">
+<div class="card overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="table">
+      <thead>
         <tr>
-          <th class="px-4 py-3">Tanggal</th>
-          <th class="px-4 py-3">Guru</th>
-          <th class="px-4 py-3">Mapel</th>
-          <th class="px-4 py-3 text-center">Skor</th>
-          <th class="px-4 py-3">Kategori</th>
-          <th class="px-4 py-3">Status</th>
-          <th class="px-4 py-3 text-right">Aksi</th>
+          <th>Tanggal</th>
+          <th>Guru</th>
+          <th>Mapel</th>
+          <th class="text-center">Skor</th>
+          <th>Kategori</th>
+          <th>Status</th>
+          <th class="text-right">Aksi</th>
         </tr>
       </thead>
-      <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+      <tbody id="tableBody"></tbody>
     </table>
-    <div id="emptyState" class="hidden p-8 text-center text-slate-500">Belum ada supervisi.</div>
   </div>
-</main>
+  <div id="emptyState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="clipboard-list" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Belum ada supervisi</h3>
+    <p class="text-sm text-slate-500 mb-4">Mulai supervisi pertama untuk guru.</p>
+    <a href="./supervisi-form.html" class="btn btn-primary">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+      <span>Supervisi Baru</span>
+    </a>
+  </div>
+</div>
 
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/api.js"></script>
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
-  const user = sispaRequireLogin(['KS']);
-  if (user) { mountHeader('/ks/supervisi.html'); loadData(); }
+  const user = sispaRequireLogin(['KS', 'Admin']);
+  if (user) { mountShell('supervisi'); loadData(); }
 
   let guruMap = {};
 
   async function loadData() {
-    try {
-      const [guru, sup] = await Promise.all([
-        sispaRequest('guru.list', {}),
-        sispaRequest('supervisi.list', {})
-      ]);
-      guru.forEach(g => guruMap[g.id] = g.nama);
-      render(sup.items || []);
-    } catch (err) { handleApiError(err); }
+    await withLoading('Memuat data supervisi...', async () => {
+      try {
+        const [guru, sup] = await Promise.all([
+          sispaRequest('guru.list', {}),
+          sispaRequest('supervisi.list', {})
+        ]);
+        guru.forEach(g => guruMap[g.id] = g.nama);
+        render(sup.items || []);
+      } catch (err) { handleApiError(err); }
+    });
   }
 
   function render(items) {
     const tbody = el('tableBody');
     const empty = el('emptyState');
+    const table = tbody.closest('.card').querySelector('.overflow-x-auto');
+
     if (!items.length) {
-      tbody.innerHTML = '';
+      table.classList.add('hidden');
       empty.classList.remove('hidden');
+      refreshIcons();
       return;
     }
+    table.classList.remove('hidden');
     empty.classList.add('hidden');
+
     tbody.innerHTML = items.map(s => `
-      <tr class="hover:bg-slate-50">
-        <td class="px-4 py-3">${formatTanggal(s.tanggal)}</td>
-        <td class="px-4 py-3 font-medium">${escapeHtml(guruMap[s.guru_id] || s.guru_id)}</td>
-        <td class="px-4 py-3">${escapeHtml(s.mapel)}</td>
-        <td class="px-4 py-3 text-center font-mono">${s.skor_total}</td>
-        <td class="px-4 py-3 text-xs">${escapeHtml(s.kategori)}</td>
-        <td class="px-4 py-3">
-          <span class="text-xs px-2 py-1 rounded ${s.status === 'terkirim' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
-            ${escapeHtml(s.status)}
+      <tr>
+        <td>${formatTanggal(s.tanggal)}</td>
+        <td class="font-medium text-slate-900">${escapeHtml(guruMap[s.guru_id] || s.guru_id)}</td>
+        <td>${escapeHtml(s.mapel || '—')}</td>
+        <td class="text-center text-mono font-medium">${s.skor_total}</td>
+        <td><span class="badge badge-neutral">${escapeHtml(s.kategori)}</span></td>
+        <td>
+          <span class="badge ${s.status === 'terkirim' ? 'badge-success' : 'badge-warning'}">
+            ${s.status === 'terkirim' ? 'Terkirim' : 'Draft'}
           </span>
         </td>
-        <td class="px-4 py-3 text-right whitespace-nowrap">
-          <a href="./supervisi-form.html?id=${s.id}" class="text-indigo-600 hover:underline text-xs mr-2">${s.status === 'draft' ? 'Lanjutkan' : 'Lihat'}</a>
-          <button data-pdf="${s.id}" class="text-slate-600 hover:underline text-xs mr-2">PDF</button>
-          ${s.status === 'draft' ? `<button data-submit="${s.id}" class="text-green-600 hover:underline text-xs mr-2">Kirim</button>` : ''}
-          ${s.status === 'draft' ? `<button data-del="${s.id}" class="text-red-600 hover:underline text-xs">Hapus</button>` : ''}
+        <td class="text-right whitespace-nowrap">
+          <a href="./supervisi-form.html?id=${s.id}" class="icon-btn" title="${s.status === 'draft' ? 'Lanjutkan' : 'Lihat'}">
+            <i data-lucide="${s.status === 'draft' ? 'pencil' : 'eye'}" class="w-4 h-4"></i>
+          </a>
+          <button class="icon-btn" data-pdf="${s.id}" title="Cetak PDF">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+          </button>
+          ${s.status === 'draft' ? `
+            <button class="icon-btn text-green-600" data-submit="${s.id}" title="Kirim ke Pengawas">
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+            <button class="icon-btn text-red-600" data-del="${s.id}" title="Hapus">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>` : ''}
         </td>
       </tr>`).join('');
 
@@ -91,37 +121,44 @@
       b.addEventListener('click', () => kirim(b.dataset.submit)));
     tbody.querySelectorAll('[data-del]').forEach(b =>
       b.addEventListener('click', () => hapus(b.dataset.del)));
+    refreshIcons();
   }
 
   async function kirim(id) {
     if (!confirm('Kirim supervisi ini ke Pengawas? Setelah dikirim tidak dapat diubah.')) return;
-    try {
-      await sispaRequest('supervisi.submit', { id });
-      showToast('Supervisi terkirim ke Pengawas', 'success');
-      loadData();
-    } catch (err) { handleApiError(err); }
+    await withLoading('Mengirim...', async () => {
+      try {
+        await sispaRequest('supervisi.submit', { id });
+        showToast('Supervisi terkirim', 'success');
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
   }
 
   async function hapus(id) {
-    if (!confirm('Hapus supervisi draft ini?')) return;
-    try {
-      await sispaRequest('supervisi.delete', { id });
-      showToast('Supervisi dihapus', 'success');
-      loadData();
-    } catch (err) { handleApiError(err); }
+    if (!confirm('Hapus draft supervisi ini?')) return;
+    await withLoading('Menghapus...', async () => {
+      try {
+        await sispaRequest('supervisi.delete', { id });
+        showToast('Supervisi dihapus', 'success');
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
   }
 
   async function cetakPdf(id) {
-    try {
-      const res = await sispaRequest('supervisi.pdf', { id });
-      if (res.mode === 'html') {
-        const w = window.open('', '_blank');
-        w.document.write(res.html);
-        w.document.close();
-      } else if (res.mode === 'drive') {
-        window.open(res.pdf_url, '_blank');
-      }
-    } catch (err) { handleApiError(err); }
+    await withLoading('Menyiapkan laporan...', async () => {
+      try {
+        const res = await sispaRequest('supervisi.pdf', { id });
+        if (res.mode === 'html') {
+          const w = window.open('', '_blank');
+          w.document.write(res.html);
+          w.document.close();
+        } else if (res.mode === 'drive') {
+          window.open(res.pdf_url, '_blank');
+        }
+      } catch (err) { handleApiError(err); }
+    });
   }
 </script>
 </body>
