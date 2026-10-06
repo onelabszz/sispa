@@ -6,107 +6,208 @@
 <title>SISPA — Data Guru</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
 <body>
 
-<div class="flex items-center justify-between mb-6 gap-4">
+<!-- ================== KONTEN HALAMAN ================== -->
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
   <div>
     <h1 class="text-2xl font-bold text-slate-900">Data Guru</h1>
     <p class="text-sm text-slate-500 mt-1" id="sekolahInfo">Memuat...</p>
   </div>
-  <button id="btnAdd" class="btn btn-primary">
-    <i data-lucide="plus" class="w-4 h-4"></i>
-    <span>Tambah Guru</span>
-  </button>
-</div>
-
-<div class="card overflow-hidden">
-  <div class="overflow-x-auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>NIP</th>
-          <th>Nama</th>
-          <th>Mapel</th>
-          <th>Kelas</th>
-          <th class="text-right">Aksi</th>
-        </tr>
-      </thead>
-      <tbody id="guruTable"></tbody>
-    </table>
-  </div>
-  <div id="emptyState" class="hidden empty-state">
-    <div class="empty-state-icon"><i data-lucide="users" class="w-6 h-6"></i></div>
-    <h3 class="font-semibold text-slate-900 mb-1">Belum ada data guru</h3>
-    <p class="text-sm text-slate-500 mb-4">Mulai dengan menambahkan guru pertama.</p>
-    <button onclick="el('btnAdd').click()" class="btn btn-primary">
+  <div class="flex flex-wrap gap-2">
+    <button id="btnImport" class="btn btn-secondary">
+      <i data-lucide="upload" class="w-4 h-4"></i>
+      <span>Impor CSV</span>
+    </button>
+    <button id="btnAdd" class="btn btn-primary">
       <i data-lucide="plus" class="w-4 h-4"></i>
       <span>Tambah Guru</span>
     </button>
   </div>
 </div>
 
+<!-- Filter & Search -->
+<div class="card mb-4">
+  <div class="card-body flex flex-wrap gap-3 items-center">
+    <div class="relative flex-1 min-w-[240px]">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+        <i data-lucide="search" class="w-4 h-4"></i>
+      </span>
+      <input type="text" id="searchInput" placeholder="Cari nama atau NIP..." class="input" style="padding-left: 2.4rem" />
+    </div>
+    <select id="filterStatus" class="select" style="max-width: 200px">
+      <option value="">Semua Status</option>
+      <option value="PNS">PNS</option>
+      <option value="PPPK">PPPK</option>
+      <option value="Non ASN">Non ASN</option>
+    </select>
+    <button id="btnRefresh" class="btn btn-ghost" title="Muat ulang">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      <span class="hidden md:inline">Muat Ulang</span>
+    </button>
+  </div>
+</div>
+
+<!-- Tabel -->
+<div class="card overflow-hidden">
+  <div class="overflow-x-auto" id="tableWrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th style="width: 40px"></th>
+          <th>NIP</th>
+          <th>Nama</th>
+          <th>Mapel</th>
+          <th>Kelas</th>
+          <th>Status</th>
+          <th class="text-right" style="width: 120px">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="guruTable"></tbody>
+    </table>
+  </div>
+
+  <div id="emptyState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="users" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Belum ada data guru</h3>
+    <p class="text-sm text-slate-500 mb-4">Mulai dengan menambahkan guru pertama.</p>
+    <button onclick="document.getElementById('btnAdd').click()" class="btn btn-primary">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+      <span>Tambah Guru</span>
+    </button>
+  </div>
+
+  <div id="noResultState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="search-x" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Tidak ada guru ditemukan</h3>
+    <p class="text-sm text-slate-500">Coba ubah kata kunci atau filter.</p>
+  </div>
+</div>
+
+<!-- ================== END KONTEN ================== -->
+
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/api.js"></script>
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
+  /* ============================================================
+     INIT
+     ============================================================ */
   const user = sispaRequireLogin(['KS', 'Admin']);
   if (user) {
     mountShell('guru');
-    el('sekolahInfo').textContent = user.nama_sekolah + ' · NPSN ' + user.npsn;
+    el('sekolahInfo').textContent = (user.nama_sekolah || '') + ' · NPSN ' + user.npsn;
     loadGuru();
   }
 
   let guruList = [];
+  let filterText = '';
+  let filterStatus = '';
 
+  /* ============================================================
+     LOAD DATA
+     ============================================================ */
   async function loadGuru() {
     await withLoading('Memuat data guru...', async () => {
       try {
         guruList = await sispaRequest('guru.list', {});
         renderTable();
-      } catch (err) { handleApiError(err); }
+      } catch (err) {
+        handleApiError(err);
+      }
     });
   }
 
+  /* ============================================================
+     RENDER TABLE
+     ============================================================ */
   function renderTable() {
     const tbody = el('guruTable');
-    const empty = el('emptyState');
-    const table = tbody.closest('.card').querySelector('.overflow-x-auto');
+    const tableWrap = el('tableWrap');
+    const emptyState = el('emptyState');
+    const noResultState = el('noResultState');
+
+    // Reset
+    tableWrap.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    noResultState.classList.add('hidden');
 
     if (!guruList.length) {
-      table.classList.add('hidden');
-      empty.classList.remove('hidden');
+      emptyState.classList.remove('hidden');
       refreshIcons();
       return;
     }
-    table.classList.remove('hidden');
-    empty.classList.add('hidden');
 
-    tbody.innerHTML = guruList.map(g => `
+    // Filter
+    const filtered = guruList.filter(g => {
+      const matchText = !filterText
+        || (g.nama || '').toLowerCase().includes(filterText.toLowerCase())
+        || (g.nip || '').toLowerCase().includes(filterText.toLowerCase());
+      const matchStatus = !filterStatus || g.status_kepegawaian === filterStatus;
+      return matchText && matchStatus;
+    });
+
+    if (!filtered.length) {
+      noResultState.classList.remove('hidden');
+      refreshIcons();
+      return;
+    }
+
+    tableWrap.classList.remove('hidden');
+
+    tbody.innerHTML = filtered.map(g => `
       <tr>
+        <td>
+          <div class="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold text-sm">
+            ${escapeHtml((g.nama || 'U').charAt(0).toUpperCase())}
+          </div>
+        </td>
         <td class="text-mono text-xs">${escapeHtml(g.nip || '—')}</td>
-        <td class="font-medium text-slate-900">${escapeHtml(g.nama)}</td>
+        <td class="font-medium text-slate-900">${escapeHtml(g.nama || '—')}</td>
         <td>${escapeHtml(g.mapel || '—')}</td>
         <td>${escapeHtml(g.kelas || '—')}</td>
-        <td class="text-right">
-          <button class="icon-btn" data-edit="${g.id}" title="Edit">
-            <i data-lucide="pencil" class="w-4 h-4"></i>
+        <td>${badgePeg(g.status_kepegawaian)}</td>
+        <td class="text-right whitespace-nowrap">
+          <button class="icon-btn" data-edit="${escapeHtml(g.id)}" title="Edit">
+            ${icon('pencil', 'w-4 h-4')}
           </button>
-          <button class="icon-btn text-red-600" data-del="${g.id}" title="Hapus">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          <button class="icon-btn text-red-600" data-del="${escapeHtml(g.id)}" title="Hapus">
+            ${icon('trash-2', 'w-4 h-4')}
           </button>
         </td>
-      </tr>`).join('');
+      </tr>
+    `).join('');
 
-    tbody.querySelectorAll('[data-edit]').forEach(b =>
-      b.addEventListener('click', () => openEdit(b.dataset.edit)));
-    tbody.querySelectorAll('[data-del]').forEach(b =>
-      b.addEventListener('click', () => doDelete(b.dataset.del)));
+    // Event binding
+    tbody.querySelectorAll('[data-edit]').forEach(btn =>
+      btn.addEventListener('click', () => openEdit(btn.dataset.edit)));
+    tbody.querySelectorAll('[data-del]').forEach(btn =>
+      btn.addEventListener('click', () => doDelete(btn.dataset.del)));
+
     refreshIcons();
   }
 
+  /* ============================================================
+     HELPERS
+     ============================================================ */
+  function badgePeg(status) {
+    if (!status) return '<span class="text-slate-400 text-xs">—</span>';
+    const map = {
+      'PNS':     'badge-info',
+      'PPPK':    'badge-warning',
+      'Non ASN': 'badge-neutral'
+    };
+    return `<span class="badge ${map[status] || 'badge-neutral'}">${escapeHtml(status)}</span>`;
+  }
+
+  /* ============================================================
+     MODAL: TAMBAH / EDIT
+     ============================================================ */
   el('btnAdd').addEventListener('click', () => openForm());
 
   function openForm(g) {
@@ -116,37 +217,65 @@
       body: `
         <form id="guruForm" class="space-y-4">
           <input type="hidden" id="fId" value="${isEdit ? escapeHtml(g.id) : ''}" />
-          <div>
-            <label class="label" for="fNip">NIP</label>
-            <input type="text" id="fNip" class="input" value="${isEdit ? escapeHtml(g.nip || '') : ''}" />
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="fNip">NIP</label>
+              <input type="text" id="fNip" class="input text-mono"
+                     value="${isEdit ? escapeHtml(g.nip || '') : ''}" />
+            </div>
+            <div>
+              <label class="label" for="fStatusPeg">Status Kepegawaian</label>
+              <select id="fStatusPeg" class="select">
+                <option value="">— Pilih —</option>
+                <option value="PNS" ${isEdit && g.status_kepegawaian === 'PNS' ? 'selected' : ''}>PNS</option>
+                <option value="PPPK" ${isEdit && g.status_kepegawaian === 'PPPK' ? 'selected' : ''}>PPPK</option>
+                <option value="Non ASN" ${isEdit && g.status_kepegawaian === 'Non ASN' ? 'selected' : ''}>Non ASN</option>
+              </select>
+            </div>
           </div>
+
           <div>
-            <label class="label" for="fNama">Nama Lengkap <span class="text-red-500">*</span></label>
-            <input type="text" id="fNama" required class="input" value="${isEdit ? escapeHtml(g.nama || '') : ''}" />
+            <label class="label" for="fNama">Nama Lengkap &amp; Gelar <span class="text-red-500">*</span></label>
+            <input type="text" id="fNama" required class="input"
+                   value="${isEdit ? escapeHtml(g.nama || '') : ''}"
+                   placeholder="Contoh: Budi Santoso, S.Pd" />
           </div>
+
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="label" for="fMapel">Mata Pelajaran</label>
-              <input type="text" id="fMapel" class="input" value="${isEdit ? escapeHtml(g.mapel || '') : ''}" />
+              <input type="text" id="fMapel" class="input"
+                     value="${isEdit ? escapeHtml(g.mapel || '') : ''}"
+                     placeholder="Contoh: Matematika" />
             </div>
             <div>
               <label class="label" for="fKelas">Kelas</label>
-              <input type="text" id="fKelas" class="input" value="${isEdit ? escapeHtml(g.kelas || '') : ''}" />
+              <input type="text" id="fKelas" class="input"
+                     value="${isEdit ? escapeHtml(g.kelas || '') : ''}"
+                     placeholder="Contoh: V" />
             </div>
           </div>
+
           <div>
             <label class="label" for="fEmail">Email</label>
-            <input type="email" id="fEmail" class="input" value="${isEdit ? escapeHtml(g.email || '') : ''}" />
+            <input type="email" id="fEmail" class="input"
+                   value="${isEdit ? escapeHtml(g.email || '') : ''}" />
           </div>
         </form>`,
       footer: `
-        <button class="btn btn-secondary" data-close>Batal</button>
+        <button class="btn btn-secondary" data-close>
+          ${icon('x', 'w-4 h-4')}
+          <span>Batal</span>
+        </button>
         <button class="btn btn-primary" id="btnSave">
-          <i data-lucide="save" class="w-4 h-4"></i>
+          ${icon('save', 'w-4 h-4')}
           <span>Simpan</span>
-        </button>`,
+        </button>`
     });
+
     el('btnSave').addEventListener('click', saveGuru);
+    el('fNama').focus();
   }
 
   function openEdit(id) {
@@ -154,61 +283,175 @@
     if (g) openForm(g);
   }
 
+  /* ============================================================
+     SAVE
+     ============================================================ */
   async function saveGuru() {
     const btn = el('btnSave');
-    btn.disabled = true;
-    btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Menyimpan...</span>`;
-    refreshIcons();
+    const nama = el('fNama').value.trim();
+
+    if (!nama) {
+      swalError('Data belum lengkap', 'Nama guru wajib diisi.');
+      el('fNama').focus();
+      return;
+    }
 
     const id = el('fId').value;
     const payload = {
       nip: el('fNip').value.trim(),
-      nama: el('fNama').value.trim(),
+      nama: nama,
       mapel: el('fMapel').value.trim(),
       kelas: el('fKelas').value.trim(),
-      email: el('fEmail').value.trim()
+      email: el('fEmail').value.trim(),
+      status_kepegawaian: el('fStatusPeg').value
     };
 
-    if (!payload.nama) {
-      showToast('Nama guru wajib diisi', 'error');
-      btn.disabled = false;
-      btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Simpan</span>`;
-      refreshIcons();
-      return;
-    }
+    btn.disabled = true;
+    btn.innerHTML = `${icon('loader-2', 'w-4 h-4 animate-spin')}<span>Menyimpan...</span>`;
+    refreshIcons();
 
     try {
       if (id) {
         await sispaRequest('guru.update', { id, payload });
-        showToast('Data guru diperbarui', 'success');
+        closeModal();
+        await swalSuccess('Tersimpan', 'Data guru berhasil diperbarui.');
       } else {
         await sispaRequest('guru.create', payload);
-        showToast('Guru ditambahkan', 'success');
+        closeModal();
+        await swalSuccess('Tersimpan', 'Guru baru berhasil ditambahkan.');
       }
-      closeModal();
-      clearFrontendCache && clearFrontendCache();
+      if (window.clearFrontendCache) clearFrontendCache();
       await loadGuru();
     } catch (err) {
-      handleApiError(err);
       btn.disabled = false;
-      btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Simpan</span>`;
+      btn.innerHTML = `${icon('save', 'w-4 h-4')}<span>Simpan</span>`;
       refreshIcons();
+      swalError('Gagal menyimpan', err.message || 'Terjadi kesalahan.');
     }
   }
 
+  /* ============================================================
+     DELETE
+     ============================================================ */
   async function doDelete(id) {
     const g = guruList.find(x => x.id === id);
     if (!g) return;
-    if (!confirm(`Hapus guru "${g.nama}"?`)) return;
+
+    const ok = await swalConfirm(
+      'Hapus data guru?',
+      `"${g.nama}" akan dihapus. Data supervisi terkait tidak akan terhapus, tetapi guru tidak muncul lagi di daftar.`,
+      { confirmText: 'Ya, hapus', danger: true, icon: 'warning' }
+    );
+    if (!ok) return;
+
     await withLoading('Menghapus...', async () => {
       try {
         await sispaRequest('guru.delete', { id });
-        showToast('Guru dihapus', 'success');
-        clearFrontendCache && clearFrontendCache();
+        if (window.clearFrontendCache) clearFrontendCache();
         await loadGuru();
-      } catch (err) { handleApiError(err); }
+        swalSuccess('Terhapus', 'Data guru berhasil dihapus.');
+      } catch (err) {
+        handleApiError(err);
+      }
     });
   }
+
+  /* ============================================================
+     FILTER
+     ============================================================ */
+  el('searchInput').addEventListener('input', (e) => {
+    filterText = e.target.value;
+    renderTable();
+  });
+
+  el('filterStatus').addEventListener('change', (e) => {
+    filterStatus = e.target.value;
+    renderTable();
+  });
+
+  el('btnRefresh').addEventListener('click', () => {
+    if (window.clearFrontendCache) clearFrontendCache();
+    loadGuru();
+  });
+
+  /* ============================================================
+     IMPORT CSV (sederhana: paste teks)
+     ============================================================ */
+  el('btnImport').addEventListener('click', () => {
+    openModal({
+      title: 'Impor Guru Massal',
+      body: `
+        <p class="text-sm text-slate-600 mb-3">
+          Tempel data guru dalam format CSV (satu baris satu guru).
+          Kolom dipisah dengan <strong>koma</strong> atau <strong>tab</strong>.
+          Urutan kolom:
+          <code class="text-xs bg-slate-100 px-1 py-0.5 rounded">NIP, Nama, Mapel, Kelas, Email, Status</code>
+        </p>
+        <textarea id="csvInput" rows="8" class="textarea text-mono text-xs"
+          placeholder="198501012010011001, Budi Santoso S.Pd, Matematika, V, budi@example.com, PNS
+198502022011012002, Siti Aminah S.Pd, IPA, VI, siti@example.com, PPPK"></textarea>
+        <p class="text-xs text-slate-500 mt-2">
+          <strong>Status</strong>: PNS / PPPK / Non ASN. Boleh dikosongkan.
+        </p>`,
+      footer: `
+        <button class="btn btn-secondary" data-close>
+          ${icon('x', 'w-4 h-4')}<span>Batal</span>
+        </button>
+        <button class="btn btn-primary" id="btnDoImport">
+          ${icon('upload', 'w-4 h-4')}<span>Impor</span>
+        </button>`
+    });
+
+    el('btnDoImport').addEventListener('click', async () => {
+      const raw = el('csvInput').value.trim();
+      if (!raw) {
+        swalError('Data kosong', 'Tempel data CSV terlebih dahulu.');
+        return;
+      }
+
+      const rows = raw.split('\n').map(line => {
+        const cols = line.split(/\t|,/).map(s => s.trim());
+        return {
+          nip: cols[0] || '',
+          nama: cols[1] || '',
+          mapel: cols[2] || '',
+          kelas: cols[3] || '',
+          email: cols[4] || '',
+          status_kepegawaian: cols[5] || ''
+        };
+      }).filter(r => r.nama);
+
+      if (!rows.length) {
+        swalError('Tidak ada data valid', 'Pastikan setiap baris memiliki setidaknya kolom Nama.');
+        return;
+      }
+
+      if (rows.length > 200) {
+        swalError('Terlalu banyak', 'Maksimal 200 guru per impor.');
+        return;
+      }
+
+      const ok = await swalConfirm(
+        `Impor ${rows.length} guru?`,
+        'Data akan ditambahkan ke daftar guru sekolah Anda.',
+        { confirmText: 'Ya, impor' }
+      );
+      if (!ok) return;
+
+      swalLoading('Mengimpor...');
+      try {
+        const res = await sispaRequest('guru.import', { guru: rows });
+        Swal2.close();
+        closeModal();
+        if (window.clearFrontendCache) clearFrontendCache();
+        await swalSuccess('Selesai', `${res.inserted} guru berhasil diimpor.`);
+        await loadGuru();
+      } catch (err) {
+        Swal2.close();
+        swalError('Gagal impor', err.message || 'Terjadi kesalahan.');
+      }
+    });
+  });
 </script>
 </body>
 </html>
