@@ -1,15 +1,5 @@
 /**
  * SISPA — UI Shell + Utilities
- *
- * Berisi:
- * - Ikon (Lucide)
- * - SweetAlert2 helpers
- * - Toast
- * - Loading overlay
- * - Modal
- * - Utils umum
- * - Navigation config + sidebar/header shell
- * - Error handler
  */
 
 /* ============================================================
@@ -63,6 +53,7 @@ function swalConfirm(title, text, opts) {
     title: title,
     text: text || '',
     icon: o.icon || 'question',
+    showConfirmButton: true,
     showCancelButton: true,
     confirmButtonText: o.confirmText || 'Ya, lanjutkan',
     cancelButtonText: o.cancelText || 'Batal',
@@ -145,6 +136,48 @@ async function withLoading(msg, fn) {
 }
 
 /* ============================================================
+   PDF PREVIEW
+   ============================================================ */
+
+/**
+ * Buka HTML hasil generate PDF di tab baru.
+ * Tab baru berisi tombol "Cetak / Simpan sebagai PDF" yang otomatis
+ * memicu window.print() saat diklik.
+ *
+ * @param {Object} res - Respons dari endpoint *.pdf
+ *   { mode:'html', html:'...', filename:'...' } — mode preview
+ *   { mode:'drive', pdf_url:'...' }             — mode Drive
+ */
+function openPdfPreview(res) {
+  if (!res) {
+    swalError('Gagal', 'Respons kosong.');
+    return;
+  }
+
+  // Mode Drive: langsung buka URL
+  if (res.mode === 'drive' && res.pdf_url) {
+    window.open(res.pdf_url, '_blank');
+    return;
+  }
+
+  // Mode HTML: buka tab baru dengan konten
+  if (res.mode === 'html' && res.html) {
+    const w = window.open('', '_blank');
+    if (!w) {
+      swalError('Popup diblokir',
+        'Izinkan popup untuk browser ini agar laporan dapat dicetak.');
+      return;
+    }
+    w.document.open();
+    w.document.write(res.html);
+    w.document.close();
+    return;
+  }
+
+  swalError('Gagal', 'Format respons tidak dikenal.');
+}
+
+/* ============================================================
    UTILS
    ============================================================ */
 
@@ -204,7 +237,7 @@ function handleApiError(err) {
 }
 
 /* ============================================================
-   NAVIGATION
+   NAVIGATION CONFIG
    ============================================================ */
 
 const SISPA_NAV = {
@@ -317,17 +350,10 @@ function buildHeader(user) {
    MOUNT SHELL
    ============================================================ */
 
-/**
- * Mount shell (sidebar + header) di atas konten halaman.
- * Panggil setelah konten halaman ada di DOM.
- *
- * @param {string} activeKey - key menu yang sedang aktif
- */
 function mountShell(activeKey) {
   const user = sispaGetUser();
   if (!user) return;
 
-  // Ambil semua child body kecuali script
   const bodyChildren = Array.from(document.body.childNodes);
   const contentNodes = [];
   const scriptNodes = [];
@@ -340,7 +366,6 @@ function mountShell(activeKey) {
     }
   });
 
-  // Buat wrapper
   const shell = document.createElement('div');
   shell.innerHTML = `
     ${buildSidebar(user, activeKey)}
@@ -349,19 +374,15 @@ function mountShell(activeKey) {
       <main id="appMain" class="app-main"></main>
     </div>`;
 
-  // Pindahkan konten halaman ke dalam appMain
   const main = shell.querySelector('#appMain');
   contentNodes.forEach(n => main.appendChild(n));
 
-  // Bersihkan body lalu pasang shell
   document.body.innerHTML = '';
   document.body.appendChild(shell);
   scriptNodes.forEach(s => document.body.appendChild(s));
 
-  // Refresh ikon
   refreshIcons();
 
-  // Event: sidebar mobile
   const sidebar = document.getElementById('appSidebar');
   const overlay = document.getElementById('sidebarOverlay');
   const menuBtn = document.getElementById('menuBtn');
@@ -432,33 +453,35 @@ function closeModal() {
    EXPORT KE WINDOW
    ============================================================ */
 
-window.refreshIcons     = refreshIcons;
-window.icon             = icon;
+window.refreshIcons       = refreshIcons;
+window.icon               = icon;
 
-window.Swal2            = Swal2;
-window.swalLoading      = swalLoading;
-window.swalSuccess      = swalSuccess;
-window.swalError        = swalError;
-window.swalConfirm      = swalConfirm;
-window.swalInput        = swalInput;
+window.Swal2              = Swal2;
+window.swalLoading        = swalLoading;
+window.swalSuccess        = swalSuccess;
+window.swalError          = swalError;
+window.swalConfirm        = swalConfirm;
+window.swalInput          = swalInput;
 
-window.showToast        = showToast;
+window.showToast          = showToast;
 
-window.showLoading      = showLoading;
-window.hideLoading      = hideLoading;
-window.withLoading      = withLoading;
+window.showLoading        = showLoading;
+window.hideLoading        = hideLoading;
+window.withLoading        = withLoading;
 
-window.el               = el;
-window.escapeHtml       = escapeHtml;
-window.formatTanggal    = formatTanggal;
+window.openPdfPreview     = openPdfPreview;
+
+window.el                 = el;
+window.escapeHtml         = escapeHtml;
+window.formatTanggal      = formatTanggal;
 window.formatTanggalWaktu = formatTanggalWaktu;
-window.todayIso         = todayIso;
+window.todayIso           = todayIso;
 
-window.handleApiError   = handleApiError;
+window.handleApiError     = handleApiError;
 
-window.SISPA_NAV        = SISPA_NAV;
-window.SISPA_ROLE_LABEL = SISPA_ROLE_LABEL;
-window.mountShell       = mountShell;
+window.SISPA_NAV          = SISPA_NAV;
+window.SISPA_ROLE_LABEL   = SISPA_ROLE_LABEL;
+window.mountShell         = mountShell;
 
-window.openModal        = openModal;
-window.closeModal       = closeModal;
+window.openModal          = openModal;
+window.closeModal         = closeModal;
