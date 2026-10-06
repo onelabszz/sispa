@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Daftar Guru</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+
+<!-- ================== KONTEN ================== -->
+
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-900">Daftar Guru</h1>
+  <p class="text-sm text-slate-500 mt-1">Semua guru di sekolah binaan</p>
+</div>
+
+<!-- Info Periode -->
+<div class="card card-body mb-4 flex items-center gap-3">
+  <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+    <i data-lucide="calendar-range" class="w-5 h-5"></i>
+  </div>
+  <div class="text-sm">
+    <div class="text-slate-500">Periode</div>
+    <div id="periodeLabel" class="font-semibold text-slate-900">—</div>
+  </div>
+</div>
+
+<!-- ================== STAT RINGKAS ================== -->
+<div id="statsRow" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="stat-icon bg-blue-50 text-blue-600"><i data-lucide="users" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Total Guru</div>
+      <div id="statTotal" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-emerald-50 text-emerald-600"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Sudah Disupervisi</div>
+      <div id="statTerkirim" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-amber-50 text-amber-600"><i data-lucide="file-edit" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Draft</div>
+      <div id="statDraft" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-red-50 text-red-600"><i data-lucide="user-x" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Belum</div>
+      <div id="statBelum" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== FILTER ================== -->
+<div class="card mb-4">
+  <div class="card-body grid md:grid-cols-4 gap-3">
+    <div class="relative md:col-span-2">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+        <i data-lucide="search" class="w-4 h-4"></i>
+      </span>
+      <input type="text" id="searchInput" placeholder="Cari nama atau NIP..."
+             class="input" style="padding-left:2.4rem" />
+    </div>
+    <select id="filterSekolah" class="select">
+      <option value="">Semua Sekolah</option>
+    </select>
+    <select id="filterStatus" class="select">
+      <option value="">Semua Status</option>
+      <option value="belum">Belum Disupervisi</option>
+      <option value="draft">Draft</option>
+      <option value="terkirim">Terkirim</option>
+    </select>
+    <select id="filterPegawai" class="select">
+      <option value="">Semua Kepegawaian</option>
+      <option value="PNS">PNS</option>
+      <option value="PPPK">PPPK</option>
+      <option value="Non ASN">Non ASN</option>
+    </select>
+    <select id="filterSort" class="select md:col-span-1">
+      <option value="">Urut: Default</option>
+      <option value="skor_asc">Rata Skor Terendah</option>
+      <option value="skor_desc">Rata Skor Tertinggi</option>
+      <option value="nama">Nama A–Z</option>
+      <option value="terakhir">Terakhir Disupervisi</option>
+    </select>
+    <div class="md:col-span-2 flex items-center justify-end gap-2">
+      <button id="btnReset" class="btn btn-ghost text-slate-600">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        <span>Reset Filter</span>
+      </button>
+      <button id="btnRefresh" class="btn btn-secondary">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================== TABEL ================== -->
+<div class="card overflow-hidden">
+  <div class="card-header">
+    <div class="flex items-center gap-2">
+      <i data-lucide="users" class="w-4 h-4 text-slate-500"></i>
+      <h2 class="font-semibold text-slate-900 text-sm">Hasil</h2>
+      <span id="resultCount" class="badge badge-neutral">0</span>
+    </div>
+  </div>
+  <div class="overflow-x-auto" id="tableWrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Guru</th>
+          <th>Sekolah</th>
+          <th>Status Pegawai</th>
+          <th class="text-center">Supervisi</th>
+          <th class="text-center">Rata Skor</th>
+          <th>Terakhir</th>
+          <th class="text-center">Status</th>
+        </tr>
+      </thead>
+      <tbody id="guruTable"></tbody>
+    </table>
+  </div>
+
+  <div id="emptyState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="users" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Belum ada guru</h3>
+    <p class="text-sm text-slate-500">Sekolah binaan belum memiliki data guru.</p>
+  </div>
+
+  <div id="noResultState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="search-x" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Tidak ada hasil</h3>
+    <p class="text-sm text-slate-500">Coba ubah kata kunci atau filter.</p>
+  </div>
+</div>
+
+<!-- ================== END ================== -->
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['Pengawas', 'Admin']);
+  if (user) {
+    mountShell('dashboard');
+    loadData();
+  }
+
+  let allItems = [];
+  let sekolahList = [];
+  let filterText = '';
+  let filterNpsn = '';
+  let filterStatus = '';
+  let filterPegawai = '';
+  let filterSort = '';
+
+  /* ============================================================
+     LOAD DATA
+     ============================================================ */
+  async function loadData() {
+    await withLoading('Memuat data guru...', async () => {
+      try {
+        // Parse filter dari URL (mis. ?filter=belum)
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('filter') === 'belum') {
+          filterStatus = 'belum';
+          el('filterStatus').value = 'belum';
+        }
+
+        const res = await sispaRequest('pengawas.guruList', {});
+        allItems = res.items || [];
+        el('periodeLabel').textContent = res.periode.label;
+
+        // Bangun daftar sekolah unik
+        const seen = {};
+        sekolahList = [];
+        allItems.forEach(g => {
+          if (!seen[g.npsn_sekolah]) {
+            seen[g.npsn_sekolah] = true;
+            sekolahList.push({ npsn: g.npsn_sekolah, nama: g.nama_sekolah });
+          }
+        });
+        sekolahList.sort((a, b) => a.nama.localeCompare(b.nama));
+
+        const selSekolah = el('filterSekolah');
+        selSekolah.innerHTML = '<option value="">Semua Sekolah</option>';
+        sekolahList.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.npsn;
+          opt.textContent = s.nama;
+          selSekolah.appendChild(opt);
+        });
+
+        renderStats();
+        renderTable();
+      } catch (err) {
+        handleApiError(err);
+      }
+    });
+  }
+
+  /* ============================================================
+     STAT RINGKAS
+     ============================================================ */
+  function renderStats() {
+    const total = allItems.length;
+    const terkirim = allItems.filter(x => x.status === 'terkirim').length;
+    const draft = allItems.filter(x => x.status === 'draft').length;
+    const belum = allItems.filter(x => x.status === 'belum').length;
+
+    el('statTotal').textContent = total;
+    el('statTerkirim').textContent = terkirim;
+    el('statDraft').textContent = draft;
+    el('statBelum').textContent = belum;
+  }
+
+  /* ============================================================
+     RENDER TABEL
+     ============================================================ */
+  function renderTable() {
+    const tbody = el('guruTable');
+    const wrap = el('tableWrap');
+    const emptyState = el('emptyState');
+    const noResultState = el('noResultState');
+
+    wrap.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    noResultState.classList.add('hidden');
+
+    if (!allItems.length) {
+      emptyState.classList.remove('hidden');
+      el('resultCount').textContent = 0;
+      refreshIcons();
+      return;
+    }
+
+    let filtered = allItems.slice();
+
+    if (filterText) {
+      const q = filterText.toLowerCase();
+      filtered = filtered.filter(x =>
+        (x.nama || '').toLowerCase().includes(q) ||
+        (x.nip || '').toLowerCase().includes(q) ||
+        (x.mapel || '').toLowerCase().includes(q)
+      );
+    }
+    if (filterNpsn) filtered = filtered.filter(x => x.npsn_sekolah === filterNpsn);
+    if (filterStatus) filtered = filtered.filter(x => x.status === filterStatus);
+    if (filterPegawai) filtered = filtered.filter(x => x.status_kepegawaian === filterPegawai);
+
+    // Sort
+    if (filterSort === 'skor_asc') {
+      filtered.sort((a, b) => (a.rata_skor || 999) - (b.rata_skor || 999));
+    } else if (filterSort === 'skor_desc') {
+      filtered.sort((a, b) => (b.rata_skor || 0) - (a.rata_skor || 0));
+    } else if (filterSort === 'nama') {
+      filtered.sort((a, b) => (a.nama || '').localeCompare(b.nama || ''));
+    } else if (filterSort === 'terakhir') {
+      filtered.sort((a, b) => {
+        if (!a.terakhir_supervisi) return 1;
+        if (!b.terakhir_supervisi) return -1;
+        return b.terakhir_supervisi.localeCompare(a.terakhir_supervisi);
+      });
+    }
+
+    el('resultCount').textContent = filtered.length + ' / ' + allItems.length;
+
+    if (!filtered.length) {
+      noResultState.classList.remove('hidden');
+      refreshIcons();
+      return;
+    }
+    wrap.classList.remove('hidden');
+
+    tbody.innerHTML = filtered.map(g => {
+      const statusBadge = g.status === 'terkirim'
+        ? '<span class="badge badge-success">Terkirim</span>'
+        : g.status === 'draft'
+        ? '<span class="badge badge-warning">Draft</span>'
+        : '<span class="badge badge-neutral">Belum</span>';
+
+      const pegBadge = g.status_kepegawaian
+        ? `<span class="badge ${g.status_kepegawaian === 'PNS' ? 'badge-info' : g.status_kepegawaian === 'PPPK' ? 'badge-warning' : 'badge-neutral'}">${escapeHtml(g.status_kepegawaian)}</span>`
+        : '<span class="text-slate-400 text-xs">—</span>';
+
+      const skorCls = g.rata_skor >= 66 ? 'text-emerald-600'
+                    : g.rata_skor >= 51 ? 'text-blue-600'
+                    : g.rata_skor > 0 ? 'text-amber-600'
+                    : 'text-slate-400';
+
+      return `
+        <tr class="hover:bg-slate-50">
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                ${escapeHtml((g.nama || 'U').charAt(0).toUpperCase())}
+              </div>
+              <div class="min-w-0">
+                <div class="font-medium text-slate-900 truncate">${escapeHtml(g.nama)}</div>
+                <div class="text-xs text-slate-500 text-mono truncate">
+                  ${escapeHtml(g.nip || '—')} · ${escapeHtml(g.mapel || '—')}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <a href="./sekolah.html?npsn=${encodeURIComponent(g.npsn_sekolah)}"
+               class="text-sm text-indigo-600 hover:underline">
+              ${escapeHtml(g.nama_sekolah)}
+            </a>
+          </td>
+          <td>${pegBadge}</td>
+          <td class="text-center">
+            <span class="font-mono">${g.supervisi_terkirim}</span>
+            ${(g.jumlah_supervisi - g.supervisi_terkirim) > 0
+              ? `<span class="text-xs text-amber-600 ml-1">(+${g.jumlah_supervisi - g.supervisi_terkirim})</span>`
+              : ''}
+          </td>
+          <td class="text-center">
+            <span class="text-mono font-medium ${skorCls}">${g.rata_skor || '—'}</span>
+          </td>
+          <td class="text-xs text-slate-500">${formatTanggal(g.terakhir_supervisi)}</td>
+          <td class="text-center">${statusBadge}</td>
+        </tr>`;
+    }).join('');
+
+    refreshIcons();
+  }
+
+  /* ============================================================
+     EVENT LISTENERS
+     ============================================================ */
+  el('searchInput').addEventListener('input', (e) => {
+    filterText = e.target.value;
+    renderTable();
+  });
+
+  el('filterSekolah').addEventListener('change', (e) => {
+    filterNpsn = e.target.value;
+    renderTable();
+  });
+
+  el('filterStatus').addEventListener('change', (e) => {
+    filterStatus = e.target.value;
+    renderTable();
+  });
+
+  el('filterPegawai').addEventListener('change', (e) => {
+    filterPegawai = e.target.value;
+    renderTable();
+  });
+
+  el('filterSort').addEventListener('change', (e) => {
+    filterSort = e.target.value;
+    renderTable();
+  });
+
+  el('btnReset').addEventListener('click', () => {
+    el('searchInput').value = '';
+    el('filterSekolah').value = '';
+    el('filterStatus').value = '';
+    el('filterPegawai').value = '';
+    el('filterSort').value = '';
+    filterText = filterNpsn = filterStatus = filterPegawai = filterSort = '';
+    renderTable();
+  });
+
+  el('btnRefresh').addEventListener('click', () => {
+    if (window.clearFrontendCache) clearFrontendCache();
+    loadData();
+  });
+</script>
+</body>
+</html>
