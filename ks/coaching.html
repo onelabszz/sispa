@@ -5,80 +5,108 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SISPA — Coaching</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <link rel="stylesheet" href="../assets/css/style.css" />
 </head>
-<body class="bg-slate-100 min-h-screen">
-<div id="appHeader"></div>
+<body>
 
-<main class="max-w-6xl mx-auto px-4 py-8">
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold text-slate-800">Coaching (LK2 — STAR-GROW)</h1>
-    <a href="./coaching-form.html" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition">+ Coaching Baru</a>
+<div class="flex items-center justify-between mb-6 gap-4">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Coaching</h1>
+    <p class="text-sm text-slate-500 mt-1">Instrumen LK2 · Percakapan STAR–GROW</p>
   </div>
+  <a href="./coaching-form.html" class="btn btn-primary">
+    <i data-lucide="plus" class="w-4 h-4"></i>
+    <span>Coaching Baru</span>
+  </a>
+</div>
 
-  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-    <table class="w-full text-sm">
-      <thead class="bg-slate-50 text-slate-600 text-left">
+<div class="card overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="table">
+      <thead>
         <tr>
-          <th class="px-4 py-3">Tanggal</th>
-          <th class="px-4 py-3">Guru</th>
-          <th class="px-4 py-3 text-center">Skor</th>
-          <th class="px-4 py-3">Kategori</th>
-          <th class="px-4 py-3">Status</th>
-          <th class="px-4 py-3 text-right">Aksi</th>
+          <th>Tanggal</th>
+          <th>Guru</th>
+          <th class="text-center">Skor</th>
+          <th>Kategori</th>
+          <th>Status</th>
+          <th class="text-right">Aksi</th>
         </tr>
       </thead>
-      <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+      <tbody id="tableBody"></tbody>
     </table>
-    <div id="emptyState" class="hidden p-8 text-center text-slate-500">Belum ada sesi coaching.</div>
   </div>
-</main>
+  <div id="emptyState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="message-square" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Belum ada sesi coaching</h3>
+    <p class="text-sm text-slate-500 mb-4">Mulai percakapan coaching dengan guru.</p>
+    <a href="./coaching-form.html" class="btn btn-primary">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+      <span>Coaching Baru</span>
+    </a>
+  </div>
+</div>
 
 <script src="../assets/js/config.js"></script>
 <script src="../assets/js/api.js"></script>
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
-  const user = sispaRequireLogin(['KS']);
-  if (user) { mountHeader('/ks/coaching.html'); loadData(); }
+  const user = sispaRequireLogin(['KS', 'Admin']);
+  if (user) { mountShell('coaching'); loadData(); }
 
   let guruMap = {};
 
   async function loadData() {
-    try {
-      const [guru, cch] = await Promise.all([
-        sispaRequest('guru.list', {}),
-        sispaRequest('coaching.list', {})
-      ]);
-      guru.forEach(g => guruMap[g.id] = g.nama);
-      render(cch.items || []);
-    } catch (err) { handleApiError(err); }
+    await withLoading('Memuat data coaching...', async () => {
+      try {
+        const [guru, cch] = await Promise.all([
+          sispaRequest('guru.list', {}),
+          sispaRequest('coaching.list', {})
+        ]);
+        guru.forEach(g => guruMap[g.id] = g.nama);
+        render(cch.items || []);
+      } catch (err) { handleApiError(err); }
+    });
   }
 
   function render(items) {
     const tbody = el('tableBody');
     const empty = el('emptyState');
+    const table = tbody.closest('.card').querySelector('.overflow-x-auto');
+
     if (!items.length) {
-      tbody.innerHTML = '';
+      table.classList.add('hidden');
       empty.classList.remove('hidden');
+      refreshIcons();
       return;
     }
+    table.classList.remove('hidden');
     empty.classList.add('hidden');
+
     tbody.innerHTML = items.map(c => `
-      <tr class="hover:bg-slate-50">
-        <td class="px-4 py-3">${formatTanggal(c.tanggal)}</td>
-        <td class="px-4 py-3 font-medium">${escapeHtml(guruMap[c.guru_id] || c.guru_id)}</td>
-        <td class="px-4 py-3 text-center font-mono">${c.skor_total}</td>
-        <td class="px-4 py-3 text-xs">${escapeHtml(c.kategori)}</td>
-        <td class="px-4 py-3">
-          <span class="text-xs px-2 py-1 rounded ${c.status === 'terkirim' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">
-            ${escapeHtml(c.status)}
+      <tr>
+        <td>${formatTanggal(c.tanggal)}</td>
+        <td class="font-medium text-slate-900">${escapeHtml(guruMap[c.guru_id] || c.guru_id)}</td>
+        <td class="text-center text-mono font-medium">${c.skor_total}</td>
+        <td><span class="badge badge-neutral">${escapeHtml(c.kategori)}</span></td>
+        <td>
+          <span class="badge ${c.status === 'terkirim' ? 'badge-success' : 'badge-warning'}">
+            ${c.status === 'terkirim' ? 'Terkirim' : 'Draft'}
           </span>
         </td>
-        <td class="px-4 py-3 text-right whitespace-nowrap">
-          <a href="./coaching-form.html?id=${c.id}" class="text-indigo-600 hover:underline text-xs mr-2">${c.status === 'draft' ? 'Lanjutkan' : 'Lihat'}</a>
-          <button data-pdf="${c.id}" class="text-slate-600 hover:underline text-xs mr-2">PDF</button>
-          ${c.status === 'draft' ? `<button data-submit="${c.id}" class="text-green-600 hover:underline text-xs">Kirim</button>` : ''}
+        <td class="text-right whitespace-nowrap">
+          <a href="./coaching-form.html?id=${c.id}" class="icon-btn" title="${c.status === 'draft' ? 'Lanjutkan' : 'Lihat'}">
+            <i data-lucide="${c.status === 'draft' ? 'pencil' : 'eye'}" class="w-4 h-4"></i>
+          </a>
+          <button class="icon-btn" data-pdf="${c.id}" title="Cetak PDF">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+          </button>
+          ${c.status === 'draft' ? `
+            <button class="icon-btn text-green-600" data-submit="${c.id}" title="Kirim">
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>` : ''}
         </td>
       </tr>`).join('');
 
@@ -86,28 +114,33 @@
       b.addEventListener('click', () => cetakPdf(b.dataset.pdf)));
     tbody.querySelectorAll('[data-submit]').forEach(b =>
       b.addEventListener('click', () => kirim(b.dataset.submit)));
+    refreshIcons();
   }
 
   async function kirim(id) {
     if (!confirm('Kirim coaching ini ke Pengawas?')) return;
-    try {
-      await sispaRequest('coaching.submit', { id });
-      showToast('Coaching terkirim', 'success');
-      loadData();
-    } catch (err) { handleApiError(err); }
+    await withLoading('Mengirim...', async () => {
+      try {
+        await sispaRequest('coaching.submit', { id });
+        showToast('Coaching terkirim', 'success');
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
   }
 
   async function cetakPdf(id) {
-    try {
-      const res = await sispaRequest('coaching.pdf', { id });
-      if (res.mode === 'html') {
-        const w = window.open('', '_blank');
-        w.document.write(res.html);
-        w.document.close();
-      } else if (res.mode === 'drive') {
-        window.open(res.pdf_url, '_blank');
-      }
-    } catch (err) { handleApiError(err); }
+    await withLoading('Menyiapkan laporan...', async () => {
+      try {
+        const res = await sispaRequest('coaching.pdf', { id });
+        if (res.mode === 'html') {
+          const w = window.open('', '_blank');
+          w.document.write(res.html);
+          w.document.close();
+        } else if (res.mode === 'drive') {
+          window.open(res.pdf_url, '_blank');
+        }
+      } catch (err) { handleApiError(err); }
+    });
   }
 </script>
 </body>
