@@ -59,6 +59,42 @@ async function sispaRequest(action, payload = {}) {
   }
 }
 
+/**
+ * Batch request — gabungkan beberapa action dalam 1 HTTP call.
+ * @param {Array} actions - Array of { action, payload?, id?, ..., key? }
+ * @returns {Promise<Object>} - { results: { key: { data?, error? } }, summary }
+ */
+async function sispaBatch(actions) {
+  if (!Array.isArray(actions) || actions.length === 0) {
+    throw new Error('Batch actions kosong');
+  }
+  if (actions.length > 5) {
+    throw new Error('Maksimal 5 actions per batch');
+  }
+
+  // Normalisasi: pastikan setiap action punya key unik
+  const normalized = actions.map((a, i) => Object.assign({}, a, {
+    key: a.key || a.action || ('action_' + i)
+  }));
+
+  const res = await sispaRequest('batch', { actions: normalized });
+
+  // Helper di dalam untuk ambil data
+  res.get = function (key) {
+    const r = res.results[key];
+    if (!r) throw new Error('Batch key tidak ditemukan: ' + key);
+    if (r.error) throw new Error(r.error);
+    return r.data;
+  };
+
+  // Helper untuk cek sukses tanpa throw
+  res.ok = function (key) {
+    return res.results[key] && !res.results[key].error;
+  };
+
+  return res;
+}
+
 function generateRequestId() {
   if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
   return 'req-' + Date.now() + '-' + Math.random().toString(36).substring(2, 10);
@@ -87,4 +123,5 @@ async function testApiConnection(url) {
 }
 
 window.sispaRequest = sispaRequest;
+window.sispaBatch = sispaBatch;
 window.testApiConnection = testApiConnection;
