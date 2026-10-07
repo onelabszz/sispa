@@ -1,8 +1,7 @@
 /**
  * SISPA — API Client
  * Semua request ke GAS lewat sini.
- * Mengirim payload di dua tempat: top-level & nested (payload),
- * agar kompatibel dengan semua endpoint backend.
+ * Mendukung auto-migrasi URL + batch request.
  */
 
 async function sispaRequest(action, payload = {}) {
@@ -16,8 +15,6 @@ async function sispaRequest(action, payload = {}) {
     client_request_id: generateRequestId()
   });
 
-  // Jika caller tidak mengirim nested `payload`, buat dari top-level.
-  // Jika caller sudah kirim nested (mis. { id, payload: {...} }), biarkan.
   if (body.payload === undefined) {
     body.payload = payload;
   }
@@ -61,8 +58,6 @@ async function sispaRequest(action, payload = {}) {
 
 /**
  * Batch request — gabungkan beberapa action dalam 1 HTTP call.
- * @param {Array} actions - Array of { action, payload?, id?, ..., key? }
- * @returns {Promise<Object>} - { results: { key: { data?, error? } }, summary }
  */
 async function sispaBatch(actions) {
   if (!Array.isArray(actions) || actions.length === 0) {
@@ -72,14 +67,12 @@ async function sispaBatch(actions) {
     throw new Error('Maksimal 5 actions per batch');
   }
 
-  // Normalisasi: pastikan setiap action punya key unik
   const normalized = actions.map((a, i) => Object.assign({}, a, {
     key: a.key || a.action || ('action_' + i)
   }));
 
   const res = await sispaRequest('batch', { actions: normalized });
 
-  // Helper di dalam untuk ambil data
   res.get = function (key) {
     const r = res.results[key];
     if (!r) throw new Error('Batch key tidak ditemukan: ' + key);
@@ -87,7 +80,6 @@ async function sispaBatch(actions) {
     return r.data;
   };
 
-  // Helper untuk cek sukses tanpa throw
   res.ok = function (key) {
     return res.results[key] && !res.results[key].error;
   };
@@ -122,6 +114,40 @@ async function testApiConnection(url) {
   }
 }
 
+/**
+ * Cache request dengan sessionStorage.
+ */
+async function sispaRequestCached(action, payload = {}, ttlSeconds = 120) {
+  const cacheKey = 'cache:' + action + ':' + JSON.stringify(payload);
+  const cached = sessionStorage.getItem(cacheKey);
+
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed.expires > Date.now()) return parsed.data;
+    } catch (e) { /* abaikan */ }
+  }
+
+  const data = await sispaRequest(action, payload);
+  try {
+    sessionStorage.setItem(cacheKey, JSON.stringify({
+      data: data,
+      expires: Date.now() + ttlSeconds * 1000
+    }));
+  } catch (e) { /* abaikan */ }
+  return data;
+}
+
+function clearFrontendCache() {
+  try {
+    Object.keys(sessionStorage)
+      .filter(k => k.startsWith('cache:'))
+      .forEach(k => sessionStorage.removeItem(k));
+  } catch (e) { /* abaikan */ }
+}
+
 window.sispaRequest = sispaRequest;
 window.sispaBatch = sispaBatch;
+window.sispaRequestCached = sispaRequestCached;
+window.clearFrontendCache = clearFrontendCache;
 window.testApiConnection = testApiConnection;
