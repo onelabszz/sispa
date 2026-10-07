@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SISPA — Panduan Penggunaan</title>
+<meta name="description" content="Panduan penggunaan aplikasi SISPA untuk Kepala Sekolah, Pengawas, dan Admin." />
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -70,819 +71,622 @@
 </head>
 <body>
 
+<!-- ================== PUBLIC HEADER (hanya muncul kalau belum login) ================== -->
+<div id="publicHeader" class="hidden">
+  <header class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <a href="./index.html" class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center flex-shrink-0">
+          <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="font-bold text-slate-900 text-sm leading-tight">SISPA</div>
+          <div class="text-xs text-slate-500 truncate hidden sm:block">Sistem Informasi Supervisi Pendidikan Akademik</div>
+        </div>
+      </a>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <a href="./index.html" class="btn btn-primary text-sm">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span>Masuk</span>
+        </a>
+      </div>
+    </div>
+  </header>
+</div>
+
 <!-- ================== KONTEN ================== -->
 
-<div class="mb-6">
-  <div class="flex items-center gap-3 mb-2">
-    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center shadow-md">
-      <i data-lucide="book-open" class="w-6 h-6"></i>
-    </div>
-    <div>
-      <h1 class="text-2xl font-bold text-slate-900">Panduan Penggunaan SISPA</h1>
-      <p class="text-sm text-slate-500 mt-0.5">Dokumentasi lengkap untuk semua pengguna aplikasi</p>
+<main id="publicMain" class="max-w-5xl mx-auto px-4 py-8">
+
+  <div class="mb-6">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white flex items-center justify-center shadow-md flex-shrink-0">
+        <i data-lucide="book-open" class="w-6 h-6"></i>
+      </div>
+      <div class="min-w-0">
+        <h1 class="text-2xl font-bold text-slate-900">Panduan Penggunaan SISPA</h1>
+        <p class="text-sm text-slate-500 mt-0.5">Dokumentasi lengkap untuk semua pengguna aplikasi</p>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- Pilihan Peran -->
-<div class="card mb-4">
-  <div class="card-body flex flex-wrap gap-2">
-    <button class="panduan-tab active px-4 py-2 rounded-lg text-sm transition" data-tab="umum">
-      <i data-lucide="home" class="w-4 h-4 inline-block mr-1 align-middle"></i>
-      Pengenalan
-    </button>
-    <button class="panduan-tab px-4 py-2 rounded-lg text-sm transition text-slate-600 hover:bg-slate-100" data-tab="ks">
-      <i data-lucide="school" class="w-4 h-4 inline-block mr-1 align-middle"></i>
-      Kepala Sekolah
-    </button>
-    <button class="panduan-tab px-4 py-2 rounded-lg text-sm transition text-slate-600 hover:bg-slate-100" data-tab="pengawas">
-      <i data-lucide="shield-check" class="w-4 h-4 inline-block mr-1 align-middle"></i>
-      Pengawas
-    </button>
-    <button class="panduan-tab px-4 py-2 rounded-lg text-sm transition text-slate-600 hover:bg-slate-100" data-tab="admin">
-      <i data-lucide="settings" class="w-4 h-4 inline-block mr-1 align-middle"></i>
-      Admin
-    </button>
-    <button class="panduan-tab px-4 py-2 rounded-lg text-sm transition text-slate-600 hover:bg-slate-100" data-tab="faq">
-      <i data-lucide="help-circle" class="w-4 h-4 inline-block mr-1 align-middle"></i>
-      FAQ
-    </button>
-    <button class="panduan-tab px-4 py-2 rounded-lg text-sm transition text-slate-600 hover:bg-slate-100" data-tab="troubleshoot">
-      <i data-lucide="wrench" class="w-4 h-4 inline-block mr-1 align-middle"></i>
-      Troubleshooting
-    </button>
-  </div>
-</div>
-
-<!-- ===================== TAB: PENGENALAN ===================== -->
-<div id="tab-umum" class="tab-content">
+  <!-- Pilihan Peran -->
   <div class="card mb-4">
-    <div class="card-body panduan-content">
+    <div class="card-body flex flex-wrap gap-2">
+      <button class="panduan-tab active px-4 py-2 rounded-lg text-sm transition" data-tab="umum">
+        <i data-lucide="home" class="w-4 h-4 inline-block mr-1 align-middle"></i>
+        Pengenalan
+      </button>
+      <button class="panduan-tab px-4 py-2 rounded-lg text-sm transition text-slate-600 hover:bg-slate-100" data-tab="ks">
+        <i data-lucide="school" class="w-4 h-4 inline-block mr-1 align-middle"></i>
+        Kepala Sekolah
+      </button>
+      <button class="panduan-tab px-4 py-2 rounded-lg text-sm transition text-slate-600 hover:bg-slate-100" data-tab="pengawas">
+        <i data-lucide="shield-check" class="w-4 h-4 inline-block mr-1 align-middle"></i>
+        Pengawas
+      </button>
+      <button class="panduan-tab px-4 py-2 rounded-lg text-sm transition text-slate-600 hover:bg-slate-100" data-tab="admin">
+        <i data-lucide="settings" class="w-4 h-4 inline-block mr-1 align-middle"></i>
+        Admin
+      </button>
+      <button class="panduan-tab px-4 py-2 rounded-lg text-sm transition text-slate-600 hover:bg-slate-100" data-tab="faq">
+        <i data-lucide="help-circle" class="w-4 h-4 inline-block mr-1 align-middle"></i>
+        FAQ
+      </button>
+      <button class="panduan-tab px-4 py-2 rounded-lg text-sm transition text-slate-600 hover:bg-slate-100" data-tab="troubleshoot">
+        <i data-lucide="wrench" class="w-4 h-4 inline-block mr-1 align-middle"></i>
+        Troubleshooting
+      </button>
+    </div>
+  </div>
 
-      <h3><i data-lucide="info" class="w-5 h-5 text-indigo-600"></i> Apa itu SISPA?</h3>
-      <p>
-        <strong>SISPA (Sistem Informasi Supervisi Pendidikan Akademik)</strong> adalah aplikasi
-        berbasis web untuk memudahkan kepala sekolah dan pengawas dalam melaksanakan
-        supervisi akademik dan coaching kepada guru.
-      </p>
+  <!-- ===================== TAB: PENGENALAN ===================== -->
+  <div id="tab-umum" class="tab-content">
+    <div class="card mb-4">
+      <div class="card-body panduan-content">
 
-      <h3><i data-lucide="users" class="w-5 h-5 text-indigo-600"></i> Siapa penggunanya?</h3>
-      <div class="overflow-x-auto mt-3">
-        <table class="table">
+        <h3><i data-lucide="info" class="w-5 h-5 text-indigo-600"></i> Apa itu SISPA?</h3>
+        <p>
+          <strong>SISPA (Sistem Informasi Supervisi Pendidikan Akademik)</strong> adalah aplikasi
+          berbasis web untuk memudahkan kepala sekolah dan pengawas dalam melaksanakan
+          supervisi akademik dan coaching kepada guru.
+        </p>
+
+        <h3><i data-lucide="users" class="w-5 h-5 text-indigo-600"></i> Siapa penggunanya?</h3>
+        <div class="overflow-x-auto mt-3">
+          <table class="table">
+            <thead>
+              <tr><th>Peran</th><th>Fungsi Utama</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Kepala Sekolah (KS)</strong></td><td>Mengelola data guru, melakukan supervisi (LK1) & coaching (LK2) di sekolahnya sendiri</td></tr>
+              <tr><td><strong>Pengawas Sekolah</strong></td><td>Memantau hasil supervisi & coaching di sekolah binaan</td></tr>
+              <tr><td><strong>Admin</strong></td><td>Mengelola user, sekolah, pengaturan aplikasi, backup</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3><i data-lucide="log-in" class="w-5 h-5 text-indigo-600"></i> Cara Login</h3>
+        <ol>
+          <li>Buka <code>https://onelabszz.github.io/sispa/</code></li>
+          <li>Masukkan <strong>NPSN</strong> sekolah (untuk KS) atau NPSN khusus (Pengawas/Admin)</li>
+          <li>Masukkan <strong>password</strong> — default: sama dengan NPSN</li>
+          <li>Klik <strong>Masuk</strong></li>
+        </ol>
+
+        <div class="box box-info">
+          <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+          <div>
+            <strong>Password default = NPSN.</strong> Setelah login pertama kali, disarankan
+            mengganti password agar lebih aman.
+          </div>
+        </div>
+
+        <h3><i data-lucide="layout" class="w-5 h-5 text-indigo-600"></i> Struktur Aplikasi</h3>
+        <ul>
+          <li><strong>Sidebar Kiri</strong> — menu navigasi (klik ☰ di HP untuk membuka)</li>
+          <li><strong>Header Atas</strong> — NPSN dan nama sekolah</li>
+          <li><strong>Area Konten</strong> — halaman yang sedang dibuka</li>
+          <li><strong>Tombol Keluar</strong> — ikon 🚪 di sidebar bawah untuk logout</li>
+        </ul>
+
+        <h3><i data-lucide="smartphone" class="w-5 h-5 text-indigo-600"></i> Akses dari HP</h3>
+        <p>
+          Aplikasi dapat diakses dari smartphone. Tampilan otomatis menyesuaikan.
+          Untuk navigasi, klik ikon <strong>☰ (menu)</strong> di kiri atas.
+        </p>
+
+        <h3><i data-lucide="clock" class="w-5 h-5 text-indigo-600"></i> Kapan Menggunakan?</h3>
+        <table class="table mt-3">
           <thead>
-            <tr>
-              <th>Peran</th>
-              <th>Fungsi Utama</th>
-            </tr>
+            <tr><th>Kegiatan</th><th>Peran</th><th>Frekuensi</th></tr>
           </thead>
           <tbody>
-            <tr>
-              <td><strong>Kepala Sekolah (KS)</strong></td>
-              <td>Mengelola data guru, melakukan supervisi (LK1), dan coaching (LK2) di sekolahnya sendiri</td>
-            </tr>
-            <tr>
-              <td><strong>Pengawas Sekolah</strong></td>
-              <td>Memantau hasil supervisi & coaching di sekolah binaan, melihat tren, dan analisis</td>
-            </tr>
-            <tr>
-              <td><strong>Admin</strong></td>
-              <td>Mengelola user, sekolah, pengaturan aplikasi, dan backup data</td>
-            </tr>
+            <tr><td>Supervisi kelas</td><td>KS</td><td>Min. 1× per semester per guru</td></tr>
+            <tr><td>Coaching pasca supervisi</td><td>KS</td><td>Setelah supervisi</td></tr>
+            <tr><td>Monitoring hasil</td><td>Pengawas</td><td>Bulanan</td></tr>
+            <tr><td>Pengelolaan user & sekolah</td><td>Admin</td><td>Sesuai kebutuhan</td></tr>
           </tbody>
         </table>
+
       </div>
-
-      <h3><i data-lucide="log-in" class="w-5 h-5 text-indigo-600"></i> Cara Login</h3>
-      <ol>
-        <li>Buka <code>https://onelabszz.github.io/sispa/</code></li>
-        <li>Masukkan <strong>NPSN</strong> sekolah Anda (untuk KS) atau NPSN khusus (untuk Pengawas/Admin)</li>
-        <li>Masukkan <strong>password</strong> — default: sama dengan NPSN</li>
-        <li>Klik <strong>Masuk</strong></li>
-      </ol>
-
-      <div class="box box-info">
-        <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-        <div>
-          <strong>Password default = NPSN.</strong> Setelah login pertama kali, disarankan
-          untuk mengganti password agar lebih aman.
-        </div>
-      </div>
-
-      <h3><i data-lucide="layout" class="w-5 h-5 text-indigo-600"></i> Struktur Aplikasi</h3>
-      <p>Setiap halaman memiliki komponen yang sama:</p>
-      <ul>
-        <li><strong>Sidebar Kiri</strong> — menu navigasi utama (klik ikon ☰ di HP untuk membuka)</li>
-        <li><strong>Header Atas</strong> — menampilkan NPSN dan nama sekolah</li>
-        <li><strong>Area Konten</strong> — halaman yang sedang dibuka</li>
-        <li><strong>Tombol Keluar</strong> — ikon 🚪 di sidebar bawah untuk logout</li>
-      </ul>
-
-      <h3><i data-lucide="smartphone" class="w-5 h-5 text-indigo-600"></i> Akses dari HP</h3>
-      <p>
-        Aplikasi dapat diakses dari smartphone. Tampilan akan otomatis menyesuaikan
-        ukuran layar. Untuk navigasi, gunakan tombol <strong>☰ (menu)</strong> di kiri atas.
-      </p>
-
-      <h3><i data-lucide="clock" class="w-5 h-5 text-indigo-600"></i> Kapan Menggunakan?</h3>
-      <table class="table mt-3">
-        <thead>
-          <tr><th>Kegiatan</th><th>Peran</th><th>Frekuensi</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Supervisi kelas</td><td>KS</td><td>Min. 1× per semester per guru</td></tr>
-          <tr><td>Coaching pasca supervisi</td><td>KS</td><td>Setelah supervisi</td></tr>
-          <tr><td>Monitoring hasil</td><td>Pengawas</td><td>Bulanan</td></tr>
-          <tr><td>Pengelolaan user & sekolah</td><td>Admin</td><td>Sesuai kebutuhan</td></tr>
-        </tbody>
-      </table>
-
     </div>
   </div>
-</div>
 
-<!-- ===================== TAB: KEPALA SEKOLAH ===================== -->
-<div id="tab-ks" class="tab-content hidden">
-  <div class="card mb-4">
-    <div class="card-body panduan-content">
+  <!-- ===================== TAB: KEPALA SEKOLAH ===================== -->
+  <div id="tab-ks" class="tab-content hidden">
+    <div class="card mb-4">
+      <div class="card-body panduan-content">
 
-      <div class="box box-info">
-        <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-        <div>
-          Panduan ini untuk <strong>Kepala Sekolah</strong>. Login dengan NPSN sekolah Anda.
+        <div class="box box-info">
+          <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+          <div>Panduan ini untuk <strong>Kepala Sekolah</strong>. Login dengan NPSN sekolah Anda.</div>
         </div>
-      </div>
 
-      <h3><i data-lucide="user-cog" class="w-5 h-5 text-indigo-600"></i> 1. Mengatur Profil</h3>
-      <p>Lengkapi profil Anda terlebih dahulu — data ini akan muncul di kop laporan PDF.</p>
-      <ol>
-        <li>Buka menu <strong>Dashboard</strong></li>
-        <li>Klik tombol <strong>Edit Profil</strong> di kanan atas kartu biru</li>
-        <li>Isi:
-          <ul>
-            <li><strong>Nama Lengkap & Gelar</strong> — mis. <code>Dra. Siti Aminah, M.Pd</code></li>
-            <li><strong>NIP</strong> — 18 digit</li>
-            <li><strong>Pangkat / Golongan</strong> — mis. <code>Pembina/IV a</code></li>
-            <li><strong>Jabatan</strong> — biasanya <code>Kepala Sekolah</code></li>
-            <li><strong>Status Kepegawaian</strong> — PNS / PPPK / Non ASN</li>
-            <li><strong>Jenis Kelamin</strong> — L / P</li>
-            <li><strong>No. HP</strong> — format <code>08xxxxxxxxxx</code></li>
-            <li><strong>Email</strong> — untuk notifikasi</li>
-          </ul>
-        </li>
-        <li>Klik <strong>Simpan</strong></li>
-      </ol>
+        <h3><i data-lucide="user-cog" class="w-5 h-5 text-indigo-600"></i> 1. Mengatur Profil</h3>
+        <p>Lengkapi profil Anda — data ini akan muncul di kop laporan PDF.</p>
+        <ol>
+          <li>Buka menu <strong>Dashboard</strong></li>
+          <li>Klik tombol <strong>Edit Profil</strong> di kanan atas kartu biru</li>
+          <li>Isi: Nama Lengkap & Gelar, NIP, Pangkat/Golongan, Jabatan, Status Kepegawaian, Jenis Kelamin, No. HP, Email</li>
+          <li>Klik <strong>Simpan</strong></li>
+        </ol>
 
-      <div class="box box-warning">
-        <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-        <div>
-          <strong>Penting:</strong> Data profil ini akan muncul di semua laporan PDF
-          yang Anda cetak. Isi dengan benar sesuai data kepegawaian resmi.
+        <div class="box box-warning">
+          <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+          <div><strong>Penting:</strong> Data profil akan muncul di semua laporan PDF. Isi dengan benar.</div>
         </div>
-      </div>
 
-      <h3><i data-lucide="users" class="w-5 h-5 text-indigo-600"></i> 2. Mengelola Data Guru</h3>
-      <p>Sebelum supervisi, pastikan data guru sudah lengkap.</p>
+        <h3><i data-lucide="users" class="w-5 h-5 text-indigo-600"></i> 2. Mengelola Data Guru</h3>
 
-      <h4>Menambah Guru Satu per Satu</h4>
-      <ol>
-        <li>Buka menu <strong>Data Guru</strong> di sidebar</li>
-        <li>Klik tombol <strong>+ Tambah Guru</strong></li>
-        <li>Isi form:
-          <ul>
-            <li>NIP (opsional, tapi disarankan diisi)</li>
-            <li><strong>Nama Lengkap</strong> — wajib</li>
-            <li>Mapel — mis. <code>Matematika</code></li>
-            <li>Kelas — mis. <code>V</code></li>
-            <li>Email</li>
-            <li>Status Kepegawaian — PNS / PPPK / Non ASN</li>
-          </ul>
-        </li>
-        <li>Klik <strong>Simpan</strong></li>
-      </ol>
+        <h4>Menambah Guru Satu per Satu</h4>
+        <ol>
+          <li>Buka menu <strong>Data Guru</strong></li>
+          <li>Klik <strong>+ Tambah Guru</strong></li>
+          <li>Isi form: NIP, Nama, Mapel, Kelas, Email, Status Kepegawaian</li>
+          <li>Klik <strong>Simpan</strong></li>
+        </ol>
 
-      <h4>Import CSV Massal</h4>
-      <p>Kalau guru banyak (>10), gunakan impor CSV.</p>
-      <ol>
-        <li>Klik tombol <strong>Impor CSV</strong></li>
-        <li>Klik <strong>Unduh Template</strong> untuk mendapatkan contoh format</li>
-        <li>Isi file CSV di Excel/Sheets</li>
-        <li>Klik <strong>Pilih File CSV</strong> atau <strong>paste langsung</strong> di textarea</li>
-        <li>Amati preview, klik <strong>Impor Sekarang</strong></li>
-      </ol>
-      <p><strong>Format CSV:</strong></p>
-      <code style="display:block; padding: 0.75rem; line-height: 1.6; white-space: pre-wrap;">NIP, Nama, Mapel, Kelas, Email, Status
-198501012010011001, Budi Santoso S.Pd, Matematika, V, budi@sch.id, PNS
-198502022011012002, Siti Aminah S.Pd, IPA, VI, siti@sch.id, PPPK</code>
+        <h4>Import CSV Massal</h4>
+        <ol>
+          <li>Klik tombol <strong>Impor CSV</strong></li>
+          <li>Klik <strong>Unduh Template</strong> untuk contoh format</li>
+          <li>Isi file CSV di Excel/Sheets</li>
+          <li>Klik <strong>Pilih File CSV</strong> atau paste di textarea</li>
+          <li>Preview muncul otomatis, klik <strong>Impor Sekarang</strong></li>
+        </ol>
 
-      <h3><i data-lucide="clipboard-list" class="w-5 h-5 text-indigo-600"></i> 3. Melakukan Supervisi</h3>
-      <p>Supervisi = kunjungan kelas untuk menilai pembelajaran digital menggunakan instrumen LK1 (19 indikator).</p>
+        <h3><i data-lucide="clipboard-list" class="w-5 h-5 text-indigo-600"></i> 3. Melakukan Supervisi (LK1)</h3>
+        <p>Supervisi = kunjungan kelas menilai pembelajaran digital (19 indikator).</p>
 
-      <h4>Memulai Supervisi</h4>
-      <ol>
-        <li>Buka menu <strong>Supervisi</strong></li>
-        <li>Pilih guru dari daftar kartu</li>
-        <li>Klik <strong>Mulai Supervisi</strong></li>
-        <li>Isi identitas:
-          <ul>
-            <li>Tanggal supervisi</li>
-            <li>Mapel yang disupervisi</li>
-            <li>Materi yang diajarkan</li>
-            <li>Durasi pelajaran (menit)</li>
-          </ul>
-        </li>
-      </ol>
+        <h4>Langkah Supervisi</h4>
+        <ol>
+          <li>Buka menu <strong>Supervisi</strong></li>
+          <li>Pilih guru dari daftar kartu</li>
+          <li>Isi identitas: tanggal, mapel, materi, durasi</li>
+          <li>Isi skor 19 indikator (skor 1–4):
+            <ul>
+              <li><strong>1</strong> = Belum Terlihat</li>
+              <li><strong>2</strong> = Mulai Terlihat</li>
+              <li><strong>3</strong> = Berkembang</li>
+              <li><strong>4</strong> = Mahir</li>
+            </ul>
+          </li>
+          <li>Isi catatan kualitatif (Kekuatan, Area Pengembangan, Rencana, Catatan Tambahan)</li>
+          <li>Klik <strong>Simpan Draft</strong> (belum selesai) atau <strong>Simpan & Kirim</strong></li>
+        </ol>
 
-      <h4>Mengisi 19 Indikator</h4>
-      <p>Setiap indikator diberi skor 1–4:</p>
-      <table class="table mt-3">
-        <thead>
-          <tr><th>Skor</th><th>Arti</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><strong>1</strong></td><td>Belum Terlihat</td></tr>
-          <tr><td><strong>2</strong></td><td>Mulai Terlihat</td></tr>
-          <tr><td><strong>3</strong></td><td>Berkembang</td></tr>
-          <tr><td><strong>4</strong></td><td>Mahir</td></tr>
-        </tbody>
-      </table>
-      <p>Klik tombol angka di kanan setiap indikator. Tambahkan catatan bukti observasi di kolom bawah.</p>
-
-      <h4>Indikator Terbagi dalam 6 Area</h4>
-      <ul>
-        <li><strong>A</strong> — Perencanaan dan Kesiapan Pembelajaran Digital (3 indikator)</li>
-        <li><strong>B</strong> — Pemanfaatan Platform dan Media Digital (3 indikator)</li>
-        <li><strong>C</strong> — Interaksi dan Keterlibatan Murid (4 indikator)</li>
-        <li><strong>D</strong> — Literasi Digital dan Etika (3 indikator)</li>
-        <li><strong>E</strong> — Asesmen Berbasis Digital (3 indikator)</li>
-        <li><strong>F</strong> — Pengelolaan Kelas Digital (3 indikator)</li>
-      </ul>
-
-      <h4>Catatan Kualitatif</h4>
-      <p>Isi 4 kotak catatan:</p>
-      <ul>
-        <li><strong>Kekuatan / Praktik Baik</strong> — apa yang sudah bagus</li>
-        <li><strong>Area Pengembangan</strong> — apa yang perlu diperbaiki</li>
-        <li><strong>Rencana Pembinaan</strong> — langkah tindak lanjut</li>
-        <li><strong>Catatan Tambahan</strong> — info lain</li>
-      </ul>
-
-      <h4>Menyimpan</h4>
-      <ul>
-        <li><strong>Simpan Draft</strong> — kalau belum selesai, bisa lanjut nanti</li>
-        <li><strong>Simpan & Kirim</strong> — kirim ke pengawas. Setelah ini <strong>tidak bisa diubah</strong></li>
-      </ul>
-
-      <div class="box box-warning">
-        <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-        <div>
-          <strong>Perhatian:</strong> Setelah dikirim ke pengawas, form menjadi read-only
-          (tidak bisa diubah). Pastikan semua data sudah benar sebelum klik "Kirim".
+        <div class="box box-warning">
+          <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+          <div>Setelah dikirim ke pengawas, form menjadi <strong>read-only</strong> — tidak bisa diubah. Pastikan data benar.</div>
         </div>
+
+        <h3><i data-lucide="message-square" class="w-5 h-5 text-indigo-600"></i> 4. Melakukan Coaching (LK2)</h3>
+        <p>Coaching = percakapan dengan guru setelah supervisi menggunakan STAR–GROW.</p>
+
+        <h4>Metode STAR (4 indikator)</h4>
+        <ul>
+          <li><strong>S</strong> — Situation (konteks)</li>
+          <li><strong>T</strong> — Task (tujuan)</li>
+          <li><strong>A</strong> — Action (tindakan)</li>
+          <li><strong>R</strong> — Result (hasil)</li>
+        </ul>
+
+        <h4>Metode GROW (4 indikator)</h4>
+        <ul>
+          <li><strong>G</strong> — Goal (tujuan pengembangan)</li>
+          <li><strong>R</strong> — Reality (kondisi nyata)</li>
+          <li><strong>O</strong> — Options (alternatif)</li>
+          <li><strong>W</strong> — Will (komitmen)</li>
+        </ul>
+
+        <h4>Isi RTL (Rencana Tindak Lanjut)</h4>
+        <ul>
+          <li>Rencana Aksi</li>
+          <li>Waktu Pelaksanaan</li>
+          <li>Dukungan yang Diperlukan</li>
+          <li>Indikator Keberhasilan</li>
+        </ul>
+
+        <h3><i data-lucide="file-text" class="w-5 h-5 text-indigo-600"></i> 5. Mencetak Laporan PDF</h3>
+        <ol>
+          <li>Buka supervisi/coaching berstatus <strong>Terkirim</strong></li>
+          <li>Klik <strong>Cetak Laporan PDF</strong></li>
+          <li>Tab baru terbuka dengan dokumen lengkap</li>
+          <li>Klik tombol <strong>Cetak / Simpan sebagai PDF</strong></li>
+          <li>Di dialog print, pilih <strong>Save as PDF</strong></li>
+        </ol>
+
       </div>
-
-      <h3><i data-lucide="message-square" class="w-5 h-5 text-indigo-600"></i> 4. Melakukan Coaching</h3>
-      <p>Coaching = percakapan dengan guru setelah supervisi menggunakan metode STAR–GROW.</p>
-
-      <h4>Metode STAR (4 indikator)</h4>
-      <ul>
-        <li><strong>S</strong> — Situation: menggali konteks</li>
-        <li><strong>T</strong> — Task: menggali tujuan</li>
-        <li><strong>A</strong> — Action: menggali tindakan</li>
-        <li><strong>R</strong> — Result: menggali hasil</li>
-      </ul>
-
-      <h4>Metode GROW (4 indikator)</h4>
-      <ul>
-        <li><strong>G</strong> — Goal: tujuan pengembangan</li>
-        <li><strong>R</strong> — Reality: kondisi nyata</li>
-        <li><strong>O</strong> — Options: opsi/alternatif</li>
-        <li><strong>W</strong> — Will: komitmen tindak lanjut</li>
-      </ul>
-
-      <h4>Langkah Coaching</h4>
-      <ol>
-        <li>Buka menu <strong>Coaching</strong></li>
-        <li>Pilih guru dari kartu</li>
-        <li>Isi tanggal</li>
-        <li>Isi skor 8 indikator (1–4)</li>
-        <li>Isi catatan kekuatan dan area pengembangan</li>
-        <li>Isi <strong>RTL (Rencana Tindak Lanjut)</strong>:
-          <ul>
-            <li>Rencana Aksi</li>
-            <li>Waktu Pelaksanaan</li>
-            <li>Dukungan yang Diperlukan</li>
-            <li>Indikator Keberhasilan</li>
-          </ul>
-        </li>
-        <li>Klik <strong>Simpan & Kirim</strong></li>
-      </ol>
-
-      <h3><i data-lucide="file-text" class="w-5 h-5 text-indigo-600"></i> 5. Mencetak Laporan PDF</h3>
-      <ol>
-        <li>Buka salah satu supervisi/coaching berstatus <strong>Terkirim</strong></li>
-        <li>Klik <strong>Cetak Laporan PDF</strong> di panel kanan</li>
-        <li>Tab baru terbuka dengan dokumen lengkap</li>
-        <li>Klik tombol <strong>Cetak / Simpan sebagai PDF</strong></li>
-        <li>Di dialog print, pilih <strong>Save as PDF</strong></li>
-        <li>Simpan file</li>
-      </ol>
-
-      <div class="box box-success">
-        <i data-lucide="check-circle-2" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-        <div>
-          PDF sudah dilengkapi format resmi: judul instrumen, identitas, tabel indikator,
-          catatan kualitatif, dan kolom tanda tangan.
-        </div>
-      </div>
-
-      <h3><i data-lucide="lock" class="w-5 h-5 text-indigo-600"></i> 6. Mengganti Password</h3>
-      <p>Fitur ini belum tersedia di UI. Untuk sementara, hubungi Admin untuk reset password.</p>
-
     </div>
   </div>
-</div>
 
-<!-- ===================== TAB: PENGAWAS ===================== -->
-<div id="tab-pengawas" class="tab-content hidden">
-  <div class="card mb-4">
-    <div class="card-body panduan-content">
+  <!-- ===================== TAB: PENGAWAS ===================== -->
+  <div id="tab-pengawas" class="tab-content hidden">
+    <div class="card mb-4">
+      <div class="card-body panduan-content">
 
-      <div class="box box-info">
-        <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-        <div>
-          Panduan ini untuk <strong>Pengawas Sekolah</strong>. Login dengan NPSN khusus pengawas.
+        <div class="box box-info">
+          <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+          <div>Panduan ini untuk <strong>Pengawas Sekolah</strong>. Login dengan NPSN khusus pengawas.</div>
         </div>
+
+        <h3><i data-lucide="layout-dashboard" class="w-5 h-5 text-indigo-600"></i> 1. Dashboard Monitoring</h3>
+        <p>Dashboard menampilkan ringkasan seluruh sekolah binaan.</p>
+        <ul>
+          <li><strong>Stat Cards</strong> — Total sekolah, guru, supervisi, rata skor</li>
+          <li><strong>Chart Tren</strong> — Grafik aktivitas supervisi & coaching per bulan</li>
+          <li><strong>Chart Kategori</strong> — Distribusi capaian (Mahir, Berkembang, dst.)</li>
+          <li><strong>Perlu Perhatian</strong> — Daftar sekolah/guru yang butuh tindak lanjut</li>
+          <li><strong>Rekap per Sekolah</strong> — Tabel semua sekolah binaan</li>
+        </ul>
+
+        <h4>Filter Periode</h4>
+        <ul>
+          <li><strong>Semester Berjalan</strong> — Ganjil (Jul–Des) atau Genap (Jan–Jun)</li>
+          <li><strong>Semester Lalu</strong> — Periode sebelumnya</li>
+          <li><strong>Tahun Ajaran Penuh</strong> — Satu tahun</li>
+        </ul>
+
+        <h3><i data-lucide="alert-circle" class="w-5 h-5 text-indigo-600"></i> 2. Panel "Perlu Perhatian"</h3>
+        <table class="table mt-3">
+          <thead>
+            <tr><th>Tipe</th><th>Arti</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Sekolah Pasif</strong></td><td>Tidak ada supervisi terkirim dalam 1 bulan terakhir</td></tr>
+            <tr><td><strong>Draft Menumpuk</strong></td><td>Ada 2+ supervisi berstatus draft</td></tr>
+            <tr><td><strong>Guru Belum</strong></td><td>Ada guru yang belum pernah disupervisi</td></tr>
+          </tbody>
+        </table>
+
+        <h3><i data-lucide="building-2" class="w-5 h-5 text-indigo-600"></i> 3. Detail Sekolah</h3>
+        <p>Klik nama sekolah atau tombol <strong>Detail</strong> untuk melihat:</p>
+        <ul>
+          <li>Info KS (nama, NIP, HP, email)</li>
+          <li>Statistik sekolah</li>
+          <li>Chart distribusi kategori</li>
+          <li>Progress guru disupervisi</li>
+          <li>Tabel rekap per guru</li>
+        </ul>
+
+        <h3><i data-lucide="users" class="w-5 h-5 text-indigo-600"></i> 4. Daftar Guru Lintas Sekolah</h3>
+        <p>Menu ini menampilkan semua guru dari sekolah binaan dalam satu tabel. Filter: nama/NIP, sekolah, status, kepegawaian.</p>
+
+        <h3><i data-lucide="clipboard-list" class="w-5 h-5 text-indigo-600"></i> 5. Semua Supervisi & Coaching</h3>
+        <p>Lihat semua supervisi/coaching dari sekolah binaan. Filter & cetak PDF yang terkirim.</p>
+
+        <h3><i data-lucide="filter" class="w-5 h-5 text-indigo-600"></i> 6. Tips Monitoring</h3>
+        <ul>
+          <li>Cek dashboard setiap minggu</li>
+          <li>Gunakan filter periode untuk bandingkan semester</li>
+          <li>Follow-up sekolah pasif via WA</li>
+          <li>Apresiasi sekolah aktif</li>
+        </ul>
+
       </div>
-
-      <h3><i data-lucide="layout-dashboard" class="w-5 h-5 text-indigo-600"></i> 1. Dashboard Monitoring</h3>
-      <p>Dashboard pengawas menampilkan ringkasan seluruh sekolah binaan.</p>
-
-      <h4>Komponen Dashboard</h4>
-      <ul>
-        <li><strong>Stat Cards</strong> — Total sekolah, guru, supervisi, rata skor</li>
-        <li><strong>Chart Tren</strong> — Grafik aktivitas supervisi & coaching per bulan</li>
-        <li><strong>Chart Kategori</strong> — Distribusi capaian (Mahir, Berkembang, dst.)</li>
-        <li><strong>Perlu Perhatian</strong> — Daftar sekolah/guru yang butuh tindak lanjut</li>
-        <li><strong>Rekap per Sekolah</strong> — Tabel semua sekolah binaan</li>
-      </ul>
-
-      <h4>Filter Periode</h4>
-      <p>Gunakan dropdown di atas untuk memilih:</p>
-      <ul>
-        <li><strong>Semester Berjalan</strong> — Ganjil (Jul–Des) atau Genap (Jan–Jun)</li>
-        <li><strong>Semester Lalu</strong> — Periode sebelumnya</li>
-        <li><strong>Tahun Ajaran Penuh</strong> — Satu tahun</li>
-      </ul>
-
-      <h3><i data-lucide="alert-circle" class="w-5 h-5 text-indigo-600"></i> 2. Panel "Perlu Perhatian"</h3>
-      <p>Panel ini secara otomatis menyorot hal-hal yang butuh tindakan:</p>
-
-      <table class="table mt-3">
-        <thead>
-          <tr><th>Tipe</th><th>Arti</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Sekolah Pasif</strong></td>
-            <td>Tidak ada supervisi terkirim dalam 1 bulan terakhir</td>
-          </tr>
-          <tr>
-            <td><strong>Draft Menumpuk</strong></td>
-            <td>Ada 2+ supervisi berstatus draft belum dikirim</td>
-          </tr>
-          <tr>
-            <td><strong>Guru Belum Disupervisi</strong></td>
-            <td>Ada guru yang belum pernah disupervisi periode ini</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <p>Klik tombol <strong>Lihat</strong> untuk menuju halaman terkait.</p>
-
-      <h3><i data-lucide="building-2" class="w-5 h-5 text-indigo-600"></i> 3. Melihat Detail Sekolah</h3>
-      <ol>
-        <li>Di tabel rekap, klik nama sekolah atau tombol <strong>Detail</strong></li>
-        <li>Halaman baru menampilkan:
-          <ul>
-            <li>Info KS (nama, NIP, HP, email)</li>
-            <li>Statistik sekolah (jumlah guru, supervisi, rata skor)</li>
-            <li>Chart distribusi kategori</li>
-            <li>Progress guru disupervisi</li>
-            <li>Tabel rekap per guru</li>
-          </ul>
-        </li>
-      </ol>
-
-      <h3><i data-lucide="users" class="w-5 h-5 text-indigo-600"></i> 4. Daftar Guru Lintas Sekolah</h3>
-      <ol>
-        <li>Klik menu <strong>Daftar Guru</strong></li>
-        <li>Lihat semua guru dari sekolah binaan</li>
-        <li>Gunakan filter:
-          <ul>
-            <li>Cari nama/NIP</li>
-            <li>Filter sekolah</li>
-            <li>Filter status (Belum / Draft / Terkirim)</li>
-            <li>Filter kepegawaian (PNS / PPPK / Non ASN)</li>
-            <li>Sort by rata skor, nama, atau terakhir disupervisi</li>
-          </ul>
-        </li>
-        <li>Klik nama sekolah untuk ke detail sekolah</li>
-      </ol>
-
-      <h3><i data-lucide="clipboard-list" class="w-5 h-5 text-indigo-600"></i> 5. Semua Supervisi & Coaching</h3>
-      <p>Lihat semua supervisi/coaching dari sekolah binaan dalam satu tabel.</p>
-      <ol>
-        <li>Klik menu <strong>Semua Supervisi</strong> atau <strong>Semua Coaching</strong></li>
-        <li>Filter berdasarkan:
-          <ul>
-            <li>Nama guru / sekolah</li>
-            <li>Sekolah</li>
-            <li>Status (Terkirim / Draft)</li>
-            <li>Kategori capaian</li>
-          </ul>
-        </li>
-        <li>Klik ikon 📄 untuk cetak PDF (hanya yang terkirim)</li>
-        <li>Klik ikon 👁 untuk lihat detail</li>
-      </ol>
-
-      <h3><i data-lucide="filter" class="w-5 h-5 text-indigo-600"></i> 6. Tips Monitoring Efektif</h3>
-      <ul>
-        <li><strong>Cek dashboard setiap minggu</strong> — jangan biarkan "Perlu Perhatian" menumpuk</li>
-        <li><strong>Gunakan filter periode</strong> — bandingkan semester untuk melihat tren</li>
-        <li><strong>Follow-up sekolah pasif</strong> — hubungi KS via WA</li>
-        <li><strong>Apresiasi sekolah aktif</strong> — jadikan contoh untuk sekolah lain</li>
-        <li><strong>Cetak rekap semester</strong> — untuk laporan ke dinas</li>
-      </ul>
-
     </div>
   </div>
-</div>
 
-<!-- ===================== TAB: ADMIN ===================== -->
-<div id="tab-admin" class="tab-content hidden">
-  <div class="card mb-4">
-    <div class="card-body panduan-content">
+  <!-- ===================== TAB: ADMIN ===================== -->
+  <div id="tab-admin" class="tab-content hidden">
+    <div class="card mb-4">
+      <div class="card-body panduan-content">
 
-      <div class="box box-warning">
-        <i data-lucide="shield" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-        <div>
-          Panduan ini untuk <strong>Administrator Aplikasi</strong>. Role ini hanya
-          dimiliki oleh 1 orang (admin pusat). Login dengan NPSN khusus <code>11111111</code>.
+        <div class="box box-warning">
+          <i data-lucide="shield" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+          <div>Panduan ini untuk <strong>Administrator Aplikasi</strong>. Hanya 1 orang yang memiliki role ini.</div>
         </div>
-      </div>
 
-      <h3><i data-lucide="layout-dashboard" class="w-5 h-5 text-indigo-600"></i> 1. Dashboard Admin</h3>
-      <p>Ringkasan sistem keseluruhan:</p>
-      <ul>
-        <li>Total sekolah, user, guru, supervisi, coaching</li>
-        <li>Aktivitas 7 hari terakhir</li>
-        <li>Status sistem (backend, spreadsheet, queue)</li>
-        <li>Distribusi per kecamatan</li>
-        <li>Daftar "Perlu Perhatian" (user idle, sekolah tanpa KS, dll.)</li>
-      </ul>
+        <h3><i data-lucide="layout-dashboard" class="w-5 h-5 text-indigo-600"></i> 1. Dashboard Admin</h3>
+        <p>Ringkasan sistem: total sekolah, user, guru, supervisi, coaching, aktivitas 7 hari, status sistem, distribusi per kecamatan.</p>
 
-      <h3><i data-lucide="users" class="w-5 h-5 text-indigo-600"></i> 2. Kelola Users</h3>
-      <p>Menu <strong>Users</strong> untuk mengelola semua akun.</p>
+        <h3><i data-lucide="users" class="w-5 h-5 text-indigo-600"></i> 2. Kelola Users</h3>
 
-      <h4>Tambah User</h4>
-      <ol>
-        <li>Klik <strong>+ Tambah User</strong></li>
-        <li>Isi form: NPSN, Role, Nama, NIP, dll.</li>
-        <li>Klik <strong>Simpan</strong></li>
-        <li>Password default = NPSN</li>
-      </ol>
+        <h4>Tambah User</h4>
+        <p>Menu <strong>Users</strong> → <strong>+ Tambah User</strong> → isi form → Simpan.</p>
 
-      <h4>Import CSV Massal</h4>
-      <ol>
-        <li>Klik <strong>Impor CSV</strong></li>
-        <li>Unduh template atau paste data</li>
-        <li>Preview muncul otomatis</li>
-        <li>Klik <strong>Impor Sekarang</strong></li>
-        <li>Hasil ditampilkan: Berhasil / Dilewati / Error</li>
-      </ol>
+        <h4>Import CSV</h4>
+        <p>Klik <strong>Impor CSV</strong> → paste/upload → preview → Impor.</p>
 
-      <h4>Reset Password User</h4>
-      <ol>
-        <li>Klik ikon 🔑 pada baris user</li>
-        <li>Konfirmasi</li>
-        <li>Password direset ke NPSN</li>
-      </ol>
+        <h4>Reset Password</h4>
+        <p>Klik ikon 🔑 pada baris user → konfirmasi → password reset ke NPSN.</p>
 
-      <h4>Login As (Impersonate)</h4>
-      <ol>
-        <li>Klik ikon 👤✓ pada baris user</li>
-        <li>Konfirmasi</li>
-        <li>Anda login sebagai user tersebut</li>
-        <li>Banner oranye muncul di bawah — klik "Kembali ke Admin" untuk keluar</li>
-      </ol>
+        <h4>Login As (Impersonate)</h4>
+        <p>Klik ikon 👤✓ → login sebagai user tersebut → banner oranye muncul untuk kembali.</p>
 
-      <h4>Menu Aksi Per User (ikon ⋮)</h4>
-      <ul>
-        <li><strong>Nonaktifkan</strong> — user tidak bisa login, data tetap ada</li>
-        <li><strong>Aktifkan</strong> — aktifkan kembali user nonaktif</li>
-        <li><strong>Hapus Permanen</strong> — hapus user dari database (permanen)</li>
-      </ul>
+        <h4>Menu Aksi (⋮)</h4>
+        <ul>
+          <li><strong>Nonaktifkan</strong> — soft delete</li>
+          <li><strong>Aktifkan</strong> — aktifkan kembali</li>
+          <li><strong>Hapus Permanen</strong> — hapus dari database</li>
+        </ul>
 
-      <h3><i data-lucide="building-2" class="w-5 h-5 text-indigo-600"></i> 3. Kelola Sekolah</h3>
+        <h3><i data-lucide="building-2" class="w-5 h-5 text-indigo-600"></i> 3. Kelola Sekolah</h3>
 
-      <h4>Tambah Sekolah</h4>
-      <ol>
-        <li>Menu <strong>Sekolah</strong> → <strong>+ Tambah Sekolah</strong></li>
-        <li>Isi NPSN (8 digit), Nama, Jenjang, Kecamatan, dll.</li>
-        <li>Klik <strong>Simpan</strong></li>
-      </ol>
+        <h4>Tambah Sekolah</h4>
+        <p>Menu <strong>Sekolah</strong> → <strong>+ Tambah Sekolah</strong> → isi NPSN, nama, jenjang, kecamatan, dll.</p>
 
-      <h4>Import CSV</h4>
-      <p>Sama seperti import user, tapi untuk sekolah. Format CSV:</p>
-      <code style="display:block; padding: 0.75rem; line-height: 1.6; white-space: pre-wrap;">NPSN, Nama Sekolah, Jenjang, Kecamatan, Kabupaten, Provinsi, Nama KS, Alamat, Telepon, Email
-20512345, SDN 1 Sukamaju, SD, Sukamaju, Kab. Malang, Jawa Timur, Dra. Siti Aminah, Jl. Raya No. 12, (0341) 123456, sdn1@sch.id</code>
+        <h4>Import CSV</h4>
+        <p>Format: NPSN, Nama Sekolah, Jenjang, Kecamatan, Kabupaten, Provinsi, Nama KS, Alamat, Telepon, Email.</p>
 
-      <h4>Atur Binaan Pengawas</h4>
-      <ol>
-        <li>Klik ikon 🛡 pada baris sekolah</li>
-        <li>Centang pengawas yang membina sekolah ini</li>
-        <li>Klik <strong>Simpan</strong></li>
-      </ol>
+        <h4>Atur Binaan Pengawas</h4>
+        <p>Klik ikon 🛡 pada baris sekolah → centang pengawas → Simpan.</p>
 
-      <h4>Menu Aksi Per Sekolah (⋮)</h4>
-      <ul>
-        <li><strong>Nonaktifkan</strong> — soft delete</li>
-        <li><strong>Aktifkan</strong> — aktifkan kembali</li>
-        <li><strong>Hapus Permanen</strong> — hanya bisa jika tidak ada user/guru/supervisi terkait</li>
-      </ul>
+        <h3><i data-lucide="activity" class="w-5 h-5 text-indigo-600"></i> 4. Audit Log</h3>
+        <p>Lihat semua aktivitas user. Filter berdasarkan role, aksi, tanggal. Ekspor CSV.</p>
 
-      <h3><i data-lucide="activity" class="w-5 h-5 text-indigo-600"></i> 4. Audit Log</h3>
-      <p>Lihat semua aktivitas user di aplikasi.</p>
-      <ul>
-        <li>Filter berdasarkan role, aksi, tanggal</li>
-        <li>Cari nama / NPSN / detail</li>
-        <li>Ekspor ke CSV</li>
-      </ul>
+        <h3><i data-lucide="settings" class="w-5 h-5 text-indigo-600"></i> 5. Pengaturan Aplikasi</h3>
 
-      <h3><i data-lucide="settings" class="w-5 h-5 text-indigo-600"></i> 5. Pengaturan Aplikasi</h3>
+        <h4>Tab Umum</h4>
+        <p>Tahun ajaran aktif, semester, nama dinas, kabupaten, provinsi.</p>
 
-      <h4>Tab Umum</h4>
-      <ul>
-        <li>Tahun ajaran aktif</li>
-        <li>Semester (Ganjil / Genap)</li>
-        <li>Nama dinas, kabupaten, provinsi</li>
-      </ul>
+        <h4>Tab Kategori</h4>
+        <p>Atur kategori penilaian LK1 (0–76) & LK2 (0–32). Bisa tambah/edit/hapus.</p>
 
-      <h4>Tab Kategori</h4>
-      <ul>
-        <li>Kategori penilaian LK1 (0–76)</li>
-        <li>Kategori penilaian LK2 (0–32)</li>
-        <li>Bisa tambah/edit/hapus kategori</li>
-        <li>Reset ke default kalau perlu</li>
-      </ul>
+        <h4>Tab Sistem</h4>
+        <p>Info versi, test koneksi, backup spreadsheet, ekspor data, bersihkan cache.</p>
 
-      <h4>Tab Sistem</h4>
-      <ul>
-        <li>Info versi & runtime</li>
-        <li>Test koneksi backend</li>
-        <li>Buat backup Spreadsheet</li>
-        <li>Ekspor semua data</li>
-        <li>Bersihkan cache</li>
-      </ul>
-
-      <h4>Tab Reset Data</h4>
-      <div class="box box-danger">
-        <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-        <div>
-          <strong>Zona berbahaya.</strong> Fitur di tab ini <strong>menghapus data permanen</strong>.
-          Backup dulu sebelum menggunakan.
+        <h4>Tab Reset Data</h4>
+        <div class="box box-danger">
+          <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+          <div><strong>Zona berbahaya.</strong> Menghapus data permanen. Backup dulu sebelum menggunakan.</div>
         </div>
+        <ul>
+          <li><strong>Hapus Supervisi & Coaching</strong></li>
+          <li><strong>Hapus Data Guru</strong></li>
+          <li><strong>Hapus User (kecuali Admin)</strong></li>
+          <li><strong>Hapus Sekolah (kecuali Dinas)</strong></li>
+          <li><strong>FULL CLEANUP</strong> — semua data operasional</li>
+        </ul>
+
+        <h3><i data-lucide="database" class="w-5 h-5 text-indigo-600"></i> 6. Backup Rutin</h3>
+        <ul>
+          <li><strong>Mingguan</strong> — backup spreadsheet</li>
+          <li><strong>Bulanan</strong> — ekspor CSV semua sheet</li>
+          <li><strong>Semester</strong> — ekspor penuh + arsip</li>
+        </ul>
+
+        <h3><i data-lucide="shield-alert" class="w-5 h-5 text-indigo-600"></i> 7. Keamanan</h3>
+        <ul>
+          <li>Jangan bagikan akun admin</li>
+          <li>Ganti password berkala</li>
+          <li>Pantau audit log setiap minggu</li>
+          <li>Simpan backup di tempat aman</li>
+        </ul>
+
       </div>
-      <ul>
-        <li><strong>Hapus Supervisi & Coaching</strong> — bersihkan data supervisi/coaching</li>
-        <li><strong>Hapus Data Guru</strong> — hapus semua guru</li>
-        <li><strong>Hapus User (kecuali Admin)</strong> — hapus KS & Pengawas</li>
-        <li><strong>Hapus Sekolah (kecuali Dinas)</strong> — hapus sekolah selain Dinas</li>
-        <li><strong>FULL CLEANUP</strong> — hapus semua data operasional</li>
-      </ul>
-      <p>Setiap aksi butuh konfirmasi 2× termasuk mengetik "HAPUS".</p>
-
-      <h3><i data-lucide="database" class="w-5 h-5 text-indigo-600"></i> 6. Backup Rutin</h3>
-      <p>Rekomendasi jadwal backup:</p>
-      <ul>
-        <li><strong>Mingguan</strong> — backup spreadsheet via menu pengaturan</li>
-        <li><strong>Bulanan</strong> — ekspor CSV semua sheet</li>
-        <li><strong>Semester</strong> — ekspor penuh + arsipkan</li>
-      </ul>
-
-      <h3><i data-lucide="shield-alert" class="w-5 h-5 text-indigo-600"></i> 7. Keamanan</h3>
-      <ul>
-        <li>Jangan bagikan akun admin ke siapa pun</li>
-        <li>Ganti password berkala</li>
-        <li>Pantau audit log setiap minggu</li>
-        <li>Simpan backup di tempat aman</li>
-      </ul>
-
     </div>
   </div>
-</div>
 
-<!-- ===================== TAB: FAQ ===================== -->
-<div id="tab-faq" class="tab-content hidden">
-  <div class="card mb-4">
-    <div class="card-body panduan-content">
+  <!-- ===================== TAB: FAQ ===================== -->
+  <div id="tab-faq" class="tab-content hidden">
+    <div class="card mb-4">
+      <div class="card-body panduan-content">
 
-      <h3><i data-lucide="help-circle" class="w-5 h-5 text-indigo-600"></i> Pertanyaan Umum</h3>
+        <h3><i data-lucide="help-circle" class="w-5 h-5 text-indigo-600"></i> Pertanyaan Umum</h3>
 
-      <div class="space-y-3 mt-4">
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Bagaimana cara login pertama kali?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            Gunakan <strong>NPSN</strong> sebagai username dan password. Contoh: NPSN
-            <code>20512345</code>, password <code>20512345</code>.
-          </div>
-        </details>
+        <div class="space-y-3 mt-4">
+          <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <summary class="font-medium text-slate-900 cursor-pointer">Bagaimana cara login pertama kali?</summary>
+            <div class="mt-2 text-sm text-slate-600">
+              Gunakan <strong>NPSN</strong> sebagai username dan password. Contoh: NPSN
+              <code>20512345</code>, password <code>20512345</code>.
+            </div>
+          </details>
 
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Saya lupa password, bagaimana?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            Hubungi <strong>Admin aplikasi</strong> untuk reset password. Admin akan mengubah
-            password kembali ke NPSN.
-          </div>
-        </details>
+          <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <summary class="font-medium text-slate-900 cursor-pointer">Saya lupa password, bagaimana?</summary>
+            <div class="mt-2 text-sm text-slate-600">
+              Hubungi <strong>Admin aplikasi</strong> untuk reset. Password akan dikembalikan ke NPSN.
+            </div>
+          </details>
 
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Apakah data supervisi bisa diubah setelah dikirim?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            Tidak. Setelah klik <strong>Kirim ke Pengawas</strong>, form menjadi read-only.
-            Pastikan semua data sudah benar sebelum mengirim.
-          </div>
-        </details>
+          <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <summary class="font-medium text-slate-900 cursor-pointer">Apakah data supervisi bisa diubah setelah dikirim?</summary>
+            <div class="mt-2 text-sm text-slate-600">
+              Tidak. Setelah klik <strong>Kirim</strong>, form menjadi read-only.
+            </div>
+          </details>
 
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Bagaimana cara export laporan PDF?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            Buka supervisi/coaching berstatus <strong>Terkirim</strong> → klik
-            <strong>Cetak Laporan PDF</strong> → di tab baru, klik tombol cetak → pilih
-            <strong>Save as PDF</strong>.
-          </div>
-        </details>
+          <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <summary class="font-medium text-slate-900 cursor-pointer">Bagaimana cara export laporan PDF?</summary>
+            <div class="mt-2 text-sm text-slate-600">
+              Buka supervisi/coaching <strong>Terkirim</strong> → klik <strong>Cetak Laporan PDF</strong> → klik tombol cetak → Save as PDF.
+            </div>
+          </details>
 
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Apakah aplikasi bisa diakses dari HP?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            Ya. Buka di browser HP (Chrome/Safari). Tampilan otomatis menyesuaikan.
-            Untuk navigasi, klik ikon <strong>☰</strong> di kiri atas.
-          </div>
-        </details>
+          <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <summary class="font-medium text-slate-900 cursor-pointer">Apakah aplikasi bisa diakses dari HP?</summary>
+            <div class="mt-2 text-sm text-slate-600">
+              Ya. Buka di browser HP. Tampilan otomatis menyesuaikan. Navigasi pakai ikon ☰.
+            </div>
+          </details>
 
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Berapa guru yang bisa disupervisi per semester?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            Tidak ada batasan. Rekomendasi: setiap guru minimal 1× disupervisi per semester.
-          </div>
-        </details>
+          <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <summary class="font-medium text-slate-900 cursor-pointer">Apa perbedaan "Draft" dan "Terkirim"?</summary>
+            <div class="mt-2 text-sm text-slate-600">
+              <strong>Draft</strong> — masih bisa diubah, belum terlihat pengawas.<br>
+              <strong>Terkirim</strong> — sudah dikirim pengawas, tidak bisa diubah.
+            </div>
+          </details>
 
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Apa perbedaan "Draft" dan "Terkirim"?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            <strong>Draft</strong> — masih bisa diubah, belum terlihat pengawas.<br>
-            <strong>Terkirim</strong> — sudah dikirim pengawas, tidak bisa diubah, muncul di dashboard pengawas.
-          </div>
-        </details>
+          <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <summary class="font-medium text-slate-900 cursor-pointer">Bagaimana cara import banyak guru sekaligus?</summary>
+            <div class="mt-2 text-sm text-slate-600">
+              Menu Data Guru → <strong>Impor CSV</strong> → paste data atau upload CSV.
+            </div>
+          </details>
 
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Bagaimana cara import banyak guru sekaligus?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            Buka menu Data Guru → klik <strong>Impor CSV</strong> → paste data atau upload file CSV.
-            Format: NIP, Nama, Mapel, Kelas, Email, Status.
-          </div>
-        </details>
+          <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <summary class="font-medium text-slate-900 cursor-pointer">Apakah pengawas bisa melihat data sekolah lain?</summary>
+            <div class="mt-2 text-sm text-slate-600">
+              Tidak. Pengawas hanya melihat sekolah binaan sesuai pengaturan admin.
+            </div>
+          </details>
 
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Apakah pengawas bisa melihat data sekolah lain?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            Tidak. Pengawas hanya melihat sekolah binaan sesuai pengaturan admin.
-          </div>
-        </details>
+          <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <summary class="font-medium text-slate-900 cursor-pointer">Aplikasi error / tidak bisa dibuka, apa yang harus dilakukan?</summary>
+            <div class="mt-2 text-sm text-slate-600">
+              <ol class="mt-2">
+                <li>Refresh halaman (Ctrl+Shift+R)</li>
+                <li>Buka <code>/settings.html</code> → Reset ke Default → Uji Koneksi</li>
+                <li>Kalau masih gagal, hubungi Admin</li>
+              </ol>
+            </div>
+          </details>
 
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Aplikasi error / tidak bisa dibuka, apa yang harus dilakukan?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            <ol>
-              <li>Refresh halaman (Ctrl+Shift+R)</li>
-              <li>Buka <code>/settings.html</code> → Reset ke Default → Uji Koneksi</li>
-              <li>Kalau masih gagal, hubungi Admin aplikasi</li>
-            </ol>
-          </div>
-        </details>
+          <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <summary class="font-medium text-slate-900 cursor-pointer">Apakah data aman?</summary>
+            <div class="mt-2 text-sm text-slate-600">
+              Data disimpan di Google Sheets milik dinas dengan akses terbatas. Setiap aktivitas
+              tercatat di audit log. Password di-hash.
+            </div>
+          </details>
 
-        <details class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <summary class="font-medium text-slate-900 cursor-pointer">Apakah data aman?</summary>
-          <div class="mt-2 text-sm text-slate-600">
-            Data disimpan di Google Sheets (milik dinas) dengan akses terbatas.
-            Setiap aktivitas tercatat di audit log. Password di-hash (tidak disimpan dalam bentuk teks).
-          </div>
-        </details>
-
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- ===================== TAB: TROUBLESHOOTING ===================== -->
-<div id="tab-troubleshoot" class="tab-content hidden">
-  <div class="card mb-4">
-    <div class="card-body panduan-content">
-
-      <h3><i data-lucide="wrench" class="w-5 h-5 text-indigo-600"></i> Mengatasi Masalah Umum</h3>
-
-      <h4>1. Tidak Bisa Login</h4>
-      <p><strong>Gejala:</strong> Muncul pesan "NPSN atau password salah".</p>
-      <p><strong>Solusi:</strong></p>
-      <ul>
-        <li>Pastikan NPSN benar (8 digit angka)</li>
-        <li>Pastikan password default = NPSN</li>
-        <li>Kalau sudah pernah ganti, gunakan password baru</li>
-        <li>Kalau lupa, hubungi Admin untuk reset</li>
-      </ul>
-
-      <h4>2. Halaman Kosong / Loading Terus</h4>
-      <p><strong>Gejala:</strong> Dashboard tampil tapi data kosong, atau spinner tidak berhenti.</p>
-      <p><strong>Solusi:</strong></p>
-      <ul>
-        <li>Tekan <strong>Ctrl+Shift+R</strong> (hard refresh)</li>
-        <li>Buka <code>/settings.html</code> → klik <strong>Uji Koneksi</strong></li>
-        <li>Kalau merah, klik <strong>Reset ke Default</strong> → Simpan</li>
-        <li>Kalau masih gagal, tunggu 5 menit lalu coba lagi</li>
-      </ul>
-
-      <h4>3. Tombol "Cetak PDF" Tidak Berfungsi</h4>
-      <p><strong>Gejala:</strong> Klik tombol tapi tidak ada yang terjadi.</p>
-      <p><strong>Solusi:</strong></p>
-      <ul>
-        <li>Izinkan popup di browser (klik ikon 🚫 di address bar)</li>
-        <li>Pastikan supervisi berstatus <strong>Terkirim</strong>, bukan Draft</li>
-        <li>Coba di browser lain (Chrome / Firefox)</li>
-      </ul>
-
-      <h4>4. Data Tidak Tersimpan</h4>
-      <p><strong>Gejala:</strong> Klik simpan tapi data tidak muncul.</p>
-      <p><strong>Solusi:</strong></p>
-      <ul>
-        <li>Cek koneksi internet</li>
-        <li>Refresh halaman, buka ulang</li>
-        <li>Kalau draft, cek di daftar supervisi dengan status Draft</li>
-        <li>Kalau terkirim, cek di dashboard pengawas</li>
-      </ul>
-
-      <h4>5. Muncul Error di Console</h4>
-      <p><strong>Gejala:</strong> Halaman tampil tapi ada error merah di Console (F12).</p>
-      <p><strong>Solusi:</strong></p>
-      <ul>
-        <li>Refresh (Ctrl+Shift+R)</li>
-        <li>Clear cache browser</li>
-        <li>Kalau berlanjut, screenshot dan hubungi Admin</li>
-      </ul>
-
-      <h4>6. Tidak Bisa Login Setelah Migrasi</h4>
-      <p><strong>Gejala:</strong> Baru pindah backend, tapi user tetap pakai URL lama.</p>
-      <p><strong>Solusi:</strong></p>
-      <ul>
-        <li>Buka <code>/settings.html</code></li>
-        <li>Klik <strong>Reset ke Default</strong></li>
-        <li>Klik <strong>Uji Koneksi</strong> → pastikan hijau</li>
-        <li>Login ulang</li>
-      </ul>
-
-      <h4>7. Import CSV Gagal</h4>
-      <p><strong>Gejala:</strong> Pesan error saat impor.</p>
-      <p><strong>Solusi:</strong></p>
-      <ul>
-        <li>Pastikan format kolom benar</li>
-        <li>Cek tidak ada karakter aneh (mis. tanda kutip berlebih)</li>
-        <li>Maksimal 500 baris per impor</li>
-        <li>Download template untuk contoh format</li>
-      </ul>
-
-      <h4>8. Sesi Berakhir Terus</h4>
-      <p><strong>Gejala:</strong> Sering diminta login ulang.</p>
-      <p><strong>Solusi:</strong></p>
-      <ul>
-        <li>Sesi berlangsung 8 jam — normal kalau habis</li>
-        <li>Jangan clear browser data saat sesi aktif</li>
-        <li>Kalau sering, hubungi Admin</li>
-      </ul>
-
-      <div class="box box-info mt-6">
-        <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-        <div>
-          <strong>Kontak Admin:</strong><br>
-          WhatsApp: [nomor admin]<br>
-          Email: [email admin]<br>
-          Grup WA Support: [link grup]
         </div>
-      </div>
 
+      </div>
     </div>
   </div>
-</div>
+
+  <!-- ===================== TAB: TROUBLESHOOTING ===================== -->
+  <div id="tab-troubleshoot" class="tab-content hidden">
+    <div class="card mb-4">
+      <div class="card-body panduan-content">
+
+        <h3><i data-lucide="wrench" class="w-5 h-5 text-indigo-600"></i> Mengatasi Masalah Umum</h3>
+
+        <h4>1. Tidak Bisa Login</h4>
+        <p><strong>Solusi:</strong></p>
+        <ul>
+          <li>Pastikan NPSN benar (8 digit angka)</li>
+          <li>Pastikan password default = NPSN</li>
+          <li>Kalau sudah pernah ganti, gunakan password baru</li>
+          <li>Kalau lupa, hubungi Admin untuk reset</li>
+        </ul>
+
+        <h4>2. Halaman Kosong / Loading Terus</h4>
+        <p><strong>Solusi:</strong></p>
+        <ul>
+          <li>Tekan <strong>Ctrl+Shift+R</strong> (hard refresh)</li>
+          <li>Buka <code>/settings.html</code> → klik <strong>Uji Koneksi</strong></li>
+          <li>Kalau merah, klik <strong>Reset ke Default</strong> → Simpan</li>
+          <li>Kalau masih gagal, tunggu 5 menit lalu coba lagi</li>
+        </ul>
+
+        <h4>3. Tombol "Cetak PDF" Tidak Berfungsi</h4>
+        <p><strong>Solusi:</strong></p>
+        <ul>
+          <li>Izinkan popup di browser (klik ikon 🚫 di address bar)</li>
+          <li>Pastikan supervisi berstatus <strong>Terkirim</strong>, bukan Draft</li>
+          <li>Coba di browser lain</li>
+        </ul>
+
+        <h4>4. Data Tidak Tersimpan</h4>
+        <p><strong>Solusi:</strong></p>
+        <ul>
+          <li>Cek koneksi internet</li>
+          <li>Refresh halaman, buka ulang</li>
+          <li>Kalau draft, cek di daftar supervisi dengan status Draft</li>
+        </ul>
+
+        <h4>5. Muncul Error di Console (F12)</h4>
+        <p><strong>Solusi:</strong></p>
+        <ul>
+          <li>Refresh (Ctrl+Shift+R)</li>
+          <li>Clear cache browser</li>
+          <li>Kalau berlanjut, screenshot & hubungi Admin</li>
+        </ul>
+
+        <h4>6. Tidak Bisa Login Setelah Migrasi</h4>
+        <p><strong>Solusi:</strong></p>
+        <ul>
+          <li>Buka <code>/settings.html</code></li>
+          <li>Klik <strong>Reset ke Default</strong></li>
+          <li>Klik <strong>Uji Koneksi</strong> → pastikan hijau</li>
+          <li>Login ulang</li>
+        </ul>
+
+        <h4>7. Import CSV Gagal</h4>
+        <p><strong>Solusi:</strong></p>
+        <ul>
+          <li>Pastikan format kolom benar</li>
+          <li>Cek tidak ada karakter aneh</li>
+          <li>Maksimal 500 baris per impor</li>
+          <li>Download template untuk contoh format</li>
+        </ul>
+
+        <h4>8. Sesi Berakhir Terus</h4>
+        <p><strong>Solusi:</strong></p>
+        <ul>
+          <li>Sesi berlangsung 8 jam — normal kalau habis</li>
+          <li>Jangan clear browser data saat sesi aktif</li>
+          <li>Kalau sering, hubungi Admin</li>
+        </ul>
+
+        <div class="box box-info mt-6">
+          <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+          <div>
+            <strong>Butuh bantuan lebih lanjut?</strong><br>
+            Hubungi Administrator aplikasi SISPA di dinas pendidikan Anda.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ================== CTA LOGIN (hanya tampil kalau belum login) ================== -->
+  <div id="loginCTA" class="hidden mt-8">
+    <div class="card border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
+      <div class="card-body text-center py-8">
+        <div class="w-14 h-14 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-4">
+          <i data-lucide="log-in" class="w-7 h-7"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 mb-2">Siap Mulai Menggunakan SISPA?</h3>
+        <p class="text-sm text-slate-600 mb-5 max-w-md mx-auto">
+          Login dengan NPSN sekolah Anda untuk mulai melakukan supervisi akademik dan coaching.
+        </p>
+        <a href="./index.html" class="btn btn-primary inline-flex">
+          <i data-lucide="log-in" class="w-4 h-4"></i>
+          <span>Masuk ke Aplikasi</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="text-center text-xs text-slate-400 mt-8 pb-4">
+    <div>SISPA — Sistem Informasi Supervisi Pendidikan Akademik</div>
+    <div class="mt-1">
+      <a href="./index.html" class="text-indigo-600 hover:underline">Masuk</a>
+      <span class="mx-2">·</span>
+      <a href="./settings.html" class="text-indigo-600 hover:underline">Pengaturan</a>
+    </div>
+  </div>
+
+</main>
 
 <!-- ================== END ================== -->
 
@@ -891,15 +695,47 @@
 <script src="./assets/js/auth.js"></script>
 <script src="./assets/js/app.js"></script>
 <script>
-  // ===== DEKLARASI DULU =====
-  // (tidak ada state khusus di halaman ini)
+  /* ============================================================
+     AKSES PUBLIK — tidak butuh login
+     ============================================================ */
 
-  // ===== BARU PANGGIL FUNGSI =====
-  const user = sispaRequireLogin(['KS', 'Pengawas', 'Admin']);
-  if (user) {
-    mountShell('panduan');
-    initTabs();
+  // Cek apakah user sudah login
+  const currentUser = (typeof sispaGetUser === 'function') ? sispaGetUser() : null;
+  const isLoggedIn = !!currentUser;
+
+  if (isLoggedIn) {
+    // ===== Mode Login: tampilkan sidebar + header =====
+    try {
+      mountShell('panduan');
+    } catch (e) {
+      console.warn('[SISPA] mountShell gagal, fallback ke mode publik:', e);
+      setupPublicMode();
+    }
+  } else {
+    // ===== Mode Publik: tampilkan header sederhana =====
+    setupPublicMode();
   }
+
+  function setupPublicMode() {
+    // Tampilkan header publik
+    const header = document.getElementById('publicHeader');
+    if (header) header.classList.remove('hidden');
+
+    // Tampilkan CTA login di bawah
+    const cta = document.getElementById('loginCTA');
+    if (cta) cta.classList.remove('hidden');
+
+    // Wrap konten utama agar rapi di tengah
+    const main = document.getElementById('publicMain');
+    if (main) {
+      main.classList.add('mx-auto');
+    }
+  }
+
+  /* ============================================================
+     TABS
+     ============================================================ */
+  initTabs();
 
   function initTabs() {
     const tabs = document.querySelectorAll('.panduan-tab');
@@ -908,38 +744,31 @@
       btn.addEventListener('click', () => {
         const target = btn.dataset.tab;
 
-        // Reset semua tab
         tabs.forEach(b => {
           b.classList.remove('active', 'text-indigo-600');
           b.classList.add('text-slate-600');
         });
 
-        // Aktifkan tab yang diklik
         btn.classList.add('active', 'text-indigo-600');
         btn.classList.remove('text-slate-600');
 
-        // Sembunyikan semua konten
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
 
-        // Tampilkan konten target
         const content = document.getElementById('tab-' + target);
         if (content) {
           content.classList.remove('hidden');
-          // Scroll ke atas
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Refresh ikon Lucide
-        refreshIcons();
+        if (typeof refreshIcons === 'function') refreshIcons();
 
-        // Simpan tab terakhir di sessionStorage
         try {
           sessionStorage.setItem('sispa_panduan_tab', target);
         } catch (e) { /* abaikan */ }
       });
     });
 
-    // Kembalikan tab terakhir yang dibuka
+    // Kembalikan tab terakhir
     try {
       const lastTab = sessionStorage.getItem('sispa_panduan_tab');
       if (lastTab) {
@@ -948,6 +777,16 @@
       }
     } catch (e) { /* abaikan */ }
   }
+
+  // Refresh ikon setelah DOM siap
+  window.addEventListener('DOMContentLoaded', () => {
+    if (typeof refreshIcons === 'function') refreshIcons();
+  });
+
+  // Fallback: panggil refreshIcons setelah 100ms (untuk Lucide yang di-load deferred)
+  setTimeout(() => {
+    if (typeof refreshIcons === 'function') refreshIcons();
+  }, 100);
 </script>
 </body>
 </html>
