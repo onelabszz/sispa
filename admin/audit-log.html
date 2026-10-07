@@ -153,12 +153,7 @@
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
-  const user = sispaRequireLogin(['Admin']);
-  if (user) {
-    mountShell('audit-log');
-    loadData();
-  }
-
+  // ===== DEKLARASI DULU =====
   let allData = null;
   let currentPage = 1;
   const PAGE_LIMIT = 50;
@@ -167,6 +162,13 @@
   let filterAksi = '';
   let filterDari = '';
   let filterSampai = '';
+
+  // ===== BARU PANGGIL FUNGSI =====
+  const user = sispaRequireLogin(['Admin']);
+  if (user) {
+    mountShell('audit-log');
+    loadData();
+  }
 
   /* ============================================================
      LOAD DATA
