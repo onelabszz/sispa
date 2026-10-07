@@ -257,7 +257,7 @@
             <button class="icon-btn" data-edit="${u.id}" title="Edit">${icon('pencil', 'w-4 h-4')}</button>
             <button class="icon-btn" data-reset="${u.id}" title="Reset Password">${icon('key', 'w-4 h-4')}</button>
             ${!isAdmin ? `<button class="icon-btn text-amber-600" data-imp="${u.id}" title="Login As">${icon('user-check', 'w-4 h-4')}</button>` : ''}
-            ${!isAdmin && !isSelf ? `<button class="icon-btn text-red-600" data-del="${u.id}" title="Nonaktifkan">${icon('user-x', 'w-4 h-4')}</button>` : ''}
+            ${!isAdmin && !isSelf ? `<button class="icon-btn text-slate-500" data-menu="${u.id}" title="Menu">${icon('more-vertical', 'w-4 h-4')}</button>` : ''}
           </td>
         </tr>`;
     }).join('');
@@ -265,7 +265,10 @@
     tbody.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openEdit(b.dataset.edit)));
     tbody.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => doReset(b.dataset.reset)));
     tbody.querySelectorAll('[data-imp]').forEach(b => b.addEventListener('click', () => doImpersonate(b.dataset.imp)));
-    tbody.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => doDelete(b.dataset.del)));
+    tbody.querySelectorAll('[data-menu]').forEach(b => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openRowMenu(b.dataset.menu, b);
+    }));
 
     refreshIcons();
   }
@@ -496,29 +499,6 @@
       Swal2.close();
       swalError('Gagal', err.message);
     }
-  }
-
-  /* ============================================================
-     NONAKTIFKAN
-     ============================================================ */
-  async function doDelete(id) {
-    const u = allItems.find(x => x.id === id);
-    if (!u) return;
-
-    const ok = await swalConfirm(
-      'Nonaktifkan user?',
-      `"${u.nama || u.npsn}" tidak akan bisa login lagi. Data supervisi tetap tersimpan.`,
-      { icon: 'warning', confirmText: 'Ya, nonaktifkan', danger: true }
-    );
-    if (!ok) return;
-
-    await withLoading('Menonaktifkan...', async () => {
-      try {
-        await sispaRequest('admin.users.delete', { id: id });
-        await swalSuccess('Dinonaktifkan', 'User tidak dapat login lagi.');
-        await loadData();
-      } catch (err) { handleApiError(err); }
-    });
   }
 
   /* ============================================================
@@ -815,6 +795,150 @@
       refreshIcons();
       swalError('Gagal impor', err.message);
     }
+  }
+    /* ============================================================
+     ROW MENU (Soft delete & Hard delete)
+     ============================================================ */
+  function openRowMenu(id, anchorBtn) {
+    const u = allItems.find(x => x.id === id);
+    if (!u) return;
+
+    // Buat menu context
+    const rect = anchorBtn.getBoundingClientRect();
+    const menu = document.createElement('div');
+    menu.id = 'rowMenu';
+    menu.style.cssText = 'position:fixed;z-index:200;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.12);padding:4px;min-width:180px;font-size:13px';
+    menu.style.top = (rect.bottom + 4) + 'px';
+    menu.style.left = Math.max(8, rect.left - 160) + 'px';
+
+    const statusAktif = u.status === 'aktif';
+
+    menu.innerHTML = `
+      <button data-action="soft" class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 flex items-center gap-2">
+        ${icon(statusAktif ? 'user-x' : 'user-check', 'w-4 h-4')}
+        <span>${statusAktif ? 'Nonaktifkan' : 'Aktifkan'}</span>
+      </button>
+      <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
+      <button data-action="hard" class="w-full text-left px-3 py-2 rounded-md hover:bg-red-50 text-red-600 flex items-center gap-2">
+        ${icon('trash-2', 'w-4 h-4')}
+        <span>Hapus Permanen</span>
+      </button>
+    `;
+
+    document.body.appendChild(menu);
+    refreshIcons();
+
+    // Close on outside click
+    setTimeout(() => {
+      document.addEventListener('click', closeRowMenu, { once: true });
+    }, 50);
+
+    menu.querySelector('[data-action="soft"]').addEventListener('click', () => {
+      closeRowMenu();
+      if (statusAktif) doSoftDelete(id);
+      else doActivate(id);
+    });
+    menu.querySelector('[data-action="hard"]').addEventListener('click', () => {
+      closeRowMenu();
+      doHardDelete(id);
+    });
+  }
+
+  function closeRowMenu() {
+    const m = document.getElementById('rowMenu');
+    if (m) m.remove();
+  }
+
+  async function doActivate(id) {
+    const u = allItems.find(x => x.id === id);
+    if (!u) return;
+    await withLoading('Mengaktifkan...', async () => {
+      try {
+        await sispaRequest('admin.users.update', { id: id, payload: { status: 'aktif' } });
+        await swalSuccess('Diaktifkan', 'User dapat login kembali.');
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  async function doSoftDelete(id) {
+    const u = allItems.find(x => x.id === id);
+    if (!u) return;
+    const ok = await swalConfirm(
+      'Nonaktifkan user?',
+      `"${u.nama || u.npsn}" tidak dapat login lagi. Data supervisi tetap tersimpan.`,
+      { icon: 'warning', confirmText: 'Ya, nonaktifkan', danger: true }
+    );
+    if (!ok) return;
+
+    await withLoading('Menonaktifkan...', async () => {
+      try {
+        await sispaRequest('admin.users.delete', { id: id });
+        await swalSuccess('Dinonaktifkan', 'User tidak dapat login lagi.');
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  async function doHardDelete(id) {
+    const u = allItems.find(x => x.id === id);
+    if (!u) return;
+
+    // Konfirmasi 1: info
+    const step1 = await Swal2.fire({
+      icon: 'warning',
+      title: 'Hapus Permanen?',
+      html: `
+        <div class="text-left text-sm">
+          <p class="mb-2">Data berikut akan <strong>dihapus permanen</strong> dan tidak dapat dikembalikan:</p>
+          <ul class="list-disc list-inside text-slate-600 mb-3">
+            <li>Akun: <strong>${escapeHtml(u.nama || u.npsn)}</strong> (${escapeHtml(u.role)})</li>
+            <li>Semua sesi aktif user ini</li>
+            <li>Binaan pengawas (kalau ada)</li>
+          </ul>
+          <p class="text-xs text-slate-500">Data supervisi/coaching terkait <strong>tidak</strong> dihapus.</p>
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: 'Lanjut',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      reverseButtons: true
+    });
+    if (!step1.isConfirmed) return;
+
+    // Konfirmasi 2: ketik nama
+    const { value: inputName } = await Swal2.fire({
+      title: 'Konfirmasi Akhir',
+      input: 'text',
+      inputLabel: 'Ketik nama user untuk konfirmasi:',
+      inputPlaceholder: u.nama || u.npsn,
+      showCancelButton: true,
+      confirmButtonText: 'Hapus Permanen',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      reverseButtons: true,
+      inputValidator: (value) => {
+        if (value !== (u.nama || u.npsn)) return 'Nama tidak cocok';
+        return null;
+      }
+    });
+    if (!inputName) return;
+
+    await withLoading('Menghapus permanen...', async () => {
+      try {
+        const res = await sispaRequest('admin.users.hardDelete', { id: id });
+        await swalSuccess('Terhapus', 'User dan sesi aktif berhasil dihapus.');
+        await loadData();
+      } catch (err) {
+        if (err.code === 409) {
+          swalError('Tidak dapat dihapus', err.message);
+        } else {
+          handleApiError(err);
+        }
+      }
+    });
   }
 </script>
 </body>
