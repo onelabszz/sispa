@@ -146,16 +146,18 @@
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
+  // ===== DEKLARASI DULU =====
+  let allItems = [];
+  let filterText = '';
+  let filterJenjang = '';
+  let filterStatus = '';
+
+  // ===== BARU PANGGIL FUNGSI =====
   const user = sispaRequireLogin(['Admin']);
   if (user) {
     mountShell('sekolah');
     loadData();
   }
-
-  let allItems = [];
-  let filterText = '';
-  let filterJenjang = '';
-  let filterStatus = '';
 
   /* ============================================================
      LOAD
@@ -468,12 +470,6 @@
     try {
       const usersRes = await sispaRequest('admin.users.list', { filter: { role: 'Pengawas', status: 'aktif' } });
       pengawasList = usersRes.items || [];
-
-      // Ambil binaan saat ini dari salah satu pengawas (ambil dari backend)
-      const binaanRes = await sispaRequest('admin.sekolah.getBinaan', { npsn: npsn }).catch(() => null);
-      if (binaanRes && binaanRes.pengawas_ids) {
-        binaanNow = binaanRes.pengawas_ids;
-      }
     } catch (e) {
       // ignore
     }
@@ -587,7 +583,7 @@
               npsn, nama_sekolah, jenjang, kecamatan, kabupaten, provinsi, nama_ks, alamat, telepon, email, logo_url
             </code>
             <div class="mt-2">
-              <strong>Jenjang</strong>: SD / SMP / SMA / SMK / SLB ·
+              <strong>Jenjang</strong>: SD / SMP / SMA / SMK / SLB / Dinas ·
               Kolom <strong>alamat</strong>, <strong>telepon</strong>, <strong>email</strong>, <strong>logo_url</strong> boleh dikosongkan.
             </div>
           </div>
