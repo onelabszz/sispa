@@ -360,7 +360,7 @@ function buildHeader(user) {
         ${icon('menu', 'w-5 h-5')}
       </button>
       <div class="flex-1 min-w-0">
-        <div class="text-sm font-medium text-slate-500">
+        <div class="text-sm font-medium text-slate-500 truncate">
           NPSN <span class="text-mono">${escapeHtml(user.npsn)}</span>
         </div>
       </div>
@@ -371,12 +371,12 @@ function buildHeader(user) {
           </div>
           <div class="text-xs text-slate-500">${roleLabel}</div>
         </div>
-        <div class="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0"
-             style="background: var(--brand-100); color: var(--brand-700)">
-          ${escapeHtml((user.nama || user.nama_sekolah || 'U').charAt(0).toUpperCase())}
-        </div>
-        <button id="logoutBtn" class="icon-btn" title="Keluar">
-          ${icon('log-out', 'w-4 h-4')}
+        <button id="profileBtn" class="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-slate-100 transition" title="Menu Akun">
+          <div class="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0"
+               style="background: var(--brand-100); color: var(--brand-700)">
+            ${escapeHtml((user.nama || user.nama_sekolah || 'U').charAt(0).toUpperCase())}
+          </div>
+          ${icon('chevron-down', 'w-3.5 h-3.5 text-slate-400 hidden md:block')}
         </button>
       </div>
     </header>`;
@@ -407,6 +407,106 @@ function mountImpersonationBanner() {
     sessionStorage.removeItem('sispa_admin_backup');
     window.location.href = sispaUrl('/admin/dashboard.html');
   });
+}
+
+/* ============================================================
+   PROFILE DROPDOWN MENU
+   ============================================================ */
+
+function openProfileMenu(anchorBtn) {
+  // Cegah dobel
+  closeProfileMenu();
+
+  const user = sispaGetUser();
+  if (!user) return;
+
+  const roleLabel = SISPA_ROLE_LABEL[user.role] || user.role;
+
+  const rect = anchorBtn.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.id = 'profileMenu';
+  menu.style.cssText = [
+    'position:fixed',
+    'z-index:200',
+    'background:#fff',
+    'border:1px solid #e2e8f0',
+    'border-radius:12px',
+    'box-shadow:0 10px 25px rgba(0,0,0,.12)',
+    'padding:6px',
+    'min-width:240px',
+    'font-size:14px',
+    'top:' + (rect.bottom + 8) + 'px',
+    'right:' + Math.max(8, window.innerWidth - rect.right) + 'px'
+  ].join(';');
+
+  menu.innerHTML = `
+    <div class="px-3 py-2 border-b border-slate-100 mb-1">
+      <div class="text-sm font-semibold text-slate-900 truncate">
+        ${escapeHtml(user.nama || '(Belum diisi)')}
+      </div>
+      <div class="text-xs text-slate-500 truncate mt-0.5">
+        ${escapeHtml(user.nama_sekolah || user.npsn)}
+      </div>
+      <div class="text-xs text-slate-400 mt-0.5">${roleLabel}</div>
+    </div>
+
+    <a href="${sispaUrl('/panduan.html')}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700">
+      ${icon('book-open', 'w-4 h-4')}
+      <span>Panduan</span>
+    </a>
+
+    <a href="${sispaUrl('/settings.html')}" class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700">
+      ${icon('settings', 'w-4 h-4')}
+      <span>Pengaturan Koneksi</span>
+    </a>
+
+    <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
+
+    <button id="profileLogoutBtn" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-red-50 text-red-600 text-left">
+      ${icon('log-out', 'w-4 h-4')}
+      <span>Keluar</span>
+    </button>`;
+
+  document.body.appendChild(menu);
+  refreshIcons();
+
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', closeProfileMenuOnOutside, { once: true });
+  }, 50);
+
+  // Event: logout
+  document.getElementById('profileLogoutBtn').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    closeProfileMenu();
+    const ok = await swalConfirm(
+      'Keluar dari SISPA?',
+      'Anda akan diminta login kembali.',
+      { confirmText: 'Ya, keluar', danger: true }
+    );
+    if (!ok) return;
+    await sispaLogout();
+    window.location.href = sispaUrl('/index.html');
+  });
+
+  // Event: klik menu item
+  menu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', closeProfileMenu);
+  });
+}
+
+function closeProfileMenu() {
+  const m = document.getElementById('profileMenu');
+  if (m) m.remove();
+}
+
+function closeProfileMenuOnOutside(e) {
+  const menu = document.getElementById('profileMenu');
+  if (!menu) return;
+  const btn = document.getElementById('profileBtn');
+  if (menu.contains(e.target)) return;
+  if (btn && btn.contains(e.target)) return;
+  closeProfileMenu();
 }
 
 /* ============================================================
@@ -512,7 +612,7 @@ function mountShell(activeKey) {
   const overlay = document.getElementById('sidebarOverlay');
   const menuBtn = document.getElementById('menuBtn');
   const closeBtn = document.getElementById('sidebarClose');
-  const logoutBtn = document.getElementById('logoutBtn');
+  const profileBtn = document.getElementById('profileBtn');
 
   function openSidebar() {
     if (sidebar) sidebar.classList.add('open');
@@ -527,16 +627,10 @@ function mountShell(activeKey) {
   if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
   if (overlay) overlay.addEventListener('click', closeSidebar);
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-      const ok = await swalConfirm(
-        'Keluar dari SISPA?',
-        'Anda akan diminta login kembali.',
-        { confirmText: 'Ya, keluar', danger: true }
-      );
-      if (!ok) return;
-      await sispaLogout();
-      window.location.href = sispaUrl('/index.html');
+  if (profileBtn) {
+    profileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openProfileMenu(profileBtn);
     });
   }
 
@@ -614,6 +708,8 @@ window.mountShell         = mountShell;
 
 window.mountImpersonationBanner = mountImpersonationBanner;
 window.checkMigrationBanner     = checkMigrationBanner;
+window.openProfileMenu          = openProfileMenu;
+window.closeProfileMenu         = closeProfileMenu;
 
 window.openModal          = openModal;
 window.closeModal         = closeModal;
