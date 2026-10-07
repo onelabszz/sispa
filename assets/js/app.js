@@ -218,8 +218,8 @@ const SISPA_NAV = {
     { key: 'supervisi', href: '/pengawas/supervisi.html', label: 'Semua Supervisi', icon: 'clipboard-list' },
     { key: 'coaching',  href: '/pengawas/coaching.html',  label: 'Semua Coaching', icon: 'message-square' },
     { section: 'Sistem' },
-    { key: 'audit-log', href: '/admin/audit-log.html',   label: 'Audit Log', icon: 'activity' },
-    { key: 'settings',  href: '/settings.html',          label: 'Pengaturan', icon: 'settings' }
+    { key: 'audit-log',  href: '/admin/audit-log.html',  label: 'Audit Log', icon: 'activity' },
+    { key: 'settings',   href: '/admin/pengaturan.html', label: 'Pengaturan', icon: 'settings' }
   ]
 };
 
