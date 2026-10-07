@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Kelola Users</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+
+<!-- ================== KONTEN ================== -->
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Kelola Users</h1>
+    <p class="text-sm text-slate-500 mt-1">Tambah, edit, reset password, atau login sebagai user.</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button id="btnRefresh" class="btn btn-secondary">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      <span>Refresh</span>
+    </button>
+    <button id="btnAdd" class="btn btn-primary">
+      <i data-lucide="user-plus" class="w-4 h-4"></i>
+      <span>Tambah User</span>
+    </button>
+  </div>
+</div>
+
+<!-- ================== STAT RINGKAS ================== -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="stat-icon bg-indigo-50 text-indigo-600"><i data-lucide="users" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Total User</div>
+      <div id="statTotal" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-blue-50 text-blue-600"><i data-lucide="school" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">KS</div>
+      <div id="statKS" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-cyan-50 text-cyan-600"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Pengawas</div>
+      <div id="statPengawas" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-amber-50 text-amber-600"><i data-lucide="user-x" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Nonaktif</div>
+      <div id="statNonaktif" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== FILTER ================== -->
+<div class="card mb-4">
+  <div class="card-body grid md:grid-cols-5 gap-3">
+    <div class="relative md:col-span-3">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+        <i data-lucide="search" class="w-4 h-4"></i>
+      </span>
+      <input type="text" id="searchInput" placeholder="Cari nama / NPSN / NIP / email..."
+             class="input" style="padding-left:2.4rem" />
+    </div>
+    <select id="filterRole" class="select">
+      <option value="">Semua Role</option>
+      <option value="KS">KS</option>
+      <option value="Pengawas">Pengawas</option>
+      <option value="Admin">Admin</option>
+    </select>
+    <select id="filterStatus" class="select">
+      <option value="">Semua Status</option>
+      <option value="aktif">Aktif</option>
+      <option value="nonaktif">Nonaktif</option>
+    </select>
+    <div class="md:col-span-5 flex items-center justify-end">
+      <button id="btnReset" class="btn btn-ghost text-slate-600">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        <span>Reset Filter</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================== TABEL ================== -->
+<div class="card overflow-hidden">
+  <div class="card-header">
+    <div class="flex items-center gap-2">
+      <i data-lucide="users" class="w-4 h-4 text-slate-500"></i>
+      <h2 class="font-semibold text-slate-900 text-sm">Daftar User</h2>
+      <span id="resultCount" class="badge badge-neutral">0</span>
+    </div>
+  </div>
+  <div class="overflow-x-auto" id="tableWrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>NPSN</th>
+          <th class="text-center">Role</th>
+          <th>Kontak</th>
+          <th>Login Terakhir</th>
+          <th class="text-center">Status</th>
+          <th class="text-right">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="usersTable"></tbody>
+    </table>
+  </div>
+
+  <div id="emptyState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="users" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Belum ada user</h3>
+    <p class="text-sm text-slate-500">Tambahkan user pertama.</p>
+  </div>
+
+  <div id="noResultState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="search-x" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Tidak ada hasil</h3>
+    <p class="text-sm text-slate-500">Coba ubah kata kunci atau filter.</p>
+  </div>
+</div>
+
+<!-- ================== END ================== -->
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['Admin']);
+  if (user) {
+    mountShell('users');
+    loadData();
+  }
+
+  let allItems = [];
+  let filterText = '';
+  let filterRole = '';
+  let filterStatus = '';
+
+  /* ============================================================
+     LOAD DATA
+     ============================================================ */
+  async function loadData() {
+    await withLoading('Memuat data user...', async () => {
+      try {
+        const res = await sispaRequest('admin.users.list', {});
+        allItems = res.items || [];
+        renderStats(res.summary || {});
+        renderTable();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  function renderStats(s) {
+    el('statTotal').textContent = s.total || 0;
+    el('statKS').textContent = s.KS || 0;
+    el('statPengawas').textContent = s.Pengawas || 0;
+    el('statNonaktif').textContent = s.nonaktif || 0;
+  }
+
+  /* ============================================================
+     RENDER TABEL
+     ============================================================ */
+  function renderTable() {
+    const tbody = el('usersTable');
+    const wrap = el('tableWrap');
+    const emptyState = el('emptyState');
+    const noResultState = el('noResultState');
+
+    wrap.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    noResultState.classList.add('hidden');
+
+    if (!allItems.length) {
+      emptyState.classList.remove('hidden');
+      el('resultCount').textContent = 0;
+      refreshIcons();
+      return;
+    }
+
+    let filtered = allItems.slice();
+    if (filterText) {
+      const q = filterText.toLowerCase();
+      filtered = filtered.filter(x =>
+        (x.nama || '').toLowerCase().includes(q) ||
+        (x.npsn || '').toLowerCase().includes(q) ||
+        (x.nip || '').toLowerCase().includes(q) ||
+        (x.email || '').toLowerCase().includes(q)
+      );
+    }
+    if (filterRole) filtered = filtered.filter(x => x.role === filterRole);
+    if (filterStatus) filtered = filtered.filter(x => x.status === filterStatus);
+
+    el('resultCount').textContent = filtered.length + ' / ' + allItems.length;
+
+    if (!filtered.length) {
+      noResultState.classList.remove('hidden');
+      refreshIcons();
+      return;
+    }
+    wrap.classList.remove('hidden');
+
+    tbody.innerHTML = filtered.map(u => {
+      const roleCls = u.role === 'Admin' ? 'badge-warning'
+                    : u.role === 'Pengawas' ? 'badge-info'
+                    : 'badge-neutral';
+
+      const statusCls = u.status === 'aktif' ? 'badge-success' : 'badge-danger';
+      const statusLabel = u.status === 'aktif' ? 'Aktif' : 'Nonaktif';
+
+      const isSelf = u.id === user.id;
+      const isAdmin = u.role === 'Admin';
+
+      return `
+        <tr class="hover:bg-slate-50">
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                ${escapeHtml((u.nama || u.npsn || 'U').charAt(0).toUpperCase())}
+              </div>
+              <div class="min-w-0">
+                <div class="font-medium text-slate-900 truncate">${escapeHtml(u.nama || '(belum diisi)')}</div>
+                <div class="text-xs text-slate-500 truncate">
+                  ${u.nama_sekolah ? escapeHtml(u.nama_sekolah) : '(sekolah tidak dikenal)'}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class="text-mono text-xs">${escapeHtml(u.npsn)}</td>
+          <td class="text-center"><span class="badge ${roleCls}">${escapeHtml(u.role)}</span></td>
+          <td class="text-xs">
+            ${u.no_hp ? `<div class="text-mono">${escapeHtml(u.no_hp)}</div>` : ''}
+            ${u.email ? `<div class="text-slate-500 truncate">${escapeHtml(u.email)}</div>` : ''}
+            ${!u.no_hp && !u.email ? '<span class="text-slate-400">—</span>' : ''}
+          </td>
+          <td class="text-xs text-slate-500">${u.last_login ? escapeHtml(u.last_login) : 'Belum pernah'}</td>
+          <td class="text-center"><span class="badge ${statusCls}">${statusLabel}</span></td>
+          <td class="text-right whitespace-nowrap">
+            <button class="icon-btn" data-edit="${u.id}" title="Edit">${icon('pencil', 'w-4 h-4')}</button>
+            <button class="icon-btn" data-reset="${u.id}" title="Reset Password">${icon('key', 'w-4 h-4')}</button>
+            ${!isAdmin ? `<button class="icon-btn text-amber-600" data-imp="${u.id}" title="Login As">${icon('user-check', 'w-4 h-4')}</button>` : ''}
+            ${!isAdmin && !isSelf ? `<button class="icon-btn text-red-600" data-del="${u.id}" title="Nonaktifkan">${icon('user-x', 'w-4 h-4')}</button>` : ''}
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openEdit(b.dataset.edit)));
+    tbody.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => doReset(b.dataset.reset)));
+    tbody.querySelectorAll('[data-imp]').forEach(b => b.addEventListener('click', () => doImpersonate(b.dataset.imp)));
+    tbody.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => doDelete(b.dataset.del)));
+
+    refreshIcons();
+  }
+
+  /* ============================================================
+     TAMBAH / EDIT
+     ============================================================ */
+  el('btnAdd').addEventListener('click', () => openForm());
+
+  function openForm(u) {
+    const isEdit = !!u;
+    openModal({
+      title: isEdit ? 'Edit User' : 'Tambah User',
+      body: `
+        <form id="userForm" class="space-y-4">
+          <input type="hidden" id="fId" value="${isEdit ? escapeHtml(u.id) : ''}" />
+
+          <div>
+            <label class="label" for="fNpsn">NPSN <span class="text-red-500">*</span></label>
+            <input type="text" id="fNpsn" required class="input text-mono"
+                   value="${isEdit ? escapeHtml(u.npsn) : ''}"
+                   ${isEdit ? 'disabled' : ''}
+                   placeholder="Contoh: 20512345" />
+            ${isEdit ? '<p class="text-xs text-slate-500 mt-1">NPSN tidak dapat diubah</p>' : '<p class="text-xs text-slate-500 mt-1">Password default = NPSN</p>'}
+          </div>
+
+          <div>
+            <label class="label" for="fRole">Role <span class="text-red-500">*</span></label>
+            <select id="fRole" required class="select" ${isEdit ? 'disabled' : ''}>
+              <option value="">— Pilih Role —</option>
+              <option value="KS" ${isEdit && u.role === 'KS' ? 'selected' : ''}>Kepala Sekolah</option>
+              <option value="Pengawas" ${isEdit && u.role === 'Pengawas' ? 'selected' : ''}>Pengawas</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="label" for="fNama">Nama Lengkap &amp; Gelar</label>
+            <input type="text" id="fNama" class="input"
+                   value="${isEdit ? escapeHtml(u.nama || '') : ''}"
+                   placeholder="Contoh: Dra. Siti Aminah, M.Pd" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="fNip">NIP</label>
+              <input type="text" id="fNip" class="input text-mono"
+                     value="${isEdit ? escapeHtml(u.nip || '') : ''}" />
+            </div>
+            <div>
+              <label class="label" for="fJk">Jenis Kelamin</label>
+              <select id="fJk" class="select">
+                <option value="">—</option>
+                <option value="L" ${isEdit && u.jenis_kelamin === 'L' ? 'selected' : ''}>Laki-laki</option>
+                <option value="P" ${isEdit && u.jenis_kelamin === 'P' ? 'selected' : ''}>Perempuan</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="fPangkat">Pangkat / Golongan</label>
+              <input type="text" id="fPangkat" class="input"
+                     value="${isEdit ? escapeHtml(u.pangkat_golongan || '') : ''}"
+                     placeholder="Contoh: Pembina/IV a" />
+            </div>
+            <div>
+              <label class="label" for="fStatusPeg">Status Kepegawaian</label>
+              <select id="fStatusPeg" class="select">
+                <option value="">—</option>
+                <option value="PNS" ${isEdit && u.status_kepegawaian === 'PNS' ? 'selected' : ''}>PNS</option>
+                <option value="PPPK" ${isEdit && u.status_kepegawaian === 'PPPK' ? 'selected' : ''}>PPPK</option>
+                <option value="Non ASN" ${isEdit && u.status_kepegawaian === 'Non ASN' ? 'selected' : ''}>Non ASN</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="fJabatan">Jabatan</label>
+            <input type="text" id="fJabatan" class="input"
+                   value="${isEdit ? escapeHtml(u.jabatan || '') : ''}"
+                   placeholder="Contoh: Kepala Sekolah" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="fHp">No. HP</label>
+              <input type="tel" id="fHp" class="input text-mono"
+                     value="${isEdit ? escapeHtml(u.no_hp || '') : ''}" />
+            </div>
+            <div>
+              <label class="label" for="fEmail">Email</label>
+              <input type="email" id="fEmail" class="input"
+                     value="${isEdit ? escapeHtml(u.email || '') : ''}" />
+            </div>
+          </div>
+
+          ${isEdit ? `
+            <div>
+              <label class="label" for="fStatus">Status Akun</label>
+              <select id="fStatus" class="select">
+                <option value="aktif" ${u.status === 'aktif' ? 'selected' : ''}>Aktif</option>
+                <option value="nonaktif" ${u.status === 'nonaktif' ? 'selected' : ''}>Nonaktif</option>
+              </select>
+            </div>` : ''}
+        </form>`,
+      footer: `
+        <button class="btn btn-secondary" data-close>
+          ${icon('x', 'w-4 h-4')}<span>Batal</span>
+        </button>
+        <button class="btn btn-primary" id="btnSave">
+          ${icon('save', 'w-4 h-4')}<span>Simpan</span>
+        </button>`
+    });
+
+    el('btnSave').addEventListener('click', () => saveUser(isEdit));
+  }
+
+  function openEdit(id) {
+    const u = allItems.find(x => x.id === id);
+    if (u) openForm(u);
+  }
+
+  async function saveUser(isEdit) {
+    const btn = el('btnSave');
+    const npsn = el('fNpsn').value.trim();
+    const role = el('fRole').value;
+    const nama = el('fNama').value.trim();
+
+    if (!isEdit) {
+      if (!npsn) return swalError('NPSN wajib diisi');
+      if (!role) return swalError('Role wajib dipilih');
+    }
+
+    const payload = {
+      nama: nama,
+      nip: el('fNip').value.trim(),
+      pangkat_golongan: el('fPangkat').value.trim(),
+      jabatan: el('fJabatan').value.trim(),
+      status_kepegawaian: el('fStatusPeg').value,
+      jenis_kelamin: el('fJk').value,
+      no_hp: el('fHp').value.trim(),
+      email: el('fEmail').value.trim()
+    };
+
+    btn.disabled = true;
+    btn.innerHTML = `${icon('loader-2', 'w-4 h-4 animate-spin')}<span>Menyimpan...</span>`;
+    refreshIcons();
+
+    try {
+      if (isEdit) {
+        payload.status = el('fStatus').value;
+        await sispaRequest('admin.users.update', { id: el('fId').value, payload: payload });
+        closeModal();
+        await swalSuccess('Tersimpan', 'Data user diperbarui.');
+      } else {
+        payload.npsn = npsn;
+        payload.role = role;
+        const res = await sispaRequest('admin.users.create', { payload: payload });
+        closeModal();
+        await swalSuccess('User dibuat', 'Password default: ' + res.npsn);
+      }
+      await loadData();
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `${icon('save', 'w-4 h-4')}<span>Simpan</span>`;
+      refreshIcons();
+      swalError('Gagal menyimpan', err.message);
+    }
+  }
+
+  /* ============================================================
+     RESET PASSWORD
+     ============================================================ */
+  async function doReset(id) {
+    const u = allItems.find(x => x.id === id);
+    if (!u) return;
+
+    const ok = await swalConfirm(
+      'Reset password?',
+      `Password "${u.nama || u.npsn}" akan direset ke NPSN (${u.npsn}). User diminta ganti saat login berikutnya.`,
+      { icon: 'warning', confirmText: 'Ya, reset' }
+    );
+    if (!ok) return;
+
+    await withLoading('Mereset password...', async () => {
+      try {
+        await sispaRequest('admin.users.resetPassword', { id: id });
+        await swalSuccess('Password direset', 'Password baru: ' + u.npsn);
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  /* ============================================================
+     LOGIN AS
+     ============================================================ */
+  async function doImpersonate(id) {
+    const u = allItems.find(x => x.id === id);
+    if (!u) return;
+
+    const ok = await swalConfirm(
+      'Login sebagai user ini?',
+      `Anda akan login sebagai "${u.nama || u.npsn}" (${u.role}). Akan ada tombol "Kembali ke Admin" untuk keluar.`,
+      { icon: 'question', confirmText: 'Ya, login as' }
+    );
+    if (!ok) return;
+
+    swalLoading('Menyiapkan sesi...');
+    try {
+      const res = await sispaRequest('admin.users.impersonate', { id: id });
+      Swal2.close();
+
+      // Simpan sesi admin sebagai backup
+      sessionStorage.setItem('sispa_admin_backup', JSON.stringify({
+        token: localStorage.getItem(SISPA_CONFIG.STORAGE_KEYS.TOKEN),
+        user: localStorage.getItem(SISPA_CONFIG.STORAGE_KEYS.USER)
+      }));
+
+      // Ganti ke sesi target
+      localStorage.setItem(SISPA_CONFIG.STORAGE_KEYS.TOKEN, res.token);
+      localStorage.setItem(SISPA_CONFIG.STORAGE_KEYS.USER, JSON.stringify(res.user));
+
+      // Redirect ke dashboard sesuai role
+      const dest = res.user.role === 'Pengawas'
+        ? '/pengawas/dashboard.html'
+        : '/ks/dashboard.html';
+      window.location.href = sispaUrl(dest);
+    } catch (err) {
+      Swal2.close();
+      swalError('Gagal', err.message);
+    }
+  }
+
+  /* ============================================================
+     NONAKTIFKAN
+     ============================================================ */
+  async function doDelete(id) {
+    const u = allItems.find(x => x.id === id);
+    if (!u) return;
+
+    const ok = await swalConfirm(
+      'Nonaktifkan user?',
+      `"${u.nama || u.npsn}" tidak akan bisa login lagi. Data supervisi tetap tersimpan.`,
+      { icon: 'warning', confirmText: 'Ya, nonaktifkan', danger: true }
+    );
+    if (!ok) return;
+
+    await withLoading('Menonaktifkan...', async () => {
+      try {
+        await sispaRequest('admin.users.delete', { id: id });
+        await swalSuccess('Dinonaktifkan', 'User tidak dapat login lagi.');
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  /* ============================================================
+     EVENT LISTENERS
+     ============================================================ */
+  el('searchInput').addEventListener('input', (e) => { filterText = e.target.value; renderTable(); });
+  el('filterRole').addEventListener('change', (e) => { filterRole = e.target.value; renderTable(); });
+  el('filterStatus').addEventListener('change', (e) => { filterStatus = e.target.value; renderTable(); });
+  el('btnReset').addEventListener('click', () => {
+    el('searchInput').value = '';
+    el('filterRole').value = '';
+    el('filterStatus').value = '';
+    filterText = filterRole = filterStatus = '';
+    renderTable();
+  });
+  el('btnRefresh').addEventListener('click', () => loadData());
+</script>
+</body>
+</html>
