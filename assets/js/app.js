@@ -198,7 +198,9 @@ const SISPA_NAV = {
     { key: 'guru',      href: '/ks/guru.html',       label: 'Data Guru',  icon: 'users' },
     { section: 'Supervisi' },
     { key: 'supervisi', href: '/ks/supervisi.html',  label: 'Supervisi',  icon: 'clipboard-list' },
-    { key: 'coaching',  href: '/ks/coaching.html',   label: 'Coaching',   icon: 'message-square' }
+    { key: 'coaching',  href: '/ks/coaching.html',   label: 'Coaching',   icon: 'message-square' },
+    { section: 'Bantuan' },
+    { key: 'panduan',   href: '/panduan.html',       label: 'Panduan',    icon: 'book-open' }
   ],
   Pengawas: [
     { section: 'Utama' },
@@ -206,7 +208,9 @@ const SISPA_NAV = {
     { section: 'Monitoring' },
     { key: 'guru',      href: '/pengawas/guru.html',      label: 'Daftar Guru', icon: 'users' },
     { key: 'supervisi', href: '/pengawas/supervisi.html', label: 'Semua Supervisi', icon: 'clipboard-list' },
-    { key: 'coaching',  href: '/pengawas/coaching.html',  label: 'Semua Coaching', icon: 'message-square' }
+    { key: 'coaching',  href: '/pengawas/coaching.html',  label: 'Semua Coaching', icon: 'message-square' },
+    { section: 'Bantuan' },
+    { key: 'panduan',   href: '/panduan.html',            label: 'Panduan', icon: 'book-open' }
   ],
   Admin: [
     { section: 'Utama' },
@@ -219,7 +223,9 @@ const SISPA_NAV = {
     { key: 'coaching',  href: '/pengawas/coaching.html',  label: 'Semua Coaching', icon: 'message-square' },
     { section: 'Sistem' },
     { key: 'audit-log',  href: '/admin/audit-log.html',  label: 'Audit Log', icon: 'activity' },
-    { key: 'settings',   href: '/admin/pengaturan.html', label: 'Pengaturan', icon: 'settings' }
+    { key: 'settings',   href: '/admin/pengaturan.html', label: 'Pengaturan', icon: 'settings' },
+    { section: 'Bantuan' },
+    { key: 'panduan',    href: '/panduan.html',           label: 'Panduan', icon: 'book-open' }
   ]
 };
 
