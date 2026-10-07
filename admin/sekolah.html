@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Kelola Sekolah</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+
+<!-- ================== KONTEN ================== -->
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Kelola Sekolah</h1>
+    <p class="text-sm text-slate-500 mt-1">Tambah, edit, dan atur sekolah binaan.</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button id="btnRefresh" class="btn btn-secondary">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      <span>Refresh</span>
+    </button>
+    <button id="btnAdd" class="btn btn-primary">
+      <i data-lucide="plus" class="w-4 h-4"></i>
+      <span>Tambah Sekolah</span>
+    </button>
+  </div>
+</div>
+
+<!-- ================== STAT RINGKAS ================== -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="stat-icon bg-blue-50 text-blue-600"><i data-lucide="building-2" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Total Sekolah</div>
+      <div id="statTotal" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-emerald-50 text-emerald-600"><i data-lucide="check-circle-2" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Aktif</div>
+      <div id="statAktif" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-amber-50 text-amber-600"><i data-lucide="user-x" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Tanpa KS Aktif</div>
+      <div id="statTanpaKS" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-indigo-50 text-indigo-600"><i data-lucide="layers" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Jenjang</div>
+      <div id="statJenjang" class="text-sm font-medium text-slate-900 mt-1">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== FILTER ================== -->
+<div class="card mb-4">
+  <div class="card-body grid md:grid-cols-5 gap-3">
+    <div class="relative md:col-span-2">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+        <i data-lucide="search" class="w-4 h-4"></i>
+      </span>
+      <input type="text" id="searchInput" placeholder="Cari sekolah / NPSN / kecamatan..."
+             class="input" style="padding-left:2.4rem" />
+    </div>
+    <select id="filterJenjang" class="select">
+      <option value="">Semua Jenjang</option>
+      <option value="SD">SD</option>
+      <option value="SMP">SMP</option>
+      <option value="SMA">SMA</option>
+      <option value="SMK">SMK</option>
+      <option value="Dinas">Dinas</option>
+    </select>
+    <select id="filterStatus" class="select">
+      <option value="">Semua Status</option>
+      <option value="aktif">Aktif</option>
+      <option value="nonaktif">Nonaktif</option>
+    </select>
+    <button id="btnReset" class="btn btn-ghost text-slate-600 justify-center">
+      <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+      <span>Reset</span>
+    </button>
+  </div>
+</div>
+
+<!-- ================== TABEL ================== -->
+<div class="card overflow-hidden">
+  <div class="card-header">
+    <div class="flex items-center gap-2">
+      <i data-lucide="building-2" class="w-4 h-4 text-slate-500"></i>
+      <h2 class="font-semibold text-slate-900 text-sm">Daftar Sekolah</h2>
+      <span id="resultCount" class="badge badge-neutral">0</span>
+    </div>
+  </div>
+  <div class="overflow-x-auto" id="tableWrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Sekolah</th>
+          <th class="text-center">Jenjang</th>
+          <th>Kecamatan</th>
+          <th class="text-center">Guru</th>
+          <th class="text-center">Supervisi</th>
+          <th>KS</th>
+          <th class="text-center">Status</th>
+          <th class="text-right">Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="sekolahTable"></tbody>
+    </table>
+  </div>
+
+  <div id="emptyState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="building-2" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Belum ada sekolah</h3>
+    <p class="text-sm text-slate-500 mb-4">Tambahkan sekolah pertama.</p>
+    <button onclick="document.getElementById('btnAdd').click()" class="btn btn-primary">
+      <i data-lucide="plus" class="w-4 h-4"></i><span>Tambah Sekolah</span>
+    </button>
+  </div>
+
+  <div id="noResultState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="search-x" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Tidak ada hasil</h3>
+    <p class="text-sm text-slate-500">Coba ubah kata kunci atau filter.</p>
+  </div>
+</div>
+
+<!-- ================== END ================== -->
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['Admin']);
+  if (user) {
+    mountShell('sekolah');
+    loadData();
+  }
+
+  let allItems = [];
+  let filterText = '';
+  let filterJenjang = '';
+  let filterStatus = '';
+
+  /* ============================================================
+     LOAD
+     ============================================================ */
+  async function loadData() {
+    await withLoading('Memuat data sekolah...', async () => {
+      try {
+        const res = await sispaRequest('admin.sekolah.list', {});
+        allItems = res.items || [];
+        renderStats(res.summary || {});
+        renderTable();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  function renderStats(s) {
+    el('statTotal').textContent = s.total || 0;
+    el('statAktif').textContent = s.aktif || 0;
+    el('statTanpaKS').textContent = s.tanpa_ks || 0;
+    const j = s.jenjang || {};
+    const parts = Object.keys(j).map(k => k + ': ' + j[k]);
+    el('statJenjang').textContent = parts.join(' · ') || '—';
+  }
+
+  /* ============================================================
+     RENDER TABEL
+     ============================================================ */
+  function renderTable() {
+    const tbody = el('sekolahTable');
+    const wrap = el('tableWrap');
+    const emptyState = el('emptyState');
+    const noResultState = el('noResultState');
+
+    wrap.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    noResultState.classList.add('hidden');
+
+    if (!allItems.length) {
+      emptyState.classList.remove('hidden');
+      el('resultCount').textContent = 0;
+      refreshIcons();
+      return;
+    }
+
+    let filtered = allItems.slice();
+    if (filterText) {
+      const q = filterText.toLowerCase();
+      filtered = filtered.filter(x =>
+        (x.nama_sekolah || '').toLowerCase().includes(q) ||
+        (x.npsn || '').includes(q) ||
+        (x.kecamatan || '').toLowerCase().includes(q)
+      );
+    }
+    if (filterJenjang) filtered = filtered.filter(x => x.jenjang === filterJenjang);
+    if (filterStatus) filtered = filtered.filter(x => x.status === filterStatus);
+
+    el('resultCount').textContent = filtered.length + ' / ' + allItems.length;
+
+    if (!filtered.length) {
+      noResultState.classList.remove('hidden');
+      refreshIcons();
+      return;
+    }
+    wrap.classList.remove('hidden');
+
+    tbody.innerHTML = filtered.map(s => {
+      const statusCls = s.status === 'aktif' ? 'badge-success' : 'badge-neutral';
+      const isDinas = s.jenjang === 'Dinas';
+
+      let ksHtml;
+      if (isDinas) {
+        ksHtml = '<span class="text-slate-400 text-xs">—</span>';
+      } else if (!s.ks_akun) {
+        ksHtml = '<span class="badge badge-warning">Belum ada</span>';
+      } else if (s.ks_akun.status !== 'aktif') {
+        ksHtml = `<div class="text-xs"><div class="text-slate-700">${escapeHtml(s.ks_akun.nama || '(belum diisi)')}</div><span class="badge badge-danger">Nonaktif</span></div>`;
+      } else {
+        ksHtml = `<div class="text-xs"><div class="text-slate-700 font-medium">${escapeHtml(s.ks_akun.nama || '(belum diisi)')}</div>${s.ks_akun.no_hp ? `<div class="text-slate-500 text-mono">${escapeHtml(s.ks_akun.no_hp)}</div>` : ''}</div>`;
+      }
+
+      return `
+        <tr class="hover:bg-slate-50">
+          <td>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold text-sm flex-shrink-0">
+                ${escapeHtml((s.nama_sekolah || 'S').charAt(0).toUpperCase())}
+              </div>
+              <div class="min-w-0">
+                <div class="font-medium text-slate-900 truncate">${escapeHtml(s.nama_sekolah)}</div>
+                <div class="text-xs text-slate-500 text-mono">${escapeHtml(s.npsn)}</div>
+              </div>
+            </div>
+          </td>
+          <td class="text-center">
+            <span class="badge ${isDinas ? 'badge-warning' : 'badge-neutral'}">${escapeHtml(s.jenjang || '-')}</span>
+          </td>
+          <td class="text-xs">${escapeHtml(s.kecamatan || '—')}</td>
+          <td class="text-center">${s.jumlah_guru}</td>
+          <td class="text-center">${s.jumlah_supervisi}</td>
+          <td>${ksHtml}</td>
+          <td class="text-center"><span class="badge ${statusCls}">${escapeHtml(s.status)}</span></td>
+          <td class="text-right whitespace-nowrap">
+            <button class="icon-btn" data-edit="${escapeHtml(s.npsn)}" title="Edit">${icon('pencil', 'w-4 h-4')}</button>
+            ${!isDinas ? `<button class="icon-btn text-indigo-600" data-binaan="${escapeHtml(s.npsn)}" title="Atur Binaan">${icon('shield', 'w-4 h-4')}</button>` : ''}
+            ${s.status === 'aktif' && !isDinas ? `<button class="icon-btn text-red-600" data-del="${escapeHtml(s.npsn)}" title="Nonaktifkan">${icon('trash-2', 'w-4 h-4')}</button>` : ''}
+          </td>
+        </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openEdit(b.dataset.edit)));
+    tbody.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => doDelete(b.dataset.del)));
+    tbody.querySelectorAll('[data-binaan]').forEach(b => b.addEventListener('click', () => openBinaan(b.dataset.binaan)));
+
+    refreshIcons();
+  }
+
+  /* ============================================================
+     TAMBAH / EDIT
+     ============================================================ */
+  el('btnAdd').addEventListener('click', () => openForm());
+
+  function openForm(s) {
+    const isEdit = !!s;
+    openModal({
+      title: isEdit ? 'Edit Sekolah' : 'Tambah Sekolah',
+      maxWidth: '640px',
+      body: `
+        <form id="sekolahForm" class="space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="fNpsn">NPSN <span class="text-red-500">*</span></label>
+              <input type="text" id="fNpsn" required class="input text-mono"
+                     value="${isEdit ? escapeHtml(s.npsn) : ''}"
+                     ${isEdit ? 'disabled' : ''}
+                     placeholder="8 digit" maxlength="8" />
+            </div>
+            <div>
+              <label class="label" for="fJenjang">Jenjang <span class="text-red-500">*</span></label>
+              <select id="fJenjang" required class="select">
+                <option value="">— Pilih —</option>
+                <option value="SD" ${isEdit && s.jenjang === 'SD' ? 'selected' : ''}>SD</option>
+                <option value="SMP" ${isEdit && s.jenjang === 'SMP' ? 'selected' : ''}>SMP</option>
+                <option value="SMA" ${isEdit && s.jenjang === 'SMA' ? 'selected' : ''}>SMA</option>
+                <option value="SMK" ${isEdit && s.jenjang === 'SMK' ? 'selected' : ''}>SMK</option>
+                ${isEdit && s.jenjang === 'Dinas' ? '<option value="Dinas" selected>Dinas</option>' : ''}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="fNama">Nama Sekolah <span class="text-red-500">*</span></label>
+            <input type="text" id="fNama" required class="input"
+                   value="${isEdit ? escapeHtml(s.nama_sekolah) : ''}"
+                   placeholder="Contoh: SDN 1 Sukamaju" />
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="label" for="fKec">Kecamatan</label>
+              <input type="text" id="fKec" class="input"
+                     value="${isEdit ? escapeHtml(s.kecamatan || '') : ''}" />
+            </div>
+            <div>
+              <label class="label" for="fKab">Kabupaten/Kota</label>
+              <input type="text" id="fKab" class="input"
+                     value="${isEdit ? escapeHtml(s.kabupaten || '') : ''}" />
+            </div>
+            <div>
+              <label class="label" for="fProv">Provinsi</label>
+              <input type="text" id="fProv" class="input"
+                     value="${isEdit ? escapeHtml(s.provinsi || '') : ''}" />
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="fAlamat">Alamat</label>
+            <input type="text" id="fAlamat" class="input"
+                   value="${isEdit ? escapeHtml(s.alamat || '') : ''}"
+                   placeholder="Jl. Raya No. 12" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label" for="fTelp">Telepon</label>
+              <input type="text" id="fTelp" class="input text-mono"
+                     value="${isEdit ? escapeHtml(s.telepon || '') : ''}"
+                     placeholder="(0341) 123456" />
+            </div>
+            <div>
+              <label class="label" for="fEmail">Email</label>
+              <input type="email" id="fEmail" class="input"
+                     value="${isEdit ? escapeHtml(s.email || '') : ''}" />
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="fNamaKS">Nama Kepala Sekolah (teks kop)</label>
+            <input type="text" id="fNamaKS" class="input"
+                   value="${isEdit ? escapeHtml(s.nama_ks || '') : ''}"
+                   placeholder="Contoh: Dra. Siti Aminah, M.Pd" />
+            <p class="text-xs text-slate-500 mt-1">Hanya untuk referensi. Akun KS dibuat lewat menu Users.</p>
+          </div>
+
+          <div>
+            <label class="label" for="fLogo">URL Logo (opsional)</label>
+            <input type="url" id="fLogo" class="input"
+                   value="${isEdit ? escapeHtml(s.logo_url || '') : ''}"
+                   placeholder="https://..." />
+          </div>
+        </form>`,
+      footer: `
+        <button class="btn btn-secondary" data-close>${icon('x', 'w-4 h-4')}<span>Batal</span></button>
+        <button class="btn btn-primary" id="btnSave">${icon('save', 'w-4 h-4')}<span>Simpan</span></button>`
+    });
+
+    el('btnSave').addEventListener('click', () => saveSekolah(isEdit));
+  }
+
+  function openEdit(npsn) {
+    const s = allItems.find(x => x.npsn === npsn);
+    if (s) openForm(s);
+  }
+
+  async function saveSekolah(isEdit) {
+    const btn = el('btnSave');
+    const npsn = isEdit ? el('fNpsn').value : el('fNpsn').value.trim();
+    const nama = el('fNama').value.trim();
+    const jenjang = el('fJenjang').value;
+
+    if (!isEdit) {
+      if (!npsn) return swalError('NPSN wajib diisi');
+      if (!/^\d{8}$/.test(npsn)) return swalError('NPSN harus 8 digit angka');
+    }
+    if (!nama) return swalError('Nama sekolah wajib diisi');
+    if (!jenjang) return swalError('Jenjang wajib dipilih');
+
+    const payload = {
+      nama_sekolah: nama,
+      jenjang: jenjang,
+      kecamatan: el('fKec').value.trim(),
+      kabupaten: el('fKab').value.trim(),
+      provinsi: el('fProv').value.trim(),
+      alamat: el('fAlamat').value.trim(),
+      telepon: el('fTelp').value.trim(),
+      email: el('fEmail').value.trim(),
+      nama_ks: el('fNamaKS').value.trim(),
+      logo_url: el('fLogo').value.trim()
+    };
+
+    btn.disabled = true;
+    btn.innerHTML = `${icon('loader-2', 'w-4 h-4 animate-spin')}<span>Menyimpan...</span>`;
+    refreshIcons();
+
+    try {
+      if (isEdit) {
+        await sispaRequest('admin.sekolah.update', { npsn: npsn, payload: payload });
+        closeModal();
+        await swalSuccess('Tersimpan', 'Data sekolah diperbarui.');
+      } else {
+        payload.npsn = npsn;
+        await sispaRequest('admin.sekolah.create', { payload: payload });
+        closeModal();
+        await swalSuccess('Sekolah ditambahkan', 'NPSN: ' + npsn);
+      }
+      if (window.clearFrontendCache) clearFrontendCache();
+      await loadData();
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `${icon('save', 'w-4 h-4')}<span>Simpan</span>`;
+      refreshIcons();
+      swalError('Gagal menyimpan', err.message);
+    }
+  }
+
+  /* ============================================================
+     NONAKTIFKAN
+     ============================================================ */
+  async function doDelete(npsn) {
+    const s = allItems.find(x => x.npsn === npsn);
+    if (!s) return;
+
+    const ok = await swalConfirm(
+      'Nonaktifkan sekolah?',
+      `"${s.nama_sekolah}" tidak akan muncul di daftar aktif. Data guru & supervisi tetap tersimpan.`,
+      { icon: 'warning', confirmText: 'Ya, nonaktifkan', danger: true }
+    );
+    if (!ok) return;
+
+    await withLoading('Menonaktifkan...', async () => {
+      try {
+        await sispaRequest('admin.sekolah.delete', { npsn: npsn });
+        await swalSuccess('Dinonaktifkan', 'Sekolah tidak aktif lagi.');
+        if (window.clearFrontendCache) clearFrontendCache();
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  /* ============================================================
+     ATUR BINAAN PENGAWAS
+     ============================================================ */
+  async function openBinaan(npsn) {
+    const s = allItems.find(x => x.npsn === npsn);
+    if (!s) return;
+
+    swalLoading('Memuat data pengawas...');
+    let pengawasList = [];
+    let binaanNow = [];
+
+    try {
+      const usersRes = await sispaRequest('admin.users.list', { filter: { role: 'Pengawas', status: 'aktif' } });
+      pengawasList = usersRes.items || [];
+
+      // Ambil binaan saat ini dari salah satu pengawas (ambil dari backend)
+      const binaanRes = await sispaRequest('admin.sekolah.getBinaan', { npsn: npsn }).catch(() => null);
+      if (binaanRes && binaanRes.pengawas_ids) {
+        binaanNow = binaanRes.pengawas_ids;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    Swal2.close();
+
+    if (!pengawasList.length) {
+      return swalError('Belum ada pengawas', 'Buat user pengawas terlebih dahulu di menu Users.');
+    }
+
+    // Modal pilih pengawas
+    openModal({
+      title: 'Atur Binaan Pengawas',
+      maxWidth: '520px',
+      body: `
+        <p class="text-sm text-slate-600 mb-4">
+          Pilih pengawas yang membina <strong>${escapeHtml(s.nama_sekolah)}</strong>:
+        </p>
+        <div class="space-y-2" id="pengawasOptions">
+          ${pengawasList.map(p => `
+            <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+              <input type="checkbox" value="${escapeHtml(p.id)}"
+                     class="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-slate-900">${escapeHtml(p.nama || p.npsn)}</div>
+                <div class="text-xs text-slate-500 text-mono">${escapeHtml(p.npsn)} · ${escapeHtml(p.email || '-')}</div>
+              </div>
+            </label>
+          `).join('')}
+        </div>
+        <p class="text-xs text-slate-500 mt-3">Jika dicentang, sekolah ini akan ditambahkan ke daftar binaan pengawas.</p>`,
+      footer: `
+        <button class="btn btn-secondary" data-close>${icon('x', 'w-4 h-4')}<span>Batal</span></button>
+        <button class="btn btn-primary" id="btnSaveBinaan">${icon('save', 'w-4 h-4')}<span>Simpan</span></button>`
+    });
+
+    // Panggil list binaan dari backend per pengawas
+    // Lakukan paralel dan tandai checkbox yang sudah bina npsn ini
+    for (const p of pengawasList) {
+      try {
+        const b = await sispaRequest('admin.sekolah.getBinaanByPengawas', { pengawas_id: p.id });
+        if (b && b.npsn_list && b.npsn_list.includes(npsn)) {
+          const cb = document.querySelector(`input[value="${p.id}"]`);
+          if (cb) cb.checked = true;
+        }
+      } catch (e) { /* abaikan */ }
+    }
+
+    el('btnSaveBinaan').addEventListener('click', async () => {
+      const checked = Array.from(document.querySelectorAll('#pengawasOptions input:checked'))
+        .map(x => x.value);
+
+      swalLoading('Menyimpan binaan...');
+      try {
+        // Untuk setiap pengawas, update daftar binaannya
+        for (const p of pengawasList) {
+          const isChecked = checked.includes(p.id);
+          const cur = await sispaRequest('admin.sekolah.getBinaanByPengawas', { pengawas_id: p.id })
+            .catch(() => ({ npsn_list: [] }));
+          let list = cur.npsn_list || [];
+
+          if (isChecked && !list.includes(npsn)) list.push(npsn);
+          if (!isChecked && list.includes(npsn)) list = list.filter(x => x !== npsn);
+
+          await sispaRequest('admin.sekolah.setBinaan', {
+            pengawas_id: p.id,
+            npsn_list: list
+          });
+        }
+        Swal2.close();
+        closeModal();
+        await swalSuccess('Binaan diperbarui', 'Pengaturan binaan telah disimpan.');
+      } catch (err) {
+        Swal2.close();
+        swalError('Gagal menyimpan', err.message);
+      }
+    });
+  }
+
+  /* ============================================================
+     EVENT LISTENERS
+     ============================================================ */
+  el('searchInput').addEventListener('input', (e) => { filterText = e.target.value; renderTable(); });
+  el('filterJenjang').addEventListener('change', (e) => { filterJenjang = e.target.value; renderTable(); });
+  el('filterStatus').addEventListener('change', (e) => { filterStatus = e.target.value; renderTable(); });
+  el('btnReset').addEventListener('click', () => {
+    el('searchInput').value = '';
+    el('filterJenjang').value = '';
+    el('filterStatus').value = '';
+    filterText = filterJenjang = filterStatus = '';
+    renderTable();
+  });
+  el('btnRefresh').addEventListener('click', () => {
+    if (window.clearFrontendCache) clearFrontendCache();
+    loadData();
+  });
+</script>
+</body>
+</html>
