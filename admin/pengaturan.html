@@ -40,7 +40,7 @@
   </div>
 </div>
 
-<!-- Tab content: UMUM -->
+<!-- ===================== TAB UMUM ===================== -->
 <div id="tab-umum" class="tab-content">
   <div class="card mb-4">
     <div class="card-header">
@@ -106,7 +106,7 @@
   </div>
 </div>
 
-<!-- Tab content: KATEGORI -->
+<!-- ===================== TAB KATEGORI ===================== -->
 <div id="tab-kategori" class="tab-content hidden">
   <div class="card mb-4">
     <div class="card-header">
@@ -149,7 +149,7 @@
   </div>
 </div>
 
-<!-- Tab content: SISTEM -->
+<!-- ===================== TAB SISTEM ===================== -->
 <div id="tab-sistem" class="tab-content hidden">
   <div class="card mb-4">
     <div class="card-header">
@@ -223,115 +223,120 @@
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Tab content: RESET DATA -->
-  <div id="tab-reset" class="tab-content hidden">
-    <div class="card mb-4 border-red-200">
-      <div class="card-header bg-red-50 border-b-red-200">
-        <div class="flex items-center gap-2">
-          <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600"></i>
-          <h2 class="font-semibold text-red-800 text-sm">Zona Berbahaya</h2>
-        </div>
-      </div>
-      <div class="card-body space-y-4 text-sm text-slate-700">
-        <p>
-          <strong>Perhatian:</strong> Aksi di bawah ini <strong>menghapus data secara permanen</strong> dan
-          tidak dapat dibatalkan. Backup terlebih dahulu sebelum menggunakan.
-        </p>
+<!-- ===================== TAB RESET DATA ===================== -->
+<div id="tab-reset" class="tab-content hidden">
+  <div class="card mb-4 border-red-200">
+    <div class="card-header bg-red-50">
+      <div class="flex items-center gap-2">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600"></i>
+        <h2 class="font-semibold text-red-800 text-sm">Zona Berbahaya</h2>
       </div>
     </div>
+    <div class="card-body text-sm text-slate-700">
+      <p>
+        <strong>Perhatian:</strong> Aksi di bawah ini <strong>menghapus data secara permanen</strong> dan
+        tidak dapat dibatalkan. Backup terlebih dahulu sebelum menggunakan.
+      </p>
+    </div>
+  </div>
 
-    <div class="card mb-4">
-      <div class="card-header">
-        <div class="flex items-center gap-2">
-          <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
-          <h2 class="font-semibold text-slate-900 text-sm">Hapus Supervisi & Coaching</h2>
-        </div>
-      </div>
-      <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <div class="text-sm font-medium text-slate-900">Semua data supervisi & coaching</div>
-          <div class="text-xs text-slate-500">Menghapus: supervisi, supervisi_detail, coaching, coaching_detail, RTL</div>
-        </div>
-        <button class="btn btn-danger" data-reset="supervisi">
-          ${icon('trash-2', 'w-4 h-4')}<span>Hapus Semua</span>
-        </button>
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Hapus Supervisi & Coaching</h2>
       </div>
     </div>
-
-    <div class="card mb-4">
-      <div class="card-header">
-        <div class="flex items-center gap-2">
-          <i data-lucide="users" class="w-4 h-4 text-slate-500"></i>
-          <h2 class="font-semibold text-slate-900 text-sm">Hapus Data Guru</h2>
-        </div>
+    <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div>
+        <div class="text-sm font-medium text-slate-900">Semua data supervisi & coaching</div>
+        <div class="text-xs text-slate-500">Menghapus: supervisi, supervisi_detail, coaching, coaching_detail, RTL</div>
       </div>
-      <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <div class="text-sm font-medium text-slate-900">Semua guru di semua sekolah</div>
-          <div class="text-xs text-slate-500">Sekolah & user tidak terpengaruh.</div>
-        </div>
-        <button class="btn btn-danger" data-reset="guru">
-          ${icon('trash-2', 'w-4 h-4')}<span>Hapus Semua</span>
-        </button>
+      <button class="btn btn-danger" data-reset="supervisi">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+        <span>Hapus Semua</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="users" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Hapus Data Guru</h2>
       </div>
     </div>
-
-    <div class="card mb-4 border-red-300">
-      <div class="card-header bg-red-50">
-        <div class="flex items-center gap-2">
-          <i data-lucide="shield-off" class="w-4 h-4 text-red-600"></i>
-          <h2 class="font-semibold text-red-800 text-sm">Hapus User (Kecuali Admin)</h2>
-        </div>
+    <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div>
+        <div class="text-sm font-medium text-slate-900">Semua guru di semua sekolah</div>
+        <div class="text-xs text-slate-500">Sekolah & user tidak terpengaruh.</div>
       </div>
-      <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <div class="text-sm font-medium text-slate-900">Semua KS & Pengawas</div>
-          <div class="text-xs text-slate-500">Akun Admin tetap tersimpan agar Anda tidak terkunci.</div>
-        </div>
-        <button class="btn btn-danger" data-reset="users_non_admin">
-          ${icon('trash-2', 'w-4 h-4')}<span>Hapus Semua</span>
-        </button>
+      <button class="btn btn-danger" data-reset="guru">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+        <span>Hapus Semua</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="card mb-4 border-red-300">
+    <div class="card-header bg-red-50">
+      <div class="flex items-center gap-2">
+        <i data-lucide="shield-off" class="w-4 h-4 text-red-600"></i>
+        <h2 class="font-semibold text-red-800 text-sm">Hapus User (Kecuali Admin)</h2>
       </div>
     </div>
-
-    <div class="card mb-4 border-red-300">
-      <div class="card-header bg-red-50">
-        <div class="flex items-center gap-2">
-          <i data-lucide="building-2" class="w-4 h-4 text-red-600"></i>
-          <h2 class="font-semibold text-red-800 text-sm">Hapus Sekolah (Kecuali Dinas)</h2>
-        </div>
+    <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div>
+        <div class="text-sm font-medium text-slate-900">Semua KS & Pengawas</div>
+        <div class="text-xs text-slate-500">Akun Admin tetap tersimpan agar Anda tidak terkunci.</div>
       </div>
-      <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div>
-          <div class="text-sm font-medium text-slate-900">Semua sekolah non-Dinas</div>
-          <div class="text-xs text-slate-500">Sekolah "Dinas Pendidikan" (11111111) tetap tersimpan.</div>
-        </div>
-        <button class="btn btn-danger" data-reset="sekolah_non_dinas">
-          ${icon('trash-2', 'w-4 h-4')}<span>Hapus Semua</span>
-        </button>
+      <button class="btn btn-danger" data-reset="users_non_admin">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+        <span>Hapus Semua</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="card mb-4 border-red-300">
+    <div class="card-header bg-red-50">
+      <div class="flex items-center gap-2">
+        <i data-lucide="building-2" class="w-4 h-4 text-red-600"></i>
+        <h2 class="font-semibold text-red-800 text-sm">Hapus Sekolah (Kecuali Dinas)</h2>
       </div>
     </div>
+    <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div>
+        <div class="text-sm font-medium text-slate-900">Semua sekolah non-Dinas</div>
+        <div class="text-xs text-slate-500">Sekolah "Dinas Pendidikan" (11111111) tetap tersimpan.</div>
+      </div>
+      <button class="btn btn-danger" data-reset="sekolah_non_dinas">
+        <i data-lucide="trash-2" class="w-4 h-4"></i>
+        <span>Hapus Semua</span>
+      </button>
+    </div>
+  </div>
 
-    <div class="card mb-4 border-red-400 border-2">
-      <div class="card-header bg-red-100">
-        <div class="flex items-center gap-2">
-          <i data-lucide="zap" class="w-4 h-4 text-red-700"></i>
-          <h2 class="font-semibold text-red-900 text-sm">FULL CLEANUP — Bersihkan Semua Data</h2>
+  <div class="card mb-4 border-2 border-red-400">
+    <div class="card-header bg-red-100">
+      <div class="flex items-center gap-2">
+        <i data-lucide="zap" class="w-4 h-4 text-red-700"></i>
+        <h2 class="font-semibold text-red-900 text-sm">FULL CLEANUP — Bersihkan Semua Data</h2>
+      </div>
+    </div>
+    <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3 bg-red-50">
+      <div>
+        <div class="text-sm font-medium text-red-900">Hapus SEMUA data operasional</div>
+        <div class="text-xs text-red-700">
+          Supervisi, coaching, guru, user (kecuali Admin), sekolah (kecuali Dinas), dan semua binaan.
+          Cocok untuk persiapan go-live.
         </div>
       </div>
-      <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3 bg-red-50">
-        <div>
-          <div class="text-sm font-medium text-red-900">Hapus SEMUA data operasional</div>
-          <div class="text-xs text-red-700">
-            Supervisi, coaching, guru, user (kecuali Admin), sekolah (kecuali Dinas), dan semua binaan.
-            Cocok untuk persiapan go-live.
-          </div>
-        </div>
-        <button class="btn btn-danger" data-reset="full_cleanup">
-          ${icon('zap', 'w-4 h-4')}<span>Full Cleanup</span>
-        </button>
-      </div>
+      <button class="btn btn-danger" data-reset="full_cleanup">
+        <i data-lucide="zap" class="w-4 h-4"></i>
+        <span>Full Cleanup</span>
+      </button>
     </div>
   </div>
 </div>
@@ -343,13 +348,15 @@
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
+  // ===== DEKLARASI DULU =====
+  let data = null;
+
+  // ===== BARU PANGGIL FUNGSI =====
   const user = sispaRequireLogin(['Admin']);
   if (user) {
     mountShell('settings');
     loadData();
   }
-
-  let data = null;
 
   /* ============================================================
      TABS
@@ -382,9 +389,6 @@
     });
   }
 
-  /* ============================================================
-     RENDER UMUM
-     ============================================================ */
   function renderUmum() {
     el('fTahunAjaran').value = data.tahun_ajaran_aktif || '';
     el('fSemester').value = data.semester_aktif || 'Ganjil';
@@ -393,9 +397,6 @@
     el('fNamaProvinsi').value = data.nama_provinsi || '';
   }
 
-  /* ============================================================
-     RENDER KATEGORI
-     ============================================================ */
   function renderKategori() {
     renderKategoriRows('kategoriLK1', data.kategori_lk1 || [], 'LK1');
     renderKategoriRows('kategoriLK2', data.kategori_lk2 || [], 'LK2');
@@ -441,7 +442,6 @@
         <span>Tambah Kategori</span>
       </button>`;
 
-    // Event handlers
     container.querySelectorAll('input').forEach(inp => {
       inp.addEventListener('change', (e) => {
         const idx = parseInt(e.target.dataset.idx, 10);
@@ -472,9 +472,6 @@
     refreshIcons();
   }
 
-  /* ============================================================
-     RENDER SISTEM
-     ============================================================ */
   function renderSistem() {
     const info = data.app_info || {};
     el('infoVersi').textContent = 'v' + (info.versi || '-');
@@ -496,15 +493,12 @@
     await savePengaturan(payload, 'Pengaturan umum disimpan.');
   });
 
-  el('btnResetUmum').addEventListener('click', () => {
-    loadData();
-  });
+  el('btnResetUmum').addEventListener('click', () => loadData());
 
   /* ============================================================
      SIMPAN KATEGORI
      ============================================================ */
   el('btnSaveKategori').addEventListener('click', async () => {
-    // Validasi: min/max berurutan, tidak ada celah
     const err1 = validateKategori(data.kategori_lk1, 76);
     if (err1) return swalError('Kategori LK1 tidak valid', err1);
     const err2 = validateKategori(data.kategori_lk2, 32);
@@ -554,9 +548,6 @@
     return null;
   }
 
-  /* ============================================================
-     SAVE HELPER
-     ============================================================ */
   async function savePengaturan(payload, successMsg) {
     await withLoading('Menyimpan...', async () => {
       try {
@@ -611,7 +602,8 @@
     swalSuccess('Cache dibersihkan', 'Muat ulang data.');
     loadData();
   });
-    /* ============================================================
+
+  /* ============================================================
      RESET DATA
      ============================================================ */
   document.querySelectorAll('[data-reset]').forEach(btn => {
@@ -675,7 +667,7 @@
       const deleted = res.deleted || {};
       const lines = Object.keys(deleted).map(k => {
         const v = deleted[k];
-        return '<div class="flex justify-between text-xs"><span class="text-slate-600">' + k + '</span><span class="font-mono">' + v + '</span></div>';
+        return '<div class="flex justify-between text-xs py-1"><span class="text-slate-600">' + k + '</span><span class="font-mono font-medium">' + v + '</span></div>';
       }).join('');
 
       await Swal2.fire({
@@ -685,7 +677,6 @@
         confirmButtonText: 'OK'
       });
 
-      // Refresh data
       await loadData();
     } catch (err) {
       Swal2.close();
