@@ -690,42 +690,113 @@
 <script src="./assets/js/auth.js"></script>
 <script src="./assets/js/app.js"></script>
 <script>
-  /* ============================================================
-     AKSES PUBLIK — tidak butuh login
-     ============================================================ */
+/* ============================================================
+   AKSES PUBLIK & FILTER TAB BERDASARKAN ROLE
+   ============================================================ */
 
-  // Cek apakah user sudah login
-  const currentUser = (typeof sispaGetUser === 'function') ? sispaGetUser() : null;
-  const isLoggedIn = !!currentUser;
+// Definisi tab yang boleh dilihat per role
+const TAB_AKSES = {
+  // Publik (belum login) — bisa lihat semua untuk onboarding
+  publik: ['umum', 'ks', 'pengawas', 'admin', 'faq', 'troubleshoot'],
+  // KS — hanya panduan untuk KS
+  KS: ['umum', 'ks', 'faq', 'troubleshoot'],
+  // Pengawas — hanya panduan untuk Pengawas
+  Pengawas: ['umum', 'pengawas', 'faq', 'troubleshoot'],
+  // Admin — lihat semua (superuser)
+  Admin: ['umum', 'ks', 'pengawas', 'admin', 'faq', 'troubleshoot']
+};
 
-  if (isLoggedIn) {
-    // ===== Mode Login: tampilkan sidebar + header =====
-    try {
-      mountShell('panduan');
-    } catch (e) {
-      console.warn('[SISPA] mountShell gagal, fallback ke mode publik:', e);
-      setupPublicMode();
-    }
-  } else {
-    // ===== Mode Publik: tampilkan header sederhana =====
+// Cek apakah user sudah login
+const currentUser = (typeof sispaGetUser === 'function') ? sispaGetUser() : null;
+const isLoggedIn = !!currentUser;
+
+if (isLoggedIn) {
+  // ===== Mode Login: tampilkan sidebar + header =====
+  try {
+    mountShell('panduan');
+  } catch (e) {
+    console.warn('[SISPA] mountShell gagal, fallback ke mode publik:', e);
     setupPublicMode();
   }
+} else {
+  // ===== Mode Publik: tampilkan header sederhana =====
+  setupPublicMode();
+}
 
-  function setupPublicMode() {
-    // Tampilkan header publik
-    const header = document.getElementById('publicHeader');
-    if (header) header.classList.remove('hidden');
+// Terapkan filter tab berdasarkan role
+applyRoleFilter();
 
-    // Tampilkan CTA login di bawah
-    const cta = document.getElementById('loginCTA');
-    if (cta) cta.classList.remove('hidden');
-
-    // Wrap konten utama agar rapi di tengah
-    const main = document.getElementById('publicMain');
-    if (main) {
-      main.classList.add('mx-auto');
-    }
+function setupPublicMode() {
+  // Tampilkan header publik
+  const header = document.getElementById('publicHeader');
+  if (header) header.classList.remove('hidden');
+  
+  // Tampilkan CTA login di bawah
+  const cta = document.getElementById('loginCTA');
+  if (cta) cta.classList.remove('hidden');
+  
+  // Wrap konten utama agar rapi di tengah
+  const main = document.getElementById('publicMain');
+  if (main) {
+    main.classList.add('mx-auto');
   }
+}
+
+/**
+ * Sembunyikan tab panduan yang tidak sesuai dengan role user.
+ * User tidak bisa melihat panduan untuk role lain.
+ */
+function applyRoleFilter() {
+  const user = (typeof sispaGetUser === 'function') ? sispaGetUser() : null;
+  const allowed = user ? (TAB_AKSES[user.role] || TAB_AKSES.KS) : TAB_AKSES.publik;
+  
+  // Sembunyikan tab button yang tidak diizinkan
+  document.querySelectorAll('.panduan-tab').forEach(btn => {
+    const key = btn.dataset.tab;
+    if (!allowed.includes(key)) {
+      btn.style.display = 'none';
+      btn.setAttribute('data-hidden', '1');
+    }
+  });
+  
+  // Kalau tab yang sedang aktif (dari session) tidak diizinkan → pindah ke 'umum'
+  const activeKey = getActiveTabKey();
+  if (!allowed.includes(activeKey)) {
+    switchTab('umum');
+  }
+  
+  // Refresh ikon setelah sembunyikan
+  if (typeof refreshIcons === 'function') refreshIcons();
+}
+
+function getActiveTabKey() {
+  const active = document.querySelector('.panduan-tab.active');
+  return active ? active.dataset.tab : 'umum';
+}
+
+function switchTab(key) {
+  // Update tombol
+  document.querySelectorAll('.panduan-tab').forEach(b => {
+    b.classList.remove('active', 'text-indigo-600');
+    if (!b.hasAttribute('data-hidden')) {
+      b.classList.add('text-slate-600');
+    }
+  });
+  
+  const target = document.querySelector(`.panduan-tab[data-tab="${key}"]`);
+  if (target) {
+    target.classList.add('active', 'text-indigo-600');
+    target.classList.remove('text-slate-600');
+  }
+  
+  // Update konten
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+  const content = document.getElementById('tab-' + key);
+  if (content) content.classList.remove('hidden');
+  
+  // Simpan tab aktif
+  try { sessionStorage.setItem('sispa_panduan_tab', key); } catch (e) {}
+}
 
   /* ============================================================
      TABS
@@ -733,45 +804,28 @@
   initTabs();
 
   function initTabs() {
-    const tabs = document.querySelectorAll('.panduan-tab');
-
-    tabs.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const target = btn.dataset.tab;
-
-        tabs.forEach(b => {
-          b.classList.remove('active', 'text-indigo-600');
-          b.classList.add('text-slate-600');
-        });
-
-        btn.classList.add('active', 'text-indigo-600');
-        btn.classList.remove('text-slate-600');
-
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-
-        const content = document.getElementById('tab-' + target);
-        if (content) {
-          content.classList.remove('hidden');
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        if (typeof refreshIcons === 'function') refreshIcons();
-
-        try {
-          sessionStorage.setItem('sispa_panduan_tab', target);
-        } catch (e) { /* abaikan */ }
-      });
+  const tabs = document.querySelectorAll('.panduan-tab');
+  
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      switchTab(target);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (typeof refreshIcons === 'function') refreshIcons();
     });
-
-    // Kembalikan tab terakhir
-    try {
-      const lastTab = sessionStorage.getItem('sispa_panduan_tab');
-      if (lastTab) {
-        const btn = document.querySelector(`.panduan-tab[data-tab="${lastTab}"]`);
-        if (btn) btn.click();
+  });
+  
+  // Kembalikan tab terakhir (kalau tidak diblokir filter role)
+  try {
+    const lastTab = sessionStorage.getItem('sispa_panduan_tab');
+    if (lastTab) {
+      const btn = document.querySelector(`.panduan-tab[data-tab="${lastTab}"]`);
+      if (btn && !btn.hasAttribute('data-hidden')) {
+        switchTab(lastTab);
       }
-    } catch (e) { /* abaikan */ }
-  }
+    }
+  } catch (e) { /* abaikan */ }
+}
 
   // Refresh ikon setelah DOM siap
   window.addEventListener('DOMContentLoaded', () => {
