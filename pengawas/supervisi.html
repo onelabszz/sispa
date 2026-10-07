@@ -160,7 +160,9 @@
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
-  // ===== DEKLARASI DULU =====
+  /* ============================================================
+     DEKLARASI STATE (di atas, sebelum init)
+     ============================================================ */
   let allItems = [];
   let currentPage = 1;
   let totalItems = 0;
@@ -174,7 +176,9 @@
   let filterStatus = '';
   let filterKategori = '';
 
-  // ===== BARU PANGGIL FUNGSI =====
+  /* ============================================================
+     INIT
+     ============================================================ */
   const user = sispaRequireLogin(['Pengawas', 'Admin']);
   if (user) {
     mountShell('dashboard');
@@ -182,7 +186,7 @@
   }
 
   /* ============================================================
-     LOAD
+     LOAD DATA
      ============================================================ */
   async function loadData(resetPage) {
     if (isLoading) return;
@@ -212,7 +216,6 @@
         summary = res.summary || {};
         el('periodeLabel').textContent = res.periode.label;
 
-        // Build dropdown sekolah — hanya saat reset
         if (resetPage) {
           buildSekolahDropdown(res.items || []);
         }
@@ -306,7 +309,7 @@
     wrap.classList.remove('hidden');
 
     el('resultCount').textContent = allItems.length + ' / ' + totalItems;
-    const filtered = allItems;  // sudah difilter server-side
+    const filtered = allItems;
 
     tbody.innerHTML = filtered.map(s => {
       const statusBadge = s.status === 'terkirim'
@@ -333,6 +336,12 @@
           <td class="text-center"><span class="badge ${katCls}">${escapeHtml(s.kategori || '-')}</span></td>
           <td class="text-center">${statusBadge}</td>
           <td class="text-right whitespace-nowrap">
+            ${s.link_dokumentasi
+              ? `<a href="${escapeHtml(s.link_dokumentasi)}" target="_blank" rel="noopener"
+                    class="icon-btn text-indigo-600" title="Buka Link Dokumentasi">
+                   ${icon('link', 'w-4 h-4')}
+                 </a>`
+              : ''}
             ${s.status === 'terkirim'
               ? `<button class="icon-btn" data-pdf="${escapeHtml(s.id)}" title="Cetak PDF">
                    ${icon('file-text', 'w-4 h-4')}
@@ -407,7 +416,6 @@
     loadData(true);
   });
 
-  // Tombol Muat Lebih (pakai event listener, bukan inline onclick)
   el('btnLoadMore').addEventListener('click', () => loadMore());
 </script>
 </body>
