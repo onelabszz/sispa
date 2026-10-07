@@ -33,6 +33,10 @@
       <i data-lucide="server" class="w-4 h-4 inline-block mr-1.5 align-middle"></i>
       Sistem
     </button>
+    <button class="tab-btn px-5 py-3 text-sm font-medium text-red-600 hover:text-red-800 whitespace-nowrap" data-tab="reset">
+      <i data-lucide="trash-2" class="w-4 h-4 inline-block mr-1.5 align-middle"></i>
+      Reset Data
+    </button>
   </div>
 </div>
 
@@ -215,6 +219,117 @@
         <button id="btnClearCache" class="btn btn-ghost text-slate-600">
           <i data-lucide="eraser" class="w-4 h-4"></i>
           <span>Bersihkan</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab content: RESET DATA -->
+  <div id="tab-reset" class="tab-content hidden">
+    <div class="card mb-4 border-red-200">
+      <div class="card-header bg-red-50 border-b-red-200">
+        <div class="flex items-center gap-2">
+          <i data-lucide="alert-triangle" class="w-4 h-4 text-red-600"></i>
+          <h2 class="font-semibold text-red-800 text-sm">Zona Berbahaya</h2>
+        </div>
+      </div>
+      <div class="card-body space-y-4 text-sm text-slate-700">
+        <p>
+          <strong>Perhatian:</strong> Aksi di bawah ini <strong>menghapus data secara permanen</strong> dan
+          tidak dapat dibatalkan. Backup terlebih dahulu sebelum menggunakan.
+        </p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="flex items-center gap-2">
+          <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
+          <h2 class="font-semibold text-slate-900 text-sm">Hapus Supervisi & Coaching</h2>
+        </div>
+      </div>
+      <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <div class="text-sm font-medium text-slate-900">Semua data supervisi & coaching</div>
+          <div class="text-xs text-slate-500">Menghapus: supervisi, supervisi_detail, coaching, coaching_detail, RTL</div>
+        </div>
+        <button class="btn btn-danger" data-reset="supervisi">
+          ${icon('trash-2', 'w-4 h-4')}<span>Hapus Semua</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <div class="flex items-center gap-2">
+          <i data-lucide="users" class="w-4 h-4 text-slate-500"></i>
+          <h2 class="font-semibold text-slate-900 text-sm">Hapus Data Guru</h2>
+        </div>
+      </div>
+      <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <div class="text-sm font-medium text-slate-900">Semua guru di semua sekolah</div>
+          <div class="text-xs text-slate-500">Sekolah & user tidak terpengaruh.</div>
+        </div>
+        <button class="btn btn-danger" data-reset="guru">
+          ${icon('trash-2', 'w-4 h-4')}<span>Hapus Semua</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card mb-4 border-red-300">
+      <div class="card-header bg-red-50">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield-off" class="w-4 h-4 text-red-600"></i>
+          <h2 class="font-semibold text-red-800 text-sm">Hapus User (Kecuali Admin)</h2>
+        </div>
+      </div>
+      <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <div class="text-sm font-medium text-slate-900">Semua KS & Pengawas</div>
+          <div class="text-xs text-slate-500">Akun Admin tetap tersimpan agar Anda tidak terkunci.</div>
+        </div>
+        <button class="btn btn-danger" data-reset="users_non_admin">
+          ${icon('trash-2', 'w-4 h-4')}<span>Hapus Semua</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card mb-4 border-red-300">
+      <div class="card-header bg-red-50">
+        <div class="flex items-center gap-2">
+          <i data-lucide="building-2" class="w-4 h-4 text-red-600"></i>
+          <h2 class="font-semibold text-red-800 text-sm">Hapus Sekolah (Kecuali Dinas)</h2>
+        </div>
+      </div>
+      <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <div class="text-sm font-medium text-slate-900">Semua sekolah non-Dinas</div>
+          <div class="text-xs text-slate-500">Sekolah "Dinas Pendidikan" (11111111) tetap tersimpan.</div>
+        </div>
+        <button class="btn btn-danger" data-reset="sekolah_non_dinas">
+          ${icon('trash-2', 'w-4 h-4')}<span>Hapus Semua</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card mb-4 border-red-400 border-2">
+      <div class="card-header bg-red-100">
+        <div class="flex items-center gap-2">
+          <i data-lucide="zap" class="w-4 h-4 text-red-700"></i>
+          <h2 class="font-semibold text-red-900 text-sm">FULL CLEANUP — Bersihkan Semua Data</h2>
+        </div>
+      </div>
+      <div class="card-body flex flex-col md:flex-row md:items-center justify-between gap-3 bg-red-50">
+        <div>
+          <div class="text-sm font-medium text-red-900">Hapus SEMUA data operasional</div>
+          <div class="text-xs text-red-700">
+            Supervisi, coaching, guru, user (kecuali Admin), sekolah (kecuali Dinas), dan semua binaan.
+            Cocok untuk persiapan go-live.
+          </div>
+        </div>
+        <button class="btn btn-danger" data-reset="full_cleanup">
+          ${icon('zap', 'w-4 h-4')}<span>Full Cleanup</span>
         </button>
       </div>
     </div>
@@ -496,6 +611,87 @@
     swalSuccess('Cache dibersihkan', 'Muat ulang data.');
     loadData();
   });
+    /* ============================================================
+     RESET DATA
+     ============================================================ */
+  document.querySelectorAll('[data-reset]').forEach(btn => {
+    btn.addEventListener('click', () => doReset(btn.dataset.reset));
+  });
+
+  const RESET_LABELS = {
+    'supervisi': 'Semua data supervisi & coaching',
+    'guru': 'Semua data guru',
+    'users_non_admin': 'Semua user (kecuali Admin)',
+    'sekolah_non_dinas': 'Semua sekolah (kecuali Dinas)',
+    'full_cleanup': 'SEMUA DATA OPERASIONAL (FULL CLEANUP)'
+  };
+
+  async function doReset(target) {
+    const label = RESET_LABELS[target] || target;
+
+    // Konfirmasi 1
+    const step1 = await Swal2.fire({
+      icon: 'warning',
+      title: 'Konfirmasi Penghapusan',
+      html: `
+        <div class="text-left text-sm">
+          <p class="mb-2">Anda akan menghapus:</p>
+          <p class="font-bold text-red-600 mb-3">${escapeHtml(label)}</p>
+          <p class="text-xs text-slate-500">Tindakan ini tidak dapat dibatalkan.</p>
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: 'Lanjut',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      reverseButtons: true
+    });
+    if (!step1.isConfirmed) return;
+
+    // Konfirmasi 2: ketik HAPUS
+    const { value } = await Swal2.fire({
+      title: 'Konfirmasi Akhir',
+      input: 'text',
+      inputLabel: 'Ketik "HAPUS" (huruf kapital semua) untuk konfirmasi:',
+      inputPlaceholder: 'HAPUS',
+      showCancelButton: true,
+      confirmButtonText: 'Hapus Sekarang',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      reverseButtons: true,
+      inputValidator: (v) => v !== 'HAPUS' ? 'Harus ketik "HAPUS"' : null
+    });
+    if (!value) return;
+
+    swalLoading('Menghapus data...');
+    try {
+      const res = await sispaRequest('admin.reset.execute', {
+        target: target,
+        konfirmasi: 'HAPUS'
+      });
+      Swal2.close();
+
+      const deleted = res.deleted || {};
+      const lines = Object.keys(deleted).map(k => {
+        const v = deleted[k];
+        return '<div class="flex justify-between text-xs"><span class="text-slate-600">' + k + '</span><span class="font-mono">' + v + '</span></div>';
+      }).join('');
+
+      await Swal2.fire({
+        icon: 'success',
+        title: 'Data dihapus',
+        html: '<div class="text-left space-y-1 max-h-60 overflow-y-auto">' + lines + '</div>',
+        confirmButtonText: 'OK'
+      });
+
+      // Refresh data
+      await loadData();
+    } catch (err) {
+      Swal2.close();
+      swalError('Gagal menghapus', err.message);
+    }
+  }
 </script>
 </body>
 </html>
