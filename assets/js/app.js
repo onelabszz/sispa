@@ -233,6 +233,12 @@ const SISPA_NAV = {
     { section: 'Sistem' },
     { key: 'settings',  href: '/settings.html',          label: 'Pengaturan', icon: 'settings' }
   ]
+    { section: 'Monitoring' },
+    { key: 'supervisi', href: '/pengawas/supervisi.html', label: 'Semua Supervisi', icon: 'clipboard-list' },
+    { key: 'coaching',  href: '/pengawas/coaching.html',  label: 'Semua Coaching', icon: 'message-square' },
+    { section: 'Sistem' },
+    { key: 'settings',  href: '/settings.html',          label: 'Pengaturan', icon: 'settings' }
+  ]
 };
 
 const SISPA_ROLE_LABEL = {
@@ -394,6 +400,9 @@ function mountShell(activeKey) {
       window.location.href = sispaUrl('/index.html');
     });
   }
+
+  // Tampilkan banner impersonate kalau ada
+  mountImpersonationBanner();
 }
 
 /* ============================================================
@@ -430,6 +439,59 @@ function closeModal() {
 }
 
 /* ============================================================
+   IMPERSONATION BANNER
+   ============================================================ */
+
+function mountImpersonationBanner() {
+  const backup = sessionStorage.getItem('sispa_admin_backup');
+  if (!backup) return;
+
+  // Cegah dobel
+  if (document.getElementById('impersonationBanner')) return;
+
+  const bar = document.createElement('div');
+  bar.id = 'impersonationBanner';
+  bar.style.cssText = [
+    'position:fixed',
+    'bottom:16px',
+    'left:16px',
+    'z-index:100',
+    'background:#f59e0b',
+    'color:#fff',
+    'padding:10px 14px',
+    'border-radius:12px',
+    'box-shadow:0 10px 25px rgba(0,0,0,.18)',
+    'display:flex',
+    'align-items:center',
+    'gap:10px',
+    'font-size:13px',
+    'font-weight:500',
+    'max-width:90vw'
+  ].join(';');
+
+  bar.innerHTML = `
+    <i data-lucide="user-check" class="w-4 h-4"></i>
+    <span>Anda melihat sebagai user lain</span>
+    <button id="btnBackAdmin"
+      style="background:#fff;color:#d97706;padding:4px 10px;border-radius:6px;font-weight:600;cursor:pointer;border:none;font-size:12px;">
+      Kembali ke Admin
+    </button>`;
+
+  document.body.appendChild(bar);
+  if (window.lucide) lucide.createIcons();
+
+  document.getElementById('btnBackAdmin').addEventListener('click', () => {
+    try {
+      const b = JSON.parse(sessionStorage.getItem('sispa_admin_backup'));
+      localStorage.setItem(SISPA_CONFIG.STORAGE_KEYS.TOKEN, b.token);
+      localStorage.setItem(SISPA_CONFIG.STORAGE_KEYS.USER, b.user);
+    } catch (e) { /* abaikan */ }
+    sessionStorage.removeItem('sispa_admin_backup');
+    window.location.href = sispaUrl('/admin/dashboard.html');
+  });
+}
+
+/* ============================================================
    EXPORT KE WINDOW
    ============================================================ */
 
@@ -461,5 +523,6 @@ window.SISPA_NAV        = SISPA_NAV;
 window.SISPA_ROLE_LABEL = SISPA_ROLE_LABEL;
 window.mountShell       = mountShell;
 
-window.openModal        = openModal;
-window.closeModal       = closeModal;
+window.openModal          = openModal;
+window.closeModal         = closeModal;
+window.mountImpersonationBanner = mountImpersonationBanner;
