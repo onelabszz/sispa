@@ -142,16 +142,18 @@
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
+  // ===== DEKLARASI DULU =====
+  let allItems = [];
+  let filterText = '';
+  let filterRole = '';
+  let filterStatus = '';
+
+  // ===== BARU PANGGIL FUNGSI =====
   const user = sispaRequireLogin(['Admin']);
   if (user) {
     mountShell('users');
     loadData();
   }
-
-  let allItems = [];
-  let filterText = '';
-  let filterRole = '';
-  let filterStatus = '';
 
   /* ============================================================
      LOAD DATA
