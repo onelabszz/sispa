@@ -143,6 +143,16 @@
     <h3 class="font-semibold text-slate-900 mb-1">Tidak ada hasil</h3>
     <p class="text-sm text-slate-500">Coba ubah kata kunci atau filter.</p>
   </div>
+    <!-- Muat Lebih -->
+  <div id="loadMoreWrap" class="hidden card-header border-t border-slate-200 bg-slate-50">
+    <div class="flex items-center justify-between w-full">
+      <span id="loadMoreInfo" class="text-xs text-slate-500">—</span>
+      <button id="btnLoadMore" class="btn btn-secondary text-xs" onclick="loadMore()">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        <span>Muat Lebih</span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ================== END ================== -->
@@ -159,7 +169,13 @@
   }
 
   let allItems = [];
-  let sekolahList = [];
+  let currentPage = 1;
+  let totalItems = 0;
+  let hasMore = false;
+  let summary = {};
+  let isLoading = false;
+  const PAGE_LIMIT = 25;
+
   let filterText = '';
   let filterNpsn = '';
   let filterStatus = '';
@@ -169,61 +185,112 @@
   /* ============================================================
      LOAD DATA
      ============================================================ */
-  async function loadData() {
-    await withLoading('Memuat data guru...', async () => {
+  async function loadData(resetPage) {
+    if (isLoading) return;
+    isLoading = true;
+
+    if (resetPage) {
+      allItems = [];
+      currentPage = 1;
+    }
+
+    await withLoading(resetPage ? 'Memuat data guru...' : 'Memuat lagi...', async () => {
       try {
-        // Parse filter dari URL (mis. ?filter=belum)
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('filter') === 'belum') {
-          filterStatus = 'belum';
-          el('filterStatus').value = 'belum';
+        // Parse filter dari URL (mis. ?filter=belum) — hanya saat pertama
+        if (resetPage && currentPage === 1) {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('filter') === 'belum' && !filterStatus) {
+            filterStatus = 'belum';
+            el('filterStatus').value = 'belum';
+          }
         }
 
-        const res = await sispaRequest('pengawas.guruList', {});
-        allItems = res.items || [];
+        const res = await sispaRequest('pengawas.guruList', {
+          page: currentPage,
+          limit: PAGE_LIMIT,
+          filter: {
+            q: filterText || undefined,
+            npsn_sekolah: filterNpsn || undefined,
+            status: filterStatus || undefined,
+            status_kepegawaian: filterPegawai || undefined
+          },
+          sort: filterSort || undefined
+        });
+
+        // Akumulasi
+        allItems = allItems.concat(res.items || []);
+        totalItems = res.total;
+        hasMore = res.has_more;
+        summary = res.summary || {};
         el('periodeLabel').textContent = res.periode.label;
 
-        // Bangun daftar sekolah unik
-        const seen = {};
-        sekolahList = [];
-        allItems.forEach(g => {
-          if (!seen[g.npsn_sekolah]) {
-            seen[g.npsn_sekolah] = true;
-            sekolahList.push({ npsn: g.npsn_sekolah, nama: g.nama_sekolah });
-          }
-        });
-        sekolahList.sort((a, b) => a.nama.localeCompare(b.nama));
-
-        const selSekolah = el('filterSekolah');
-        selSekolah.innerHTML = '<option value="">Semua Sekolah</option>';
-        sekolahList.forEach(s => {
-          const opt = document.createElement('option');
-          opt.value = s.npsn;
-          opt.textContent = s.nama;
-          selSekolah.appendChild(opt);
-        });
+        // Dropdown sekolah — hanya di-build sekali
+        if (resetPage) {
+          buildSekolahDropdown(res.items || []);
+        }
 
         renderStats();
         renderTable();
+        renderLoadMore();
       } catch (err) {
         handleApiError(err);
       }
     });
+
+    isLoading = false;
+  }
+
+  function buildSekolahDropdown(items) {
+    // Gabung dengan yang sudah ada (kalau load more)
+    const seen = {};
+    const list = [];
+    items.forEach(g => {
+      if (!seen[g.npsn_sekolah]) {
+        seen[g.npsn_sekolah] = true;
+        list.push({ npsn: g.npsn_sekolah, nama: g.nama_sekolah });
+      }
+    });
+    list.sort((a, b) => a.nama.localeCompare(b.nama));
+
+    const selSekolah = el('filterSekolah');
+    selSekolah.innerHTML = '<option value="">Semua Sekolah</option>';
+    list.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.npsn;
+      opt.textContent = s.nama;
+      selSekolah.appendChild(opt);
+    });
+  }
+
+  async function loadMore() {
+    if (!hasMore || isLoading) return;
+    currentPage++;
+    await loadData(false);
+  }
+
+  function renderLoadMore() {
+    const wrap = el('loadMoreWrap');
+    if (!wrap) return;
+    if (hasMore) {
+      wrap.classList.remove('hidden');
+      el('loadMoreInfo').textContent = 'Menampilkan ' + allItems.length + ' dari ' + totalItems;
+    } else if (totalItems > PAGE_LIMIT) {
+      wrap.classList.remove('hidden');
+      el('loadMoreInfo').textContent = 'Semua ' + totalItems + ' data sudah dimuat';
+      el('btnLoadMore').classList.add('hidden');
+    } else {
+      wrap.classList.add('hidden');
+    }
   }
 
   /* ============================================================
      STAT RINGKAS
      ============================================================ */
   function renderStats() {
-    const total = allItems.length;
-    const terkirim = allItems.filter(x => x.status === 'terkirim').length;
-    const draft = allItems.filter(x => x.status === 'draft').length;
-    const belum = allItems.filter(x => x.status === 'belum').length;
-
-    el('statTotal').textContent = total;
-    el('statTerkirim').textContent = terkirim;
-    el('statDraft').textContent = draft;
-    el('statBelum').textContent = belum;
+    el('statTotal').textContent = summary.total || 0;
+    el('statTerkirim').textContent = summary.terkirim || 0;
+    el('statDraft').textContent = summary.draft || 0;
+    el('statBelum').textContent = summary.belum || 0;
   }
 
   /* ============================================================
@@ -240,49 +307,19 @@
     noResultState.classList.add('hidden');
 
     if (!allItems.length) {
-      emptyState.classList.remove('hidden');
+      if (totalItems === 0 && !filterText && !filterNpsn && !filterStatus && !filterPegawai) {
+        emptyState.classList.remove('hidden');
+      } else {
+        noResultState.classList.remove('hidden');
+      }
       el('resultCount').textContent = 0;
       refreshIcons();
       return;
     }
-
-    let filtered = allItems.slice();
-
-    if (filterText) {
-      const q = filterText.toLowerCase();
-      filtered = filtered.filter(x =>
-        (x.nama || '').toLowerCase().includes(q) ||
-        (x.nip || '').toLowerCase().includes(q) ||
-        (x.mapel || '').toLowerCase().includes(q)
-      );
-    }
-    if (filterNpsn) filtered = filtered.filter(x => x.npsn_sekolah === filterNpsn);
-    if (filterStatus) filtered = filtered.filter(x => x.status === filterStatus);
-    if (filterPegawai) filtered = filtered.filter(x => x.status_kepegawaian === filterPegawai);
-
-    // Sort
-    if (filterSort === 'skor_asc') {
-      filtered.sort((a, b) => (a.rata_skor || 999) - (b.rata_skor || 999));
-    } else if (filterSort === 'skor_desc') {
-      filtered.sort((a, b) => (b.rata_skor || 0) - (a.rata_skor || 0));
-    } else if (filterSort === 'nama') {
-      filtered.sort((a, b) => (a.nama || '').localeCompare(b.nama || ''));
-    } else if (filterSort === 'terakhir') {
-      filtered.sort((a, b) => {
-        if (!a.terakhir_supervisi) return 1;
-        if (!b.terakhir_supervisi) return -1;
-        return b.terakhir_supervisi.localeCompare(a.terakhir_supervisi);
-      });
-    }
-
-    el('resultCount').textContent = filtered.length + ' / ' + allItems.length;
-
-    if (!filtered.length) {
-      noResultState.classList.remove('hidden');
-      refreshIcons();
-      return;
-    }
     wrap.classList.remove('hidden');
+
+    el('resultCount').textContent = allItems.length + ' / ' + totalItems;
+    const filtered = allItems;  // sudah difilter server-side
 
     tbody.innerHTML = filtered.map(g => {
       const statusBadge = g.status === 'terkirim'
@@ -342,29 +379,31 @@
   /* ============================================================
      EVENT LISTENERS
      ============================================================ */
+  let debounceSearch = null;
   el('searchInput').addEventListener('input', (e) => {
     filterText = e.target.value;
-    renderTable();
+    clearTimeout(debounceSearch);
+    debounceSearch = setTimeout(() => loadData(true), 400);
   });
 
   el('filterSekolah').addEventListener('change', (e) => {
     filterNpsn = e.target.value;
-    renderTable();
+    loadData(true);
   });
 
   el('filterStatus').addEventListener('change', (e) => {
     filterStatus = e.target.value;
-    renderTable();
+    loadData(true);
   });
 
   el('filterPegawai').addEventListener('change', (e) => {
     filterPegawai = e.target.value;
-    renderTable();
+    loadData(true);
   });
 
   el('filterSort').addEventListener('change', (e) => {
     filterSort = e.target.value;
-    renderTable();
+    loadData(true);
   });
 
   el('btnReset').addEventListener('click', () => {
@@ -374,12 +413,12 @@
     el('filterPegawai').value = '';
     el('filterSort').value = '';
     filterText = filterNpsn = filterStatus = filterPegawai = filterSort = '';
-    renderTable();
+    loadData(true);
   });
 
   el('btnRefresh').addEventListener('click', () => {
     if (window.clearFrontendCache) clearFrontendCache();
-    loadData();
+    loadData(true);
   });
 </script>
 </body>
