@@ -176,7 +176,7 @@
   let filterKategori = '';
 
   /* ============================================================
-     INIT (paling bawah — panggil fungsi)
+     INIT
      ============================================================ */
   const user = sispaRequireLogin(['Pengawas', 'Admin']);
   if (user) {
@@ -341,6 +341,12 @@
           <td class="text-center"><span class="badge ${katCls}">${escapeHtml(c.kategori || '-')}</span></td>
           <td class="text-center">${statusBadge}</td>
           <td class="text-right whitespace-nowrap">
+            ${c.link_dokumentasi
+              ? `<a href="${escapeHtml(c.link_dokumentasi)}" target="_blank" rel="noopener"
+                    class="icon-btn text-indigo-600" title="Buka Link Dokumentasi">
+                   ${icon('link', 'w-4 h-4')}
+                 </a>`
+              : ''}
             ${c.status === 'terkirim'
               ? `<button class="icon-btn" data-pdf="${escapeHtml(c.id)}" title="Cetak PDF">
                    ${icon('file-text', 'w-4 h-4')}
