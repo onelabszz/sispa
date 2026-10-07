@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Dashboard Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+<style>
+  .chart-box { position: relative; height: 220px; width: 100%; }
+  @media (max-width: 768px) { .chart-box { height: 200px; } }
+</style>
+</head>
+<body>
+
+<!-- ================== KONTEN ================== -->
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Dashboard Admin</h1>
+    <p class="text-sm text-slate-500 mt-1">Overview global & status sistem SISPA</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button id="btnRefresh" class="btn btn-secondary">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      <span>Refresh</span>
+    </button>
+  </div>
+</div>
+
+<!-- ================== STAT CARDS ================== -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="stat-icon bg-blue-50 text-blue-600"><i data-lucide="building-2" class="w-5 h-5"></i></div>
+    <div class="min-w-0">
+      <div class="text-xs text-slate-500">Total Sekolah</div>
+      <div id="statSekolah" class="text-2xl font-bold text-slate-900">—</div>
+      <div id="statSekolahSub" class="text-xs text-slate-500 mt-0.5">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-indigo-50 text-indigo-600"><i data-lucide="users" class="w-5 h-5"></i></div>
+    <div class="min-w-0">
+      <div class="text-xs text-slate-500">Total User</div>
+      <div id="statUser" class="text-2xl font-bold text-slate-900">—</div>
+      <div id="statUserSub" class="text-xs text-slate-500 mt-0.5">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-emerald-50 text-emerald-600"><i data-lucide="clipboard-list" class="w-5 h-5"></i></div>
+    <div class="min-w-0">
+      <div class="text-xs text-slate-500">Supervisi</div>
+      <div id="statSupervisi" class="text-2xl font-bold text-slate-900">—</div>
+      <div id="statSupervisiSub" class="text-xs text-slate-500 mt-0.5">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-amber-50 text-amber-600"><i data-lucide="database" class="w-5 h-5"></i></div>
+    <div class="min-w-0">
+      <div class="text-xs text-slate-500">Storage</div>
+      <div class="flex items-baseline gap-1">
+        <span id="statStorage" class="text-2xl font-bold text-slate-900">—</span>
+        <span class="text-xs text-slate-400">MB</span>
+      </div>
+      <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1.5">
+        <div id="statStorageBar" class="h-full bg-amber-500 transition-all" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== CHART & STATUS ================== -->
+<div class="grid lg:grid-cols-3 gap-4 mb-6">
+  <div class="card lg:col-span-2">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="activity" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Aktivitas 7 Hari Terakhir</h2>
+      </div>
+      <span class="text-xs text-slate-500">Total request tulis</span>
+    </div>
+    <div class="card-body">
+      <div class="chart-box">
+        <canvas id="chartAktivitas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="server" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Status Sistem</h2>
+      </div>
+    </div>
+    <div class="card-body space-y-3 text-sm">
+      <div class="flex items-center justify-between">
+        <span class="flex items-center gap-2 text-slate-600">
+          <i data-lucide="cpu" class="w-4 h-4"></i> Backend GAS
+        </span>
+        <span class="badge badge-success">OK</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="flex items-center gap-2 text-slate-600">
+          <i data-lucide="table" class="w-4 h-4"></i> Spreadsheet
+        </span>
+        <span class="badge badge-success">Terhubung</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="flex items-center gap-2 text-slate-600">
+          <i data-lucide="layers" class="w-4 h-4"></i> Sheets
+        </span>
+        <span id="infoSheets" class="text-xs font-medium text-slate-700">—</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="flex items-center gap-2 text-slate-600">
+          <i data-lucide="hash" class="w-4 h-4"></i> Total Baris
+        </span>
+        <span id="infoBaris" class="text-xs font-mono text-slate-700">—</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="flex items-center gap-2 text-slate-600">
+          <i data-lucide="git-branch" class="w-4 h-4"></i> Skema
+        </span>
+        <span id="infoVersi" class="text-xs font-mono text-slate-700">—</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="flex items-center gap-2 text-slate-600">
+          <i data-lucide="inbox" class="w-4 h-4"></i> Queue
+        </span>
+        <span id="infoQueue" class="text-xs font-medium text-slate-700">—</span>
+      </div>
+      <div class="divider"></div>
+      <div class="text-xs text-slate-500">
+        Server: <span id="infoServerTime" class="font-mono text-slate-700">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== DISTRIBUSI KECAMATAN ================== -->
+<div class="grid lg:grid-cols-2 gap-4 mb-6">
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="map" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Distribusi per Kecamatan</h2>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="chart-box">
+        <canvas id="chartKecamatan"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="list" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Ringkasan Data</h2>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="ringkasanList" class="space-y-2 text-sm">
+        <div class="text-slate-500 italic">Memuat...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== PERLU PERHATIAN ================== -->
+<div class="card mb-6">
+  <div class="card-header">
+    <div class="flex items-center gap-2">
+      <i data-lucide="alert-circle" class="w-4 h-4 text-amber-500"></i>
+      <h2 class="font-semibold text-slate-900 text-sm">Perlu Perhatian</h2>
+      <span id="attentionCount" class="badge badge-warning">0</span>
+    </div>
+  </div>
+  <div id="attentionList" class="card-body space-y-2">Memuat...</div>
+</div>
+
+<!-- ================== END ================== -->
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['Admin']);
+  if (user) {
+    mountShell('dashboard');
+    loadDashboard();
+  }
+
+  let data = null;
+  let chartAktivitas = null;
+  let chartKecamatan = null;
+
+  /* ============================================================
+     LOAD DATA
+     ============================================================ */
+  async function loadDashboard() {
+    await withLoading('Memuat dashboard admin...', async () => {
+      try {
+        data = await sispaRequest('admin.dashboard', {});
+        renderAll();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  function renderAll() {
+    const tasks = [
+      ['Stat', renderStat],
+      ['Chart Aktivitas', renderChartAktivitas],
+      ['Status Sistem', renderStatusSistem],
+      ['Chart Kecamatan', renderChartKecamatan],
+      ['Ringkasan', renderRingkasan],
+      ['Attention', renderAttention]
+    ];
+    tasks.forEach(([label, fn]) => {
+      try { fn(); }
+      catch (err) { console.error('[SISPA] render' + label + ' gagal:', err); }
+    });
+    refreshIcons();
+  }
+
+  /* ============================================================
+     STAT CARDS
+     ============================================================ */
+  function renderStat() {
+    const g = data.global;
+    const s = data.sistem;
+
+    el('statSekolah').textContent = g.total_sekolah;
+    el('statSekolahSub').textContent = g.total_guru + ' guru terdaftar';
+
+    el('statUser').textContent = g.total_user;
+    const bu = g.breakdown_user;
+    el('statUserSub').innerHTML = bu.KS + ' KS · ' + bu.Pengawas + ' Pengawas · ' + bu.Admin + ' Admin';
+
+    el('statSupervisi').textContent = g.total_supervisi;
+    el('statSupervisiSub').innerHTML = g.total_supervisi_terkirim + ' terkirim · ' +
+      (g.total_supervisi - g.total_supervisi_terkirim) + ' draft';
+
+    el('statStorage').textContent = s.storage_mb;
+    el('statStorageBar').style.width = s.storage_persen + '%';
+  }
+
+  /* ============================================================
+     CHART — AKTIVITAS 7 HARI
+     ============================================================ */
+  function renderChartAktivitas() {
+    const ctx = el('chartAktivitas').getContext('2d');
+    const labels = data.aktivitas_7hari.map(a => a.hari);
+    const values = data.aktivitas_7hari.map(a => a.jumlah);
+
+    if (chartAktivitas) chartAktivitas.destroy();
+    chartAktivitas = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Request',
+          data: values,
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99,102,241,0.12)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#6366f1',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.35,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              title: (items) => data.aktivitas_7hari[items[0].dataIndex].tanggal,
+              label: (ctx) => ' ' + ctx.parsed.y + ' request'
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 11 } } },
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, color: '#64748b', font: { size: 11 }, precision: 0 },
+            grid: { color: '#f1f5f9' }
+          }
+        }
+      }
+    });
+  }
+
+  /* ============================================================
+     STATUS SISTEM
+     ============================================================ */
+  function renderStatusSistem() {
+    const s = data.sistem;
+    el('infoSheets').textContent = s.sheets.length + ' sheet';
+    el('infoBaris').textContent = s.total_baris.toLocaleString('id-ID');
+    el('infoVersi').textContent = 'v' + s.versi;
+    const queue = s.queue_pending + ' pending' +
+      (s.queue_failed > 0 ? ' · ' + s.queue_failed + ' failed' : '');
+    el('infoQueue').textContent = queue;
+    el('infoServerTime').textContent = formatTanggalWaktu(s.server_time);
+  }
+
+  /* ============================================================
+     CHART — KECAMATAN
+     ============================================================ */
+  function renderChartKecamatan() {
+    const ctx = el('chartKecamatan').getContext('2d');
+    const labels = data.distribusi_kecamatan.map(k => k.kecamatan);
+    const values = data.distribusi_kecamatan.map(k => k.supervisi);
+
+    if (chartKecamatan) chartKecamatan.destroy();
+    chartKecamatan = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Supervisi',
+          data: values,
+          backgroundColor: '#6366f1',
+          borderRadius: 6,
+          barThickness: 20
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: { label: (ctx) => ' ' + ctx.parsed.x + ' supervisi' }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: { stepSize: 1, color: '#64748b', font: { size: 11 }, precision: 0 },
+            grid: { color: '#f1f5f9' }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: '#334155', font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  /* ============================================================
+     RINGKASAN
+     ============================================================ */
+  function renderRingkasan() {
+    const g = data.global;
+    const items = [
+      { label: 'Guru', value: g.total_guru, icon: 'users', color: 'text-blue-600' },
+      { label: 'Supervisi', value: g.total_supervisi, icon: 'clipboard-list', color: 'text-indigo-600' },
+      { label: 'Coaching', value: g.total_coaching, icon: 'message-square', color: 'text-purple-600' },
+      { label: 'Terkirim LK1', value: g.total_supervisi_terkirim, icon: 'check-circle-2', color: 'text-emerald-600' },
+      { label: 'Terkirim LK2', value: g.total_coaching_terkirim, icon: 'check-circle-2', color: 'text-emerald-600' }
+    ];
+    el('ringkasanList').innerHTML = items.map(it => `
+      <div class="flex items-center justify-between py-2 border-b border-slate-100 last:border-0">
+        <span class="flex items-center gap-2 text-slate-600">
+          <i data-lucide="${it.icon}" class="w-4 h-4 ${it.color}"></i>
+          ${it.label}
+        </span>
+        <span class="font-mono font-semibold text-slate-900">${it.value.toLocaleString('id-ID')}</span>
+      </div>
+    `).join('');
+  }
+
+  /* ============================================================
+     PERLU PERHATIAN
+     ============================================================ */
+  function renderAttention() {
+    const list = el('attentionList');
+    const items = data.perlu_perhatian || [];
+    el('attentionCount').textContent = items.length;
+
+    if (!items.length) {
+      list.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon" style="background:#dcfce7;color:#16a34a">
+            <i data-lucide="check-circle" class="w-6 h-6"></i>
+          </div>
+          <div class="text-sm text-slate-600 font-medium">Semua sistem normal 🎉</div>
+          <div class="text-xs text-slate-500 mt-1">Tidak ada yang perlu perhatian khusus.</div>
+        </div>`;
+      refreshIcons();
+      return;
+    }
+
+    const iconMap = {
+      sekolah_tanpa_ks: { icon: 'building-2', color: 'text-red-600', bg: 'bg-red-50' },
+      user_tidak_aktif: { icon: 'user-x', color: 'text-amber-600', bg: 'bg-amber-50' },
+      guru_belum: { icon: 'users', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+      queue_failed: { icon: 'alert-triangle', color: 'text-orange-600', bg: 'bg-orange-50' }
+    };
+
+    list.innerHTML = items.map(it => {
+      const meta = iconMap[it.tipe] || { icon: 'alert-circle', color: 'text-slate-600', bg: 'bg-slate-100' };
+      return `
+        <div class="flex items-start gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition">
+          <div class="w-9 h-9 rounded-lg ${meta.bg} ${meta.color} flex items-center justify-center flex-shrink-0">
+            <i data-lucide="${meta.icon}" class="w-4 h-4"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm text-slate-700">${escapeHtml(it.pesan)}</div>
+          </div>
+          <a href="${sispaUrl(it.aksi)}" class="btn btn-ghost text-xs flex-shrink-0">
+            <span>Lihat</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </a>
+        </div>`;
+    }).join('');
+    refreshIcons();
+  }
+
+  /* ============================================================
+     EVENT LISTENERS
+     ============================================================ */
+  el('btnRefresh').addEventListener('click', () => {
+    if (window.clearFrontendCache) clearFrontendCache();
+    loadDashboard();
+  });
+</script>
+</body>
+</html>
