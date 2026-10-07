@@ -262,14 +262,17 @@
           <td class="text-right whitespace-nowrap">
             <button class="icon-btn" data-edit="${escapeHtml(s.npsn)}" title="Edit">${icon('pencil', 'w-4 h-4')}</button>
             ${!isDinas ? `<button class="icon-btn text-indigo-600" data-binaan="${escapeHtml(s.npsn)}" title="Atur Binaan">${icon('shield', 'w-4 h-4')}</button>` : ''}
-            ${s.status === 'aktif' && !isDinas ? `<button class="icon-btn text-red-600" data-del="${escapeHtml(s.npsn)}" title="Nonaktifkan">${icon('trash-2', 'w-4 h-4')}</button>` : ''}
+            ${!isDinas ? `<button class="icon-btn text-slate-500" data-menu="${escapeHtml(s.npsn)}" title="Menu">${icon('more-vertical', 'w-4 h-4')}</button>` : ''}
           </td>
         </tr>`;
     }).join('');
 
     tbody.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openEdit(b.dataset.edit)));
-    tbody.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => doDelete(b.dataset.del)));
     tbody.querySelectorAll('[data-binaan]').forEach(b => b.addEventListener('click', () => openBinaan(b.dataset.binaan)));
+    tbody.querySelectorAll('[data-menu]').forEach(b => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openRowMenu(b.dataset.menu, b);
+    }));
 
     refreshIcons();
   }
@@ -829,6 +832,139 @@
       refreshIcons();
       swalError('Gagal impor', err.message);
     }
+  }
+    /* ============================================================
+     ROW MENU (Soft delete & Hard delete)
+     ============================================================ */
+  function openRowMenu(npsn, anchorBtn) {
+    const s = allItems.find(x => x.npsn === npsn);
+    if (!s) return;
+
+    const rect = anchorBtn.getBoundingClientRect();
+    const menu = document.createElement('div');
+    menu.id = 'rowMenu';
+    menu.style.cssText = 'position:fixed;z-index:200;background:#fff;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.12);padding:4px;min-width:180px;font-size:13px';
+    menu.style.top = (rect.bottom + 4) + 'px';
+    menu.style.left = Math.max(8, rect.left - 160) + 'px';
+
+    const statusAktif = s.status === 'aktif';
+
+    menu.innerHTML = `
+      <button data-action="soft" class="w-full text-left px-3 py-2 rounded-md hover:bg-slate-100 flex items-center gap-2">
+        ${icon(statusAktif ? 'x-circle' : 'check-circle-2', 'w-4 h-4')}
+        <span>${statusAktif ? 'Nonaktifkan' : 'Aktifkan'}</span>
+      </button>
+      <div style="height:1px;background:#f1f5f9;margin:4px 0"></div>
+      <button data-action="hard" class="w-full text-left px-3 py-2 rounded-md hover:bg-red-50 text-red-600 flex items-center gap-2">
+        ${icon('trash-2', 'w-4 h-4')}
+        <span>Hapus Permanen</span>
+      </button>
+    `;
+
+    document.body.appendChild(menu);
+    refreshIcons();
+    setTimeout(() => document.addEventListener('click', closeRowMenu, { once: true }), 50);
+
+    menu.querySelector('[data-action="soft"]').addEventListener('click', () => {
+      closeRowMenu();
+      if (statusAktif) doSoftDelete(npsn);
+      else doActivate(npsn);
+    });
+    menu.querySelector('[data-action="hard"]').addEventListener('click', () => {
+      closeRowMenu();
+      doHardDelete(npsn);
+    });
+  }
+
+  function closeRowMenu() {
+    const m = document.getElementById('rowMenu');
+    if (m) m.remove();
+  }
+
+  async function doActivate(npsn) {
+    await withLoading('Mengaktifkan...', async () => {
+      try {
+        await sispaRequest('admin.sekolah.update', { npsn: npsn, payload: { status: 'aktif' } });
+        await swalSuccess('Diaktifkan', 'Sekolah aktif kembali.');
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  async function doSoftDelete(npsn) {
+    const s = allItems.find(x => x.npsn === npsn);
+    if (!s) return;
+    const ok = await swalConfirm(
+      'Nonaktifkan sekolah?',
+      `"${s.nama_sekolah}" tidak akan muncul di daftar aktif.`,
+      { icon: 'warning', confirmText: 'Ya, nonaktifkan', danger: true }
+    );
+    if (!ok) return;
+    await withLoading('Menonaktifkan...', async () => {
+      try {
+        await sispaRequest('admin.sekolah.delete', { npsn: npsn });
+        await swalSuccess('Dinonaktifkan', 'Sekolah tidak aktif lagi.');
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  async function doHardDelete(npsn) {
+    const s = allItems.find(x => x.npsn === npsn);
+    if (!s) return;
+
+    // Konfirmasi 1
+    const step1 = await Swal2.fire({
+      icon: 'warning',
+      title: 'Hapus Permanen?',
+      html: `
+        <div class="text-left text-sm">
+          <p class="mb-2">Sekolah <strong>${escapeHtml(s.nama_sekolah)}</strong> akan dihapus permanen.</p>
+          <p class="text-xs text-slate-600 mb-2">Penghapusan akan <strong>gagal</strong> jika masih ada:</p>
+          <ul class="list-disc list-inside text-slate-600 text-xs">
+            <li>User (KS/Admin) dengan NPSN ini</li>
+            <li>Guru terdaftar</li>
+            <li>Supervisi atau coaching terkait</li>
+          </ul>
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: 'Lanjut',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      reverseButtons: true
+    });
+    if (!step1.isConfirmed) return;
+
+    // Konfirmasi 2: ketik nama
+    const { value } = await Swal2.fire({
+      title: 'Konfirmasi Akhir',
+      input: 'text',
+      inputLabel: 'Ketik nama sekolah untuk konfirmasi:',
+      inputPlaceholder: s.nama_sekolah,
+      showCancelButton: true,
+      confirmButtonText: 'Hapus Permanen',
+      cancelButtonText: 'Batal',
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      reverseButtons: true,
+      inputValidator: (value) => value !== s.nama_sekolah ? 'Nama tidak cocok' : null
+    });
+    if (!value) return;
+
+    await withLoading('Menghapus permanen...', async () => {
+      try {
+        const res = await sispaRequest('admin.sekolah.hardDelete', { npsn: npsn });
+        await swalSuccess('Terhapus', 'Sekolah berhasil dihapus permanen.');
+        await loadData();
+      } catch (err) {
+        if (err.code === 409) {
+          swalError('Tidak dapat dihapus', err.message);
+        } else {
+          handleApiError(err);
+        }
+      }
+    });
   }
 </script>
 </body>
