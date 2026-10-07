@@ -27,7 +27,15 @@
     .indicator-row { grid-template-columns: 1fr; }
   }
   .sticky-summary { position: sticky; top: 80px; }
-  .rtl-row { display: grid; grid-template-columns: 2fr 1fr 1.5fr 1.5fr auto; gap: 0.5rem; padding: 0.75rem; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: 8px; }
+  .rtl-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1.5fr 1.5fr auto;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--slate-50);
+    border: 1px solid var(--slate-200);
+    border-radius: 8px;
+  }
   @media (max-width: 900px) {
     .rtl-row { grid-template-columns: 1fr; }
   }
@@ -192,6 +200,20 @@
           </div>
         </div>
       </div>
+
+      <div id="linkInfoBox" class="hidden p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-xs">
+        <div class="font-medium text-indigo-900 mb-1 flex items-center gap-1">
+          <i data-lucide="link" class="w-3.5 h-3.5"></i>
+          <span>Link Dokumentasi</span>
+        </div>
+        <a id="linkInfoValue" href="#" target="_blank"
+           class="block text-indigo-600 hover:underline break-all">—</a>
+      </div>
+
+      <div class="text-xs text-slate-400 text-center">
+        <i data-lucide="info" class="w-3 h-3 inline-block align-middle"></i>
+        Link dokumentasi dapat ditambahkan kapan saja
+      </div>
     </div>
   </div>
 </div>
@@ -202,18 +224,24 @@
 <script src="../assets/js/instruments.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
-  const user = sispaRequireLogin(['KS', 'Admin']);
-  if (!user) throw new Error('Unauthorized');
-  mountShell('coaching');
+  /* ============================================================
+     DEKLARASI (di atas — cegah TDZ)
+     ============================================================ */
+  let existing = null;
+  let isReadonly = false;
+  const detailMap = {};
+  let guruList = [];
 
   const params = new URLSearchParams(window.location.search);
   const editId = params.get('id');
   const guruFromParam = params.get('guru');
 
-  let existing = null;
-  let isReadonly = false;
-  const detailMap = {};
-  let guruList = [];
+  /* ============================================================
+     INIT
+     ============================================================ */
+  const user = sispaRequireLogin(['KS', 'Admin']);
+  if (!user) throw new Error('Unauthorized');
+  mountShell('coaching');
 
   (async function init() {
     await withLoading('Memuat data...', async () => {
@@ -271,6 +299,9 @@
     });
   })();
 
+  /* ============================================================
+     GURU INFO
+     ============================================================ */
   function showGuruInfo(g) {
     el('guruInfo').classList.remove('hidden');
     el('guruInitial').textContent = (g.nama || 'U').charAt(0).toUpperCase();
@@ -279,6 +310,9 @@
     el('guruSelectWrap').classList.add('hidden');
   }
 
+  /* ============================================================
+     INSTRUMEN
+     ============================================================ */
   function renderInstrumen() {
     const container = el('instrumenContainer');
     let currentTahap = '';
@@ -376,18 +410,41 @@
     }
   }
 
-  function populateForm() {
+  /* ============================================================
+     POPULATE — isi form dengan data existing
+     ============================================================ */
+  function populate() {
+    if (!existing) return;
+
+    // Identitas
     el('fGuru').value = existing.guru_id || '';
     el('fTanggal').value = (existing.tanggal || '').slice(0, 10);
+
+    // Catatan kualitatif
     el('fKekuatan').value = existing.catatan_kekuatan || '';
     el('fArea').value = existing.catatan_area || '';
 
-    // Tampilkan guru info (readonly)
+    // Guru info
     const gData = guruList.find(x => x.id === existing.guru_id);
     if (gData) {
       showGuruInfo(gData);
+    } else {
+      const g = el('fGuru');
+      if (g) {
+        const opt = g.querySelector(`option[value="${existing.guru_id}"]`);
+        if (opt) {
+          showGuruInfo({
+            id: existing.guru_id,
+            nama: opt.textContent,
+            mapel: '',
+            kelas: '',
+            nip: ''
+          });
+        }
+      }
     }
 
+    // Skor indikator + catatan
     INSTRUMEN_LK2.forEach(i => {
       const d = detailMap[i.kode];
       if (!d) return;
@@ -397,6 +454,9 @@
     });
   }
 
+  /* ============================================================
+     READONLY MODE
+     ============================================================ */
   function applyReadonly() {
     if (!isReadonly) return;
     el('readonlyBanner').classList.remove('hidden');
@@ -410,8 +470,13 @@
     el('btnAddRtl').classList.add('hidden');
     el('pdfSection').classList.remove('hidden');
     el('btnPdf').addEventListener('click', cetakPdf);
+    el('btnSetLink').addEventListener('click', openLinkModal);
+    renderLinkInfo();
   }
 
+  /* ============================================================
+     PDF
+     ============================================================ */
   async function cetakPdf() {
     await withLoading('Menyiapkan dokumen...', async () => {
       try {
@@ -425,7 +490,99 @@
     });
   }
 
-  /* ============ RTL ============ */
+  /* ============================================================
+     LINK DOKUMENTASI
+     ============================================================ */
+  function renderLinkInfo() {
+    const link = existing ? (existing.link_dokumentasi || '') : '';
+    const box = el('linkInfoBox');
+    const label = el('btnSetLinkLabel');
+
+    if (link) {
+      el('linkInfoValue').textContent = link;
+      el('linkInfoValue').href = link;
+      box.classList.remove('hidden');
+      label.textContent = 'Edit Link Dokumentasi';
+    } else {
+      box.classList.add('hidden');
+      label.textContent = 'Tambah Link Dokumentasi';
+    }
+    refreshIcons();
+  }
+
+  function openLinkModal() {
+    const current = existing ? (existing.link_dokumentasi || '') : '';
+
+    openModal({
+      title: current ? 'Edit Link Dokumentasi' : 'Tambah Link Dokumentasi',
+      maxWidth: '520px',
+      body: `
+        <div class="space-y-4">
+          <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-xs text-indigo-900">
+            <div class="font-semibold mb-1">Contoh link yang didukung:</div>
+            <ul class="list-disc list-inside space-y-0.5 text-indigo-800">
+              <li>Google Drive — <code class="text-mono text-[10px]">https://drive.google.com/file/d/xxxxx/view</code></li>
+              <li>YouTube (unlisted) — <code class="text-mono text-[10px]">https://youtube.com/watch?v=xxxxx</code></li>
+              <li>Google Docs — <code class="text-mono text-[10px]">https://docs.google.com/document/d/xxxxx</code></li>
+            </ul>
+            <div class="mt-2 text-indigo-700">
+              <strong>Penting:</strong> Pastikan link bisa diakses oleh Pengawas
+              (set sharing ke <em>Anyone with the link</em>).
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="fLinkInput">Link Dokumentasi</label>
+            <input type="url" id="fLinkInput" class="input text-sm"
+                   placeholder="https://drive.google.com/..."
+                   value="${escapeHtml(current)}" />
+            <p class="text-xs text-slate-500 mt-1">Kosongkan dan simpan untuk menghapus link.</p>
+          </div>
+        </div>`,
+      footer: `
+        <button class="btn btn-secondary" data-close>
+          ${icon('x', 'w-4 h-4')}<span>Batal</span>
+        </button>
+        <button class="btn btn-primary" id="btnSaveLink">
+          ${icon('save', 'w-4 h-4')}<span>Simpan</span>
+        </button>`
+    });
+
+    el('btnSaveLink').addEventListener('click', saveLink);
+    setTimeout(() => el('fLinkInput').focus(), 100);
+  }
+
+  async function saveLink() {
+    const btn = el('btnSaveLink');
+    const link = el('fLinkInput').value.trim();
+
+    if (link && !/^https?:\/\/.+/i.test(link)) {
+      return swalError('Link tidak valid', 'Link harus dimulai dengan http:// atau https://');
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `${icon('loader-2', 'w-4 h-4 animate-spin')}<span>Menyimpan...</span>`;
+    refreshIcons();
+
+    try {
+      await sispaRequest('coaching.setLink', { id: editId, link_dokumentasi: link });
+      closeModal();
+
+      if (existing) existing.link_dokumentasi = link;
+      renderLinkInfo();
+
+      await swalSuccess('Tersimpan', link ? 'Link dokumentasi berhasil disimpan.' : 'Link dihapus.');
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `${icon('save', 'w-4 h-4')}<span>Simpan</span>`;
+      refreshIcons();
+      swalError('Gagal menyimpan', err.message);
+    }
+  }
+
+  /* ============================================================
+     RTL
+     ============================================================ */
   function addRtlRow(data) {
     const d = data || {};
     el('rtlEmpty').classList.add('hidden');
@@ -462,7 +619,9 @@
     }).filter(x => x.rencana_aksi.trim() !== '');
   }
 
-  /* ============ SAVE ============ */
+  /* ============================================================
+     SAVE
+     ============================================================ */
   async function save(submit) {
     const payload = {
       id: editId || '',
