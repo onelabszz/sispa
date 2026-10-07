@@ -162,12 +162,7 @@
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
-  const user = sispaRequireLogin(['Pengawas', 'Admin']);
-  if (user) {
-    mountShell('dashboard');
-    loadData();
-  }
-
+  // ===== DEKLARASI DULU =====
   let allItems = [];
   let currentPage = 1;
   let totalItems = 0;
@@ -181,6 +176,13 @@
   let filterStatus = '';
   let filterPegawai = '';
   let filterSort = '';
+
+  // ===== BARU PANGGIL FUNGSI =====
+  const user = sispaRequireLogin(['Pengawas', 'Admin']);
+  if (user) {
+    mountShell('dashboard');
+    loadData(true);
+  }
 
   /* ============================================================
      LOAD DATA
