@@ -140,6 +140,17 @@
     <h3 class="font-semibold text-slate-900 mb-1">Tidak ada hasil</h3>
     <p class="text-sm text-slate-500">Coba ubah kata kunci atau filter.</p>
   </div>
+
+  <!-- Muat Lebih -->
+  <div id="loadMoreWrap" class="hidden card-header border-t border-slate-200 bg-slate-50">
+    <div class="flex items-center justify-between w-full">
+      <span id="loadMoreInfo" class="text-xs text-slate-500">—</span>
+      <button id="btnLoadMore" class="btn btn-secondary text-xs">
+        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        <span>Muat Lebih</span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ================== END ================== -->
@@ -149,69 +160,124 @@
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/app.js"></script>
 <script>
-  const user = sispaRequireLogin(['Pengawas', 'Admin']);
-  if (user) {
-    mountShell('dashboard');
-    loadData();
-  }
-
+  // ===== DEKLARASI DULU =====
   let allItems = [];
+  let currentPage = 1;
+  let totalItems = 0;
+  let hasMore = false;
+  let summary = {};
+  let isLoading = false;
+  const PAGE_LIMIT = 25;
+
   let filterText = '';
   let filterNpsn = '';
   let filterStatus = '';
   let filterKategori = '';
 
+  // ===== BARU PANGGIL FUNGSI =====
+  const user = sispaRequireLogin(['Pengawas', 'Admin']);
+  if (user) {
+    mountShell('dashboard');
+    loadData(true);
+  }
+
   /* ============================================================
      LOAD
      ============================================================ */
-  async function loadData() {
-    await withLoading('Memuat data supervisi...', async () => {
-      try {
-        const res = await sispaRequest('pengawas.supervisiList', {});
-        allItems = res.items || [];
-        el('periodeLabel').textContent = res.periode.label;
+  async function loadData(resetPage) {
+    if (isLoading) return;
+    isLoading = true;
 
-        // Daftar sekolah unik
-        const seen = {};
-        const sekolahList = [];
-        allItems.forEach(s => {
-          if (!seen[s.npsn_sekolah]) {
-            seen[s.npsn_sekolah] = true;
-            sekolahList.push({ npsn: s.npsn_sekolah, nama: s.nama_sekolah });
+    if (resetPage) {
+      allItems = [];
+      currentPage = 1;
+    }
+
+    await withLoading(resetPage ? 'Memuat data supervisi...' : 'Memuat lagi...', async () => {
+      try {
+        const res = await sispaRequest('pengawas.supervisiList', {
+          page: currentPage,
+          limit: PAGE_LIMIT,
+          filter: {
+            q: filterText || undefined,
+            npsn_sekolah: filterNpsn || undefined,
+            status: filterStatus || undefined,
+            kategori: filterKategori || undefined
           }
         });
-        sekolahList.sort((a, b) => a.nama.localeCompare(b.nama));
 
-        const sel = el('filterSekolah');
-        sel.innerHTML = '<option value="">Semua Sekolah</option>';
-        sekolahList.forEach(s => {
-          const opt = document.createElement('option');
-          opt.value = s.npsn;
-          opt.textContent = s.nama;
-          sel.appendChild(opt);
-        });
+        allItems = allItems.concat(res.items || []);
+        totalItems = res.total;
+        hasMore = res.has_more;
+        summary = res.summary || {};
+        el('periodeLabel').textContent = res.periode.label;
+
+        // Build dropdown sekolah — hanya saat reset
+        if (resetPage) {
+          buildSekolahDropdown(res.items || []);
+        }
 
         renderStats();
         renderTable();
+        renderLoadMore();
       } catch (err) { handleApiError(err); }
     });
+
+    isLoading = false;
+  }
+
+  function buildSekolahDropdown(items) {
+    const seen = {};
+    const list = [];
+    items.forEach(s => {
+      if (!seen[s.npsn_sekolah]) {
+        seen[s.npsn_sekolah] = true;
+        list.push({ npsn: s.npsn_sekolah, nama: s.nama_sekolah });
+      }
+    });
+    list.sort((a, b) => a.nama.localeCompare(b.nama));
+
+    const sel = el('filterSekolah');
+    sel.innerHTML = '<option value="">Semua Sekolah</option>';
+    list.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.npsn;
+      opt.textContent = s.nama;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function loadMore() {
+    if (!hasMore || isLoading) return;
+    currentPage++;
+    await loadData(false);
+  }
+
+  function renderLoadMore() {
+    const wrap = el('loadMoreWrap');
+    if (!wrap) return;
+    if (hasMore) {
+      wrap.classList.remove('hidden');
+      el('loadMoreInfo').textContent = 'Menampilkan ' + allItems.length + ' dari ' + totalItems;
+      el('btnLoadMore').classList.remove('hidden');
+    } else if (totalItems > PAGE_LIMIT) {
+      wrap.classList.remove('hidden');
+      el('loadMoreInfo').textContent = 'Semua ' + totalItems + ' data sudah dimuat';
+      el('btnLoadMore').classList.add('hidden');
+    } else {
+      wrap.classList.add('hidden');
+    }
+    refreshIcons();
   }
 
   /* ============================================================
      STAT
      ============================================================ */
   function renderStats() {
-    const total = allItems.length;
-    const terkirim = allItems.filter(x => x.status === 'terkirim');
-    const draft = allItems.filter(x => x.status === 'draft').length;
-    const avg = terkirim.length
-      ? Math.round(terkirim.reduce((a, s) => a + (s.skor_total || 0), 0) / terkirim.length)
-      : 0;
-
-    el('statTotal').textContent = total;
-    el('statTerkirim').textContent = terkirim.length;
-    el('statDraft').textContent = draft;
-    el('statSkor').textContent = avg;
+    el('statTotal').textContent = summary.total || 0;
+    el('statTerkirim').textContent = summary.terkirim || 0;
+    el('statDraft').textContent = summary.draft || 0;
+    el('statSkor').textContent = summary.rata_skor || 0;
   }
 
   /* ============================================================
@@ -228,34 +294,19 @@
     noResultState.classList.add('hidden');
 
     if (!allItems.length) {
-      emptyState.classList.remove('hidden');
+      if (totalItems === 0 && !filterText && !filterNpsn && !filterStatus && !filterKategori) {
+        emptyState.classList.remove('hidden');
+      } else {
+        noResultState.classList.remove('hidden');
+      }
       el('resultCount').textContent = 0;
       refreshIcons();
       return;
     }
-
-    let filtered = allItems.slice();
-
-    if (filterText) {
-      const q = filterText.toLowerCase();
-      filtered = filtered.filter(x =>
-        (x.nama_guru || '').toLowerCase().includes(q) ||
-        (x.nama_sekolah || '').toLowerCase().includes(q) ||
-        (x.mapel || '').toLowerCase().includes(q)
-      );
-    }
-    if (filterNpsn) filtered = filtered.filter(x => x.npsn_sekolah === filterNpsn);
-    if (filterStatus) filtered = filtered.filter(x => x.status === filterStatus);
-    if (filterKategori) filtered = filtered.filter(x => x.kategori === filterKategori);
-
-    el('resultCount').textContent = filtered.length + ' / ' + allItems.length;
-
-    if (!filtered.length) {
-      noResultState.classList.remove('hidden');
-      refreshIcons();
-      return;
-    }
     wrap.classList.remove('hidden');
+
+    el('resultCount').textContent = allItems.length + ' / ' + totalItems;
+    const filtered = allItems;  // sudah difilter server-side
 
     tbody.innerHTML = filtered.map(s => {
       const statusBadge = s.status === 'terkirim'
@@ -320,17 +371,26 @@
   /* ============================================================
      EVENT LISTENERS
      ============================================================ */
+  let debounceSearch = null;
   el('searchInput').addEventListener('input', (e) => {
-    filterText = e.target.value; renderTable();
+    filterText = e.target.value;
+    clearTimeout(debounceSearch);
+    debounceSearch = setTimeout(() => loadData(true), 400);
   });
+
   el('filterSekolah').addEventListener('change', (e) => {
-    filterNpsn = e.target.value; renderTable();
+    filterNpsn = e.target.value;
+    loadData(true);
   });
+
   el('filterStatus').addEventListener('change', (e) => {
-    filterStatus = e.target.value; renderTable();
+    filterStatus = e.target.value;
+    loadData(true);
   });
+
   el('filterKategori').addEventListener('change', (e) => {
-    filterKategori = e.target.value; renderTable();
+    filterKategori = e.target.value;
+    loadData(true);
   });
 
   el('btnReset').addEventListener('click', () => {
@@ -339,13 +399,16 @@
     el('filterStatus').value = '';
     el('filterKategori').value = '';
     filterText = filterNpsn = filterStatus = filterKategori = '';
-    renderTable();
+    loadData(true);
   });
 
   el('btnRefresh').addEventListener('click', () => {
     if (window.clearFrontendCache) clearFrontendCache();
-    loadData();
+    loadData(true);
   });
+
+  // Tombol Muat Lebih (pakai event listener, bukan inline onclick)
+  el('btnLoadMore').addEventListener('click', () => loadMore());
 </script>
 </body>
 </html>
