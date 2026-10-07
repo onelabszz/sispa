@@ -358,6 +358,7 @@ function mountShell(activeKey) {
   }
 
   mountImpersonationBanner();
+  checkMigrationBanner();
 }
 
 /* ============================================================
@@ -390,6 +391,69 @@ function closeModal() {
 }
 
 /* ============================================================
+   MIGRATION BANNER
+   ============================================================ */
+
+/**
+ * Tampilkan notifikasi kecil saat migrasi URL baru saja terjadi.
+ * Hanya muncul 1× per sesi browser.
+ */
+function checkMigrationBanner() {
+  if (typeof wasJustMigrated !== 'function') return;
+  if (!wasJustMigrated()) return;
+
+  // Cegah tampil dobel
+  if (document.getElementById('migrationBanner')) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'migrationBanner';
+  banner.style.cssText = [
+    'position:fixed',
+    'top:16px',
+    'left:50%',
+    'transform:translateX(-50%)',
+    'z-index:110',
+    'background:#4f46e5',
+    'color:#fff',
+    'padding:10px 16px',
+    'border-radius:12px',
+    'box-shadow:0 10px 25px rgba(79,70,229,.35)',
+    'display:flex',
+    'align-items:center',
+    'gap:10px',
+    'font-size:13px',
+    'font-weight:500',
+    'max-width:90vw'
+  ].join(';');
+
+  banner.innerHTML = `
+    <i data-lucide="sparkles" class="w-4 h-4"></i>
+    <span>Aplikasi telah diperbarui — memuat data terbaru…</span>
+    <button id="btnCloseMigration" style="background:transparent;border:none;color:#fff;cursor:pointer;padding:2px 6px;font-size:16px;line-height:1">×</button>`;
+
+  document.body.appendChild(banner);
+  if (window.lucide) lucide.createIcons();
+
+  // Tutup setelah 4 detik
+  setTimeout(() => {
+    if (banner.parentNode) {
+      banner.style.opacity = '0';
+      banner.style.transform = 'translateX(-50%) translateY(-8px)';
+      setTimeout(() => banner.remove(), 300);
+    }
+    if (typeof clearMigrationFlag === 'function') clearMigrationFlag();
+  }, 4000);
+
+  const btn = document.getElementById('btnCloseMigration');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      banner.remove();
+      if (typeof clearMigrationFlag === 'function') clearMigrationFlag();
+    });
+  }
+}
+
+/* ============================================================
    EXPORT KE WINDOW
    ============================================================ */
 
@@ -417,3 +481,4 @@ window.mountShell         = mountShell;
 window.mountImpersonationBanner = mountImpersonationBanner;
 window.openModal          = openModal;
 window.closeModal         = closeModal;
+window.checkMigrationBanner = checkMigrationBanner;
