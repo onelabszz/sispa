@@ -23,6 +23,10 @@
       <i data-lucide="refresh-cw" class="w-4 h-4"></i>
       <span>Refresh</span>
     </button>
+    <button id="btnImport" class="btn btn-secondary">
+      <i data-lucide="upload" class="w-4 h-4"></i>
+      <span>Impor CSV</span>
+    </button>
     <button id="btnAdd" class="btn btn-primary">
       <i data-lucide="user-plus" class="w-4 h-4"></i>
       <span>Tambah User</span>
@@ -529,6 +533,287 @@
     renderTable();
   });
   el('btnRefresh').addEventListener('click', () => loadData());
+  
+    /* ============================================================
+     IMPOR CSV
+     ============================================================ */
+  el('btnImport').addEventListener('click', openImportModal);
+
+  function openImportModal() {
+    openModal({
+      title: 'Impor User Massal (CSV)',
+      maxWidth: '680px',
+      body: `
+        <div class="space-y-4">
+          <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-xs text-indigo-900">
+            <div class="font-semibold mb-1">Format kolom (urutan bebas, header opsional):</div>
+            <code class="block text-[11px] text-mono break-all">
+              npsn, role, nama, nip, pangkat_golongan, jabatan, status_kepegawaian, jenis_kelamin, no_hp, email
+            </code>
+            <div class="mt-2">
+              <strong>Role</strong>: KS / Pengawas / Admin ·
+              <strong>JK</strong>: L / P ·
+              <strong>Status</strong>: PNS / PPPK / Non ASN
+            </div>
+            <div class="mt-1">
+              Password default = <strong>NPSN</strong>. User wajib ganti saat login.
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button type="button" id="btnPilihFile" class="btn btn-secondary flex-1 justify-center text-xs">
+              ${icon('file-up', 'w-3.5 h-3.5')}
+              <span>Pilih File CSV</span>
+            </button>
+            <button type="button" id="btnTemplate" class="btn btn-ghost text-slate-600 text-xs">
+              ${icon('download', 'w-3.5 h-3.5')}
+              <span>Unduh Template</span>
+            </button>
+            <input type="file" id="fileInput" accept=".csv,.txt" class="hidden" />
+          </div>
+
+          <div>
+            <label class="label">Atau paste data CSV di sini:</label>
+            <textarea id="csvInput" rows="8"
+                      class="textarea text-mono text-xs"
+                      placeholder="20512345, KS, Dra. Siti Aminah, 197001011990031001, Pembina/IV a, Kepala Sekolah, PNS, P, 081234567890, siti@sch.id
+20512346, KS, Bambang Suryadi S.Pd, 197101011990031002, Penata/III c, Kepala Sekolah, PNS, L, 081234567891, bambang@sch.id"></textarea>
+          </div>
+
+          <div id="previewBox" class="hidden">
+            <div class="label">Pratinjau:</div>
+            <div id="previewInfo" class="text-xs text-slate-600 mb-2">—</div>
+            <div class="overflow-x-auto rounded-lg border border-slate-200 max-h-48 overflow-y-auto">
+              <table class="table text-xs">
+                <thead id="previewHead"></thead>
+                <tbody id="previewBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="importResult" class="hidden"></div>
+        </div>`,
+      footer: `
+        <button class="btn btn-secondary" data-close>
+          ${icon('x', 'w-4 h-4')}<span>Batal</span>
+        </button>
+        <button class="btn btn-primary" id="btnDoImport">
+          ${icon('upload', 'w-4 h-4')}<span>Impor Sekarang</span>
+        </button>`
+    });
+
+    // Event: pilih file
+    el('btnPilihFile').addEventListener('click', () => el('fileInput').click());
+    el('fileInput').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        el('csvInput').value = ev.target.result;
+        renderPreview();
+      };
+      reader.readAsText(f);
+    });
+
+    // Event: unduh template
+    el('btnTemplate').addEventListener('click', () => {
+      const headers = 'npsn,role,nama,nip,pangkat_golongan,jabatan,status_kepegawaian,jenis_kelamin,no_hp,email';
+      const sample = '20512999,KS,Dra. Contoh Kepala Sekolah,197001011990031001,Pembina/IV a,Kepala Sekolah,PNS,P,081234567890,ks@sekolah.sch.id';
+      const blob = new Blob(['\uFEFF' + headers + '\n' + sample], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'template-import-user.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Event: preview saat textarea berubah
+    let debouncePreview = null;
+    el('csvInput').addEventListener('input', () => {
+      clearTimeout(debouncePreview);
+      debouncePreview = setTimeout(renderPreview, 400);
+    });
+
+    // Event: impor
+    el('btnDoImport').addEventListener('click', doImport);
+  }
+
+  function parseClientCsv(raw) {
+    const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+      .split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if (!lines.length) return [];
+    const sample = lines[0];
+    const tabCount = (sample.match(/\t/g) || []).length;
+    const commaCount = (sample.match(/,/g) || []).length;
+    const semiCount = (sample.match(/;/g) || []).length;
+    let delim = ',';
+    if (tabCount > commaCount && tabCount > semiCount) delim = '\t';
+    else if (semiCount > commaCount && semiCount > tabCount) delim = ';';
+
+    function splitLine(line) {
+      const out = [];
+      let cur = '';
+      let q = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (q && line[i + 1] === '"') { cur += '"'; i++; }
+          else q = !q;
+        } else if (ch === delim && !q) { out.push(cur); cur = ''; }
+        else cur += ch;
+      }
+      out.push(cur);
+      return out.map(s => s.trim());
+    }
+
+    // Deteksi header
+    const first = splitLine(lines[0]).map(c => c.toLowerCase());
+    const hasHeader = first.some(c => ['npsn', 'role', 'nama'].includes(c));
+
+    const start = hasHeader ? 1 : 0;
+    const rows = [];
+    for (let i = start; i < lines.length; i++) {
+      const cells = splitLine(lines[i]);
+      rows.push({
+        line: i + 1,
+        npsn: cells[0] || '',
+        role: cells[1] || '',
+        nama: cells[2] || '',
+        nip: cells[3] || '',
+        pangkat_golongan: cells[4] || '',
+        jabatan: cells[5] || '',
+        status_kepegawaian: cells[6] || '',
+        jenis_kelamin: cells[7] || '',
+        no_hp: cells[8] || '',
+        email: cells[9] || ''
+      });
+    }
+    return rows;
+  }
+
+  function renderPreview() {
+    const raw = el('csvInput').value.trim();
+    if (!raw) {
+      el('previewBox').classList.add('hidden');
+      return;
+    }
+
+    const rows = parseClientCsv(raw);
+    if (!rows.length) {
+      el('previewBox').classList.add('hidden');
+      return;
+    }
+
+    el('previewBox').classList.remove('hidden');
+    el('previewInfo').textContent = rows.length + ' baris terdeteksi';
+
+    const cols = ['npsn', 'role', 'nama', 'nip', 'no_hp', 'email'];
+    el('previewHead').innerHTML = '<tr>' +
+      cols.map(c => `<th class="text-xs">${c}</th>`).join('') +
+      '</tr>';
+
+    const preview = rows.slice(0, 10);
+    el('previewBody').innerHTML = preview.map(r => `
+      <tr>
+        ${cols.map(c => `<td class="text-xs truncate" style="max-width: 120px">${escapeHtml(r[c] || '—')}</td>`).join('')}
+      </tr>
+    `).join('') + (rows.length > 10
+      ? `<tr><td colspan="${cols.length}" class="text-center text-xs text-slate-500 italic">... dan ${rows.length - 10} baris lagi</td></tr>`
+      : '');
+
+    refreshIcons();
+  }
+
+  async function doImport() {
+    const raw = el('csvInput').value.trim();
+    if (!raw) {
+      return swalError('Data kosong', 'Paste data CSV terlebih dahulu.');
+    }
+
+    const rows = parseClientCsv(raw);
+    if (!rows.length) {
+      return swalError('Tidak ada data', 'Tidak ada baris yang terdeteksi.');
+    }
+
+    if (rows.length > 500) {
+      return swalError('Terlalu banyak', 'Maksimal 500 baris per impor. Terdeteksi: ' + rows.length);
+    }
+
+    const ok = await swalConfirm(
+      'Impor ' + rows.length + ' user?',
+      'User baru akan dibuat dengan password default = NPSN. NPSN yang sudah ada akan dilewati.',
+      { confirmText: 'Ya, impor' }
+    );
+    if (!ok) return;
+
+    const btn = el('btnDoImport');
+    btn.disabled = true;
+    btn.innerHTML = `${icon('loader-2', 'w-4 h-4 animate-spin')}<span>Mengimpor...</span>`;
+    refreshIcons();
+
+    try {
+      const res = await sispaRequest('admin.users.importBulk', { csv: raw });
+
+      // Tampilkan hasil
+      const resultBox = el('importResult');
+      resultBox.classList.remove('hidden');
+      resultBox.innerHTML = `
+        <div class="p-3 rounded-lg ${res.errors.length ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200'}">
+          <div class="flex items-center gap-2 font-medium text-sm mb-2">
+            ${icon(res.errors.length ? 'alert-triangle' : 'check-circle-2', 'w-4 h-4')}
+            <span>Hasil Impor</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-xs mb-3">
+            <div class="p-2 rounded bg-white border border-slate-200">
+              <div class="text-slate-500">Berhasil</div>
+              <div class="text-lg font-bold text-green-600">${res.inserted}</div>
+            </div>
+            <div class="p-2 rounded bg-white border border-slate-200">
+              <div class="text-slate-500">Dilewati</div>
+              <div class="text-lg font-bold text-amber-600">${res.skipped}</div>
+            </div>
+            <div class="p-2 rounded bg-white border border-slate-200">
+              <div class="text-slate-500">Error</div>
+              <div class="text-lg font-bold text-red-600">${res.errors.length}</div>
+            </div>
+          </div>
+          ${res.errors.length ? `
+            <div class="max-h-32 overflow-y-auto text-xs space-y-1">
+              ${res.errors.map(e => `
+                <div class="text-red-700">Baris ${e.line}: ${escapeHtml(e.message)}${e.npsn ? ' (' + escapeHtml(e.npsn) + ')' : ''}</div>
+              `).join('')}
+            </div>` : ''}
+          ${res.skipped_detail && res.skipped_detail.length ? `
+            <details class="mt-2 text-xs">
+              <summary class="cursor-pointer text-slate-600 hover:text-slate-900">Lihat detail yang dilewati (${res.skipped_detail.length})</summary>
+              <div class="mt-1 max-h-32 overflow-y-auto space-y-0.5 text-slate-600">
+                ${res.skipped_detail.map(s => `
+                  <div>Baris ${s.line} · NPSN ${escapeHtml(s.npsn)} — ${escapeHtml(s.reason)}</div>
+                `).join('')}
+              </div>
+            </details>` : ''}
+        </div>`;
+
+      // Toast sukses
+      if (res.inserted > 0) {
+        showToast(res.inserted + ' user baru ditambahkan', 'success');
+      }
+
+      // Refresh tabel di belakang
+      await loadData();
+
+      // Ubah tombol jadi "Selesai"
+      btn.disabled = false;
+      btn.innerHTML = `${icon('check', 'w-4 h-4')}<span>Selesai — tutup</span>`;
+      btn.addEventListener('click', closeModal, { once: true });
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `${icon('upload', 'w-4 h-4')}<span>Impor Sekarang</span>`;
+      refreshIcons();
+      swalError('Gagal impor', err.message);
+    }
+  }
 </script>
 </body>
 </html>
