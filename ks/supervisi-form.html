@@ -220,7 +220,18 @@
   (async function init() {
     await withLoading('Memuat data...', async () => {
       try {
-        const guru = await sispaRequest('guru.list', {});
+        // Susun batch request
+        const batchActions = [
+          { key: 'guru', action: 'guru.list' }
+        ];
+        if (editId) {
+          batchActions.push({ key: 'supervisi', action: 'supervisi.get', id: editId });
+        }
+
+        const batchRes = await sispaBatch(batchActions);
+
+        // Guru list
+        const guru = batchRes.get('guru') || [];
         guruList = guru;
         const sel = el('fGuru');
         sel.innerHTML = '<option value="">— Pilih Guru —</option>';
@@ -231,18 +242,16 @@
           sel.appendChild(opt);
         });
 
-        // Pre-select guru dari param
         if (guruFromParam) {
           sel.value = guruFromParam;
           const g = guru.find(x => x.id === guruFromParam);
           if (g) showGuruInfo(g);
         }
 
-        // RENDER INSTRUMEN DULU sebelum populateForm
         renderInstrumen();
 
         if (editId) {
-          const data = await sispaRequest('supervisi.get', { id: editId });
+          const data = batchRes.get('supervisi');
           existing = data.header;
           (data.detail || []).forEach(d => detailMap[d.kode_indikator] = d);
           isReadonly = existing.status === 'terkirim';
