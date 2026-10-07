@@ -23,6 +23,10 @@
       <i data-lucide="refresh-cw" class="w-4 h-4"></i>
       <span>Refresh</span>
     </button>
+    <button id="btnImport" class="btn btn-secondary">
+      <i data-lucide="upload" class="w-4 h-4"></i>
+      <span>Impor CSV</span>
+    </button>
     <button id="btnAdd" class="btn btn-primary">
       <i data-lucide="plus" class="w-4 h-4"></i>
       <span>Tambah Sekolah</span>
@@ -566,6 +570,270 @@
     if (window.clearFrontendCache) clearFrontendCache();
     loadData();
   });
+    /* ============================================================
+     IMPOR CSV SEKOLAH
+     ============================================================ */
+  el('btnImport').addEventListener('click', openImportModal);
+
+  function openImportModal() {
+    openModal({
+      title: 'Impor Sekolah Massal (CSV)',
+      maxWidth: '720px',
+      body: `
+        <div class="space-y-4">
+          <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-xs text-indigo-900">
+            <div class="font-semibold mb-1">Format kolom (urutan bebas, header opsional):</div>
+            <code class="block text-[11px] text-mono break-all">
+              npsn, nama_sekolah, jenjang, kecamatan, kabupaten, provinsi, nama_ks, alamat, telepon, email, logo_url
+            </code>
+            <div class="mt-2">
+              <strong>Jenjang</strong>: SD / SMP / SMA / SMK / SLB ·
+              Kolom <strong>alamat</strong>, <strong>telepon</strong>, <strong>email</strong>, <strong>logo_url</strong> boleh dikosongkan.
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button type="button" id="btnPilihFileSek" class="btn btn-secondary flex-1 justify-center text-xs">
+              ${icon('file-up', 'w-3.5 h-3.5')}
+              <span>Pilih File CSV</span>
+            </button>
+            <button type="button" id="btnTemplateSek" class="btn btn-ghost text-slate-600 text-xs">
+              ${icon('download', 'w-3.5 h-3.5')}
+              <span>Unduh Template</span>
+            </button>
+            <input type="file" id="fileInputSek" accept=".csv,.txt" class="hidden" />
+          </div>
+
+          <div>
+            <label class="label">Atau paste data CSV di sini:</label>
+            <textarea id="csvInputSek" rows="8"
+                      class="textarea text-mono text-xs"
+                      placeholder="20512999, SDN 1 Contoh, SD, Sukamaju, Kab. Malang, Jawa Timur, Dra. Siti Aminah, Jl. Raya No. 12, (0341) 123456, sdn1contoh@sch.id
+20512998, SMPN 2 Contoh, SMP, Ngantang, Kab. Malang, Jawa Timur, Budi S.Pd, Jl. Melati No. 5, (0341) 654321, smpn2contoh@sch.id"></textarea>
+          </div>
+
+          <div id="previewBoxSek" class="hidden">
+            <div class="label">Pratinjau:</div>
+            <div id="previewInfoSek" class="text-xs text-slate-600 mb-2">—</div>
+            <div class="overflow-x-auto rounded-lg border border-slate-200 max-h-48 overflow-y-auto">
+              <table class="table text-xs">
+                <thead id="previewHeadSek"></thead>
+                <tbody id="previewBodySek"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="importResultSek" class="hidden"></div>
+        </div>`,
+      footer: `
+        <button class="btn btn-secondary" data-close>
+          ${icon('x', 'w-4 h-4')}<span>Batal</span>
+        </button>
+        <button class="btn btn-primary" id="btnDoImportSek">
+          ${icon('upload', 'w-4 h-4')}<span>Impor Sekarang</span>
+        </button>`
+    });
+
+    el('btnPilihFileSek').addEventListener('click', () => el('fileInputSek').click());
+    el('fileInputSek').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        el('csvInputSek').value = ev.target.result;
+        renderPreviewSek();
+      };
+      reader.readAsText(f);
+    });
+
+    el('btnTemplateSek').addEventListener('click', () => {
+      const headers = 'npsn,nama_sekolah,jenjang,kecamatan,kabupaten,provinsi,nama_ks,alamat,telepon,email,logo_url';
+      const sample = '20512999,SDN 1 Contoh,SD,Sukamaju,Kab. Malang,Jawa Timur,Dra. Siti Aminah,"Jl. Raya No. 12",(0341) 123456,sdn1contoh@sch.id,';
+      const blob = new Blob(['\uFEFF' + headers + '\n' + sample], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'template-import-sekolah.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    let debouncePreviewSek = null;
+    el('csvInputSek').addEventListener('input', () => {
+      clearTimeout(debouncePreviewSek);
+      debouncePreviewSek = setTimeout(renderPreviewSek, 400);
+    });
+
+    el('btnDoImportSek').addEventListener('click', doImportSek);
+  }
+
+  function parseClientCsvSek(raw) {
+    const lines = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+      .split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if (!lines.length) return [];
+    const sample = lines[0];
+    const tabCount = (sample.match(/\t/g) || []).length;
+    const commaCount = (sample.match(/,/g) || []).length;
+    const semiCount = (sample.match(/;/g) || []).length;
+    let delim = ',';
+    if (tabCount > commaCount && tabCount > semiCount) delim = '\t';
+    else if (semiCount > commaCount && semiCount > tabCount) delim = ';';
+
+    function splitLine(line) {
+      const out = [];
+      let cur = '';
+      let q = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          if (q && line[i + 1] === '"') { cur += '"'; i++; }
+          else q = !q;
+        } else if (ch === delim && !q) { out.push(cur); cur = ''; }
+        else cur += ch;
+      }
+      out.push(cur);
+      return out.map(s => s.trim());
+    }
+
+    const first = splitLine(lines[0]).map(c => c.toLowerCase());
+    const hasHeader = first.some(c => ['npsn', 'nama_sekolah', 'nama sekolah', 'jenjang'].includes(c));
+    const start = hasHeader ? 1 : 0;
+
+    const rows = [];
+    for (let i = start; i < lines.length; i++) {
+      const cells = splitLine(lines[i]);
+      rows.push({
+        line: i + 1,
+        npsn: cells[0] || '',
+        nama_sekolah: cells[1] || '',
+        jenjang: cells[2] || '',
+        kecamatan: cells[3] || '',
+        kabupaten: cells[4] || '',
+        provinsi: cells[5] || '',
+        nama_ks: cells[6] || '',
+        alamat: cells[7] || '',
+        telepon: cells[8] || '',
+        email: cells[9] || '',
+        logo_url: cells[10] || ''
+      });
+    }
+    return rows;
+  }
+
+  function renderPreviewSek() {
+    const raw = el('csvInputSek').value.trim();
+    if (!raw) {
+      el('previewBoxSek').classList.add('hidden');
+      return;
+    }
+    const rows = parseClientCsvSek(raw);
+    if (!rows.length) {
+      el('previewBoxSek').classList.add('hidden');
+      return;
+    }
+
+    el('previewBoxSek').classList.remove('hidden');
+    el('previewInfoSek').textContent = rows.length + ' baris terdeteksi';
+
+    const cols = ['npsn', 'nama_sekolah', 'jenjang', 'kecamatan'];
+    el('previewHeadSek').innerHTML = '<tr>' +
+      cols.map(c => `<th class="text-xs">${c}</th>`).join('') + '</tr>';
+
+    const preview = rows.slice(0, 10);
+    el('previewBodySek').innerHTML = preview.map(r => `
+      <tr>
+        ${cols.map(c => `<td class="text-xs truncate" style="max-width: 160px">${escapeHtml(r[c] || '—')}</td>`).join('')}
+      </tr>
+    `).join('') + (rows.length > 10
+      ? `<tr><td colspan="${cols.length}" class="text-center text-xs text-slate-500 italic">... dan ${rows.length - 10} baris lagi</td></tr>`
+      : '');
+
+    refreshIcons();
+  }
+
+  async function doImportSek() {
+    const raw = el('csvInputSek').value.trim();
+    if (!raw) {
+      return swalError('Data kosong', 'Paste data CSV terlebih dahulu.');
+    }
+    const rows = parseClientCsvSek(raw);
+    if (!rows.length) {
+      return swalError('Tidak ada data', 'Tidak ada baris yang terdeteksi.');
+    }
+    if (rows.length > 500) {
+      return swalError('Terlalu banyak', 'Maksimal 500 baris per impor. Terdeteksi: ' + rows.length);
+    }
+
+    const ok = await swalConfirm(
+      'Impor ' + rows.length + ' sekolah?',
+      'NPSN yang sudah ada akan dilewati.',
+      { confirmText: 'Ya, impor' }
+    );
+    if (!ok) return;
+
+    const btn = el('btnDoImportSek');
+    btn.disabled = true;
+    btn.innerHTML = `${icon('loader-2', 'w-4 h-4 animate-spin')}<span>Mengimpor...</span>`;
+    refreshIcons();
+
+    try {
+      const res = await sispaRequest('admin.sekolah.importBulk', { csv: raw });
+
+      const resultBox = el('importResultSek');
+      resultBox.classList.remove('hidden');
+      resultBox.innerHTML = `
+        <div class="p-3 rounded-lg ${res.errors.length ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200'}">
+          <div class="flex items-center gap-2 font-medium text-sm mb-2">
+            ${icon(res.errors.length ? 'alert-triangle' : 'check-circle-2', 'w-4 h-4')}
+            <span>Hasil Impor</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-xs mb-3">
+            <div class="p-2 rounded bg-white border border-slate-200">
+              <div class="text-slate-500">Berhasil</div>
+              <div class="text-lg font-bold text-green-600">${res.inserted}</div>
+            </div>
+            <div class="p-2 rounded bg-white border border-slate-200">
+              <div class="text-slate-500">Dilewati</div>
+              <div class="text-lg font-bold text-amber-600">${res.skipped}</div>
+            </div>
+            <div class="p-2 rounded bg-white border border-slate-200">
+              <div class="text-slate-500">Error</div>
+              <div class="text-lg font-bold text-red-600">${res.errors.length}</div>
+            </div>
+          </div>
+          ${res.errors.length ? `
+            <div class="max-h-32 overflow-y-auto text-xs space-y-1">
+              ${res.errors.map(e => `
+                <div class="text-red-700">Baris ${e.line}: ${escapeHtml(e.message)}${e.npsn ? ' (' + escapeHtml(e.npsn) + ')' : ''}</div>
+              `).join('')}
+            </div>` : ''}
+          ${res.skipped_detail && res.skipped_detail.length ? `
+            <details class="mt-2 text-xs">
+              <summary class="cursor-pointer text-slate-600 hover:text-slate-900">Lihat detail yang dilewati (${res.skipped_detail.length})</summary>
+              <div class="mt-1 max-h-32 overflow-y-auto space-y-0.5 text-slate-600">
+                ${res.skipped_detail.map(s => `
+                  <div>Baris ${s.line} · NPSN ${escapeHtml(s.npsn)} — ${escapeHtml(s.reason)}</div>
+                `).join('')}
+              </div>
+            </details>` : ''}
+        </div>`;
+
+      if (res.inserted > 0) {
+        showToast(res.inserted + ' sekolah baru ditambahkan', 'success');
+      }
+
+      await loadData();
+
+      btn.disabled = false;
+      btn.innerHTML = `${icon('check', 'w-4 h-4')}<span>Selesai — tutup</span>`;
+      btn.addEventListener('click', closeModal, { once: true });
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `${icon('upload', 'w-4 h-4')}<span>Impor Sekarang</span>`;
+      refreshIcons();
+      swalError('Gagal impor', err.message);
+    }
+  }
 </script>
 </body>
 </html>
