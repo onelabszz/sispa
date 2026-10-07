@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Pengaturan Aplikasi</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+
+<!-- ================== KONTEN ================== -->
+
+<div class="mb-6">
+  <h1 class="text-2xl font-bold text-slate-900">Pengaturan Aplikasi</h1>
+  <p class="text-sm text-slate-500 mt-1">Konfigurasi global SISPA.</p>
+</div>
+
+<!-- Tabs -->
+<div class="card mb-4">
+  <div class="flex border-b border-slate-200 overflow-x-auto">
+    <button class="tab-btn active px-5 py-3 text-sm font-medium text-indigo-600 border-b-2 border-indigo-600 whitespace-nowrap" data-tab="umum">
+      <i data-lucide="settings-2" class="w-4 h-4 inline-block mr-1.5 align-middle"></i>
+      Umum
+    </button>
+    <button class="tab-btn px-5 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 whitespace-nowrap" data-tab="kategori">
+      <i data-lucide="sliders" class="w-4 h-4 inline-block mr-1.5 align-middle"></i>
+      Kategori Penilaian
+    </button>
+    <button class="tab-btn px-5 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 whitespace-nowrap" data-tab="sistem">
+      <i data-lucide="server" class="w-4 h-4 inline-block mr-1.5 align-middle"></i>
+      Sistem
+    </button>
+  </div>
+</div>
+
+<!-- Tab content: UMUM -->
+<div id="tab-umum" class="tab-content">
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Tahun Ajaran Aktif</h2>
+      </div>
+    </div>
+    <div class="card-body grid md:grid-cols-2 gap-4">
+      <div>
+        <label class="label" for="fTahunAjaran">Tahun Ajaran</label>
+        <input type="text" id="fTahunAjaran" class="input text-mono"
+               placeholder="Contoh: 2025/2026" />
+        <p class="text-xs text-slate-500 mt-1">Format: YYYY/YYYY</p>
+      </div>
+      <div>
+        <label class="label" for="fSemester">Semester</label>
+        <select id="fSemester" class="select">
+          <option value="Ganjil">Ganjil (Juli – Desember)</option>
+          <option value="Genap">Genap (Januari – Juni)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="building" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Identitas Dinas</h2>
+      </div>
+    </div>
+    <div class="card-body space-y-4">
+      <div>
+        <label class="label" for="fNamaDinas">Nama Dinas</label>
+        <input type="text" id="fNamaDinas" class="input"
+               placeholder="Contoh: DINAS PENDIDIKAN DAN KEBUDAYAAN" />
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="label" for="fNamaKabupaten">Kabupaten / Kota</label>
+          <input type="text" id="fNamaKabupaten" class="input"
+                 placeholder="Contoh: KABUPATEN MALANG" />
+        </div>
+        <div>
+          <label class="label" for="fNamaProvinsi">Provinsi</label>
+          <input type="text" id="fNamaProvinsi" class="input"
+                 placeholder="Contoh: JAWA TIMUR" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-2 mb-8">
+    <button id="btnResetUmum" class="btn btn-ghost text-slate-600">
+      <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+      <span>Muat Ulang</span>
+    </button>
+    <button id="btnSaveUmum" class="btn btn-primary">
+      <i data-lucide="save" class="w-4 h-4"></i>
+      <span>Simpan</span>
+    </button>
+  </div>
+</div>
+
+<!-- Tab content: KATEGORI -->
+<div id="tab-kategori" class="tab-content hidden">
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Kategori LK1 — Supervisi Akademik</h2>
+      </div>
+      <span class="text-xs text-slate-500">Skor total 0–76</span>
+    </div>
+    <div class="card-body">
+      <div id="kategoriLK1" class="space-y-3"></div>
+      <p class="text-xs text-slate-500 mt-3">
+        Setiap kategori punya rentang <strong>min</strong> s.d. <strong>max</strong> (inklusif). Pastikan tidak ada celah antar kategori.
+      </p>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="message-square" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Kategori LK2 — Coaching</h2>
+      </div>
+      <span class="text-xs text-slate-500">Skor total 0–32</span>
+    </div>
+    <div class="card-body">
+      <div id="kategoriLK2" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-2 mb-8">
+    <button id="btnResetKategori" class="btn btn-ghost text-red-600">
+      <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+      <span>Reset ke Default</span>
+    </button>
+    <button id="btnSaveKategori" class="btn btn-primary">
+      <i data-lucide="save" class="w-4 h-4"></i>
+      <span>Simpan Kategori</span>
+    </button>
+  </div>
+</div>
+
+<!-- Tab content: SISTEM -->
+<div id="tab-sistem" class="tab-content hidden">
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="info" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Informasi Sistem</h2>
+      </div>
+    </div>
+    <div class="card-body space-y-3 text-sm">
+      <div class="flex items-center justify-between py-2 border-b border-slate-100">
+        <span class="text-slate-600">Versi Skema</span>
+        <span id="infoVersi" class="text-mono font-medium text-slate-900">—</span>
+      </div>
+      <div class="flex items-center justify-between py-2 border-b border-slate-100">
+        <span class="text-slate-600">Runtime</span>
+        <span id="infoRuntime" class="text-mono font-medium text-slate-900">—</span>
+      </div>
+      <div class="flex items-center justify-between py-2 border-b border-slate-100">
+        <span class="text-slate-600">URL Backend</span>
+        <span id="infoUrl" class="text-xs text-mono text-slate-600 truncate" style="max-width: 400px">—</span>
+      </div>
+      <div class="flex items-center justify-between py-2">
+        <span class="text-slate-600">Test Koneksi</span>
+        <button id="btnTestKoneksi" class="btn btn-secondary text-xs">
+          <i data-lucide="plug-zap" class="w-3.5 h-3.5"></i>
+          <span>Uji Sekarang</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">
+      <div class="flex items-center gap-2">
+        <i data-lucide="database" class="w-4 h-4 text-slate-500"></i>
+        <h2 class="font-semibold text-slate-900 text-sm">Operasi Data</h2>
+      </div>
+    </div>
+    <div class="card-body space-y-3">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 py-2">
+        <div>
+          <div class="text-sm font-medium text-slate-900">Backup Spreadsheet</div>
+          <div class="text-xs text-slate-500">Buat salinan SISPA_DB ke folder backup.</div>
+        </div>
+        <button id="btnBackup" class="btn btn-secondary">
+          <i data-lucide="save" class="w-4 h-4"></i>
+          <span>Buat Backup</span>
+        </button>
+      </div>
+      <div class="divider"></div>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 py-2">
+        <div>
+          <div class="text-sm font-medium text-slate-900">Ekspor Semua Data</div>
+          <div class="text-xs text-slate-500">Unduh semua sheet sebagai file CSV.</div>
+        </div>
+        <button id="btnExport" class="btn btn-secondary">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>Ekspor</span>
+        </button>
+      </div>
+      <div class="divider"></div>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 py-2">
+        <div>
+          <div class="text-sm font-medium text-slate-900">Bersihkan Cache</div>
+          <div class="text-xs text-slate-500">Hapus cache server & frontend, muat ulang data.</div>
+        </div>
+        <button id="btnClearCache" class="btn btn-ghost text-slate-600">
+          <i data-lucide="eraser" class="w-4 h-4"></i>
+          <span>Bersihkan</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== END ================== -->
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['Admin']);
+  if (user) {
+    mountShell('settings');
+    loadData();
+  }
+
+  let data = null;
+
+  /* ============================================================
+     TABS
+     ============================================================ */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active', 'text-indigo-600', 'border-indigo-600');
+        b.classList.add('text-slate-600');
+      });
+      btn.classList.add('active', 'text-indigo-600', 'border-indigo-600');
+      btn.classList.remove('text-slate-600');
+
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      el('tab-' + btn.dataset.tab).classList.remove('hidden');
+    });
+  });
+
+  /* ============================================================
+     LOAD
+     ============================================================ */
+  async function loadData() {
+    await withLoading('Memuat pengaturan...', async () => {
+      try {
+        data = await sispaRequest('admin.pengaturan.get', {});
+        renderUmum();
+        renderKategori();
+        renderSistem();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  /* ============================================================
+     RENDER UMUM
+     ============================================================ */
+  function renderUmum() {
+    el('fTahunAjaran').value = data.tahun_ajaran_aktif || '';
+    el('fSemester').value = data.semester_aktif || 'Ganjil';
+    el('fNamaDinas').value = data.nama_dinas || '';
+    el('fNamaKabupaten').value = data.nama_kabupaten || '';
+    el('fNamaProvinsi').value = data.nama_provinsi || '';
+  }
+
+  /* ============================================================
+     RENDER KATEGORI
+     ============================================================ */
+  function renderKategori() {
+    renderKategoriRows('kategoriLK1', data.kategori_lk1 || [], 'LK1');
+    renderKategoriRows('kategoriLK2', data.kategori_lk2 || [], 'LK2');
+  }
+
+  function renderKategoriRows(containerId, items, tipe) {
+    const container = el(containerId);
+    if (!items.length) {
+      container.innerHTML = '<div class="text-sm text-slate-500 italic">Belum ada kategori.</div>';
+      return;
+    }
+
+    const warnaMap = {
+      'Belum Terlihat': 'text-red-600 bg-red-50',
+      'Mulai Terlihat': 'text-amber-600 bg-amber-50',
+      'Berkembang': 'text-blue-600 bg-blue-50',
+      'Mahir': 'text-emerald-600 bg-emerald-50',
+      'Belum Tampak': 'text-red-600 bg-red-50',
+      'Mulai Tampak': 'text-amber-600 bg-amber-50',
+      'Konsisten/Optimal': 'text-emerald-600 bg-emerald-50'
+    };
+
+    container.innerHTML = items.map((k, i) => {
+      const warna = warnaMap[k.label] || 'text-slate-600 bg-slate-100';
+      return `
+        <div class="grid grid-cols-[1fr_100px_100px_auto] gap-3 items-center p-3 border border-slate-200 rounded-lg bg-white">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded ${warna} flex items-center justify-center text-xs font-semibold">${i+1}</span>
+            <input type="text" class="input text-sm" data-idx="${i}" data-field="label"
+                   value="${escapeHtml(k.label || '')}" placeholder="Label" />
+          </div>
+          <input type="number" class="input text-sm text-center" data-idx="${i}" data-field="min"
+                 value="${k.min}" min="0" max="999" placeholder="Min" />
+          <input type="number" class="input text-sm text-center" data-idx="${i}" data-field="max"
+                 value="${k.max}" min="0" max="999" placeholder="Max" />
+          <button type="button" class="icon-btn text-red-600" data-remove="${i}" title="Hapus">
+            ${icon('trash-2', 'w-4 h-4')}
+          </button>
+        </div>`;
+    }).join('') + `
+      <button type="button" class="btn btn-ghost text-indigo-600 text-xs mt-2" data-add="${tipe}">
+        ${icon('plus', 'w-3.5 h-3.5')}
+        <span>Tambah Kategori</span>
+      </button>`;
+
+    // Event handlers
+    container.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('change', (e) => {
+        const idx = parseInt(e.target.dataset.idx, 10);
+        const field = e.target.dataset.field;
+        let val = e.target.value;
+        if (field === 'min' || field === 'max') val = parseInt(val, 10) || 0;
+        const arr = tipe === 'LK1' ? data.kategori_lk1 : data.kategori_lk2;
+        arr[idx][field] = val;
+      });
+    });
+
+    container.querySelectorAll('[data-remove]').forEach(b => {
+      b.addEventListener('click', () => {
+        const idx = parseInt(b.dataset.remove, 10);
+        const arr = tipe === 'LK1' ? data.kategori_lk1 : data.kategori_lk2;
+        arr.splice(idx, 1);
+        renderKategori();
+      });
+    });
+
+    container.querySelector('[data-add]').addEventListener('click', () => {
+      const arr = tipe === 'LK1' ? data.kategori_lk1 : data.kategori_lk2;
+      const last = arr[arr.length - 1];
+      arr.push({ min: last ? last.max + 1 : 0, max: last ? last.max + 10 : 10, label: '' });
+      renderKategori();
+    });
+
+    refreshIcons();
+  }
+
+  /* ============================================================
+     RENDER SISTEM
+     ============================================================ */
+  function renderSistem() {
+    const info = data.app_info || {};
+    el('infoVersi').textContent = 'v' + (info.versi || '-');
+    el('infoRuntime').textContent = info.runtime || 'V8';
+    el('infoUrl').textContent = getApiUrl();
+  }
+
+  /* ============================================================
+     SIMPAN UMUM
+     ============================================================ */
+  el('btnSaveUmum').addEventListener('click', async () => {
+    const payload = {
+      tahun_ajaran_aktif: el('fTahunAjaran').value.trim(),
+      semester_aktif: el('fSemester').value,
+      nama_dinas: el('fNamaDinas').value.trim(),
+      nama_kabupaten: el('fNamaKabupaten').value.trim(),
+      nama_provinsi: el('fNamaProvinsi').value.trim()
+    };
+    await savePengaturan(payload, 'Pengaturan umum disimpan.');
+  });
+
+  el('btnResetUmum').addEventListener('click', () => {
+    loadData();
+  });
+
+  /* ============================================================
+     SIMPAN KATEGORI
+     ============================================================ */
+  el('btnSaveKategori').addEventListener('click', async () => {
+    // Validasi: min/max berurutan, tidak ada celah
+    const err1 = validateKategori(data.kategori_lk1, 76);
+    if (err1) return swalError('Kategori LK1 tidak valid', err1);
+    const err2 = validateKategori(data.kategori_lk2, 32);
+    if (err2) return swalError('Kategori LK2 tidak valid', err2);
+
+    const payload = {
+      kategori_lk1: data.kategori_lk1,
+      kategori_lk2: data.kategori_lk2
+    };
+    await savePengaturan(payload, 'Kategori penilaian disimpan.');
+  });
+
+  el('btnResetKategori').addEventListener('click', async () => {
+    const ok = await swalConfirm(
+      'Reset kategori ke default?',
+      'Kategori LK1 dan LK2 akan dikembalikan ke pengaturan pabrik.',
+      { confirmText: 'Ya, reset', danger: true }
+    );
+    if (!ok) return;
+
+    await withLoading('Reset...', async () => {
+      try {
+        await sispaRequest('admin.pengaturan.reset', {});
+        await swalSuccess('Reset', 'Kategori dikembalikan ke default.');
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
+  });
+
+  function validateKategori(arr, maxSkor) {
+    if (!arr.length) return 'Minimal harus ada 1 kategori.';
+    const sorted = arr.slice().sort((a, b) => a.min - b.min);
+    if (sorted[0].min !== 0) return 'Kategori pertama harus mulai dari 0.';
+    if (sorted[sorted.length - 1].max < maxSkor) {
+      return 'Kategori terakhir harus mencakup skor maksimal ' + maxSkor + '.';
+    }
+    for (let i = 1; i < sorted.length; i++) {
+      if (sorted[i].min !== sorted[i-1].max + 1) {
+        return 'Rentang tidak berkesinambungan: kategori #' + i + ' (' +
+               sorted[i].label + ') harus mulai dari ' + (sorted[i-1].max + 1) + '.';
+      }
+    }
+    for (const k of arr) {
+      if (!k.label || !k.label.trim()) return 'Semua kategori harus punya label.';
+      if (k.min > k.max) return 'Kategori "' + k.label + '": min > max.';
+    }
+    return null;
+  }
+
+  /* ============================================================
+     SAVE HELPER
+     ============================================================ */
+  async function savePengaturan(payload, successMsg) {
+    await withLoading('Menyimpan...', async () => {
+      try {
+        await sispaRequest('admin.pengaturan.set', { payload: payload });
+        await swalSuccess('Tersimpan', successMsg);
+        await loadData();
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  /* ============================================================
+     SISTEM
+     ============================================================ */
+  el('btnTestKoneksi').addEventListener('click', async () => {
+    await withLoading('Menguji koneksi...', async () => {
+      const r = await testApiConnection();
+      if (r.ok) {
+        const d = r.data.data || {};
+        await swalSuccess('OK', 'Aplikasi: ' + (d.app || '-') + ' · v' + (d.version || '-'));
+      } else {
+        swalError('Gagal', r.error || (r.data && r.data.message) || 'Koneksi gagal');
+      }
+    });
+  });
+
+  el('btnBackup').addEventListener('click', async () => {
+    const ok = await swalConfirm('Buat backup?', 'Salinan SISPA_DB akan dibuat di Google Drive.');
+    if (!ok) return;
+    await withLoading('Membuat backup...', async () => {
+      try {
+        const res = await sispaRequest('admin.backup', {});
+        await swalSuccess('Backup dibuat', 'File: ' + (res.backup_url ? 'berhasil' : '-'));
+        if (res.backup_url) window.open(res.backup_url, '_blank');
+      } catch (err) { handleApiError(err); }
+    });
+  });
+
+  el('btnExport').addEventListener('click', async () => {
+    const ok = await swalConfirm('Ekspor semua data?', 'Semua sheet akan diekspor ke folder Drive.');
+    if (!ok) return;
+    await withLoading('Mengekspor...', async () => {
+      try {
+        const res = await sispaRequest('admin.exportAll', {});
+        await swalSuccess('Ekspor selesai', 'Folder: ' + (res.folder_url ? 'berhasil' : '-'));
+        if (res.folder_url) window.open(res.folder_url, '_blank');
+      } catch (err) { handleApiError(err); }
+    });
+  });
+
+  el('btnClearCache').addEventListener('click', () => {
+    if (window.clearFrontendCache) clearFrontendCache();
+    swalSuccess('Cache dibersihkan', 'Muat ulang data.');
+    loadData();
+  });
+</script>
+</body>
+</html>
