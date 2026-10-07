@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SISPA — Audit Log</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+
+<!-- ================== KONTEN ================== -->
+
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Audit Log</h1>
+    <p class="text-sm text-slate-500 mt-1">Riwayat semua aktivitas tulis di sistem.</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button id="btnExport" class="btn btn-secondary">
+      <i data-lucide="download" class="w-4 h-4"></i>
+      <span>Ekspor CSV</span>
+    </button>
+    <button id="btnRefresh" class="btn btn-secondary">
+      <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      <span>Refresh</span>
+    </button>
+  </div>
+</div>
+
+<!-- ================== STAT RINGKAS ================== -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="stat-card">
+    <div class="stat-icon bg-indigo-50 text-indigo-600"><i data-lucide="list" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Total Aktivitas</div>
+      <div id="statTotal" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-emerald-50 text-emerald-600"><i data-lucide="calendar" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Hari Ini</div>
+      <div id="statHariIni" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-blue-50 text-blue-600"><i data-lucide="calendar-days" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">7 Hari Terakhir</div>
+      <div id="statMinggu" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon bg-purple-50 text-purple-600"><i data-lucide="layers" class="w-5 h-5"></i></div>
+    <div>
+      <div class="text-xs text-slate-500">Jenis Aksi</div>
+      <div id="statAksi" class="text-2xl font-bold text-slate-900">—</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================== FILTER ================== -->
+<div class="card mb-4">
+  <div class="card-body grid md:grid-cols-6 gap-3">
+    <div class="relative md:col-span-2">
+      <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+        <i data-lucide="search" class="w-4 h-4"></i>
+      </span>
+      <input type="text" id="searchInput" placeholder="Cari user / aksi / detail..."
+             class="input" style="padding-left:2.4rem" />
+    </div>
+    <select id="filterRole" class="select">
+      <option value="">Semua Role</option>
+      <option value="KS">KS</option>
+      <option value="Pengawas">Pengawas</option>
+      <option value="Admin">Admin</option>
+    </select>
+    <select id="filterAksi" class="select">
+      <option value="">Semua Aksi</option>
+    </select>
+    <input type="date" id="filterDari" class="input" title="Dari tanggal" />
+    <input type="date" id="filterSampai" class="input" title="Sampai tanggal" />
+    <div class="md:col-span-6 flex items-center justify-between">
+      <div class="text-xs text-slate-500">
+        Menampilkan <span id="infoHalaman" class="font-medium text-slate-700">—</span>
+      </div>
+      <button id="btnReset" class="btn btn-ghost text-slate-600">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        <span>Reset Filter</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================== TABEL ================== -->
+<div class="card overflow-hidden">
+  <div class="card-header">
+    <div class="flex items-center gap-2">
+      <i data-lucide="activity" class="w-4 h-4 text-slate-500"></i>
+      <h2 class="font-semibold text-slate-900 text-sm">Riwayat Aktivitas</h2>
+      <span id="resultCount" class="badge badge-neutral">0</span>
+    </div>
+  </div>
+  <div class="overflow-x-auto" id="tableWrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th style="width: 160px">Waktu</th>
+          <th>User</th>
+          <th style="width: 200px">Aksi</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody id="logTable"></tbody>
+    </table>
+  </div>
+
+  <div id="emptyState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="activity" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Belum ada aktivitas</h3>
+    <p class="text-sm text-slate-500">Log akan muncul setelah user mulai menggunakan aplikasi.</p>
+  </div>
+
+  <div id="noResultState" class="hidden empty-state">
+    <div class="empty-state-icon"><i data-lucide="search-x" class="w-6 h-6"></i></div>
+    <h3 class="font-semibold text-slate-900 mb-1">Tidak ada hasil</h3>
+    <p class="text-sm text-slate-500">Coba ubah filter atau kata kunci.</p>
+  </div>
+
+  <!-- Pagination -->
+  <div id="paginationWrap" class="card-header border-t border-slate-200 bg-slate-50 hidden">
+    <div class="flex items-center justify-between w-full">
+      <button id="btnPrev" class="btn btn-secondary text-xs">
+        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+        <span>Sebelumnya</span>
+      </button>
+      <span id="pageInfo" class="text-sm text-slate-600">Halaman 1</span>
+      <button id="btnNext" class="btn btn-secondary text-xs">
+        <span>Selanjutnya</span>
+        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================== END ================== -->
+
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/app.js"></script>
+<script>
+  const user = sispaRequireLogin(['Admin']);
+  if (user) {
+    mountShell('audit-log');
+    loadData();
+  }
+
+  let allData = null;
+  let currentPage = 1;
+  const PAGE_LIMIT = 50;
+  let filterText = '';
+  let filterRole = '';
+  let filterAksi = '';
+  let filterDari = '';
+  let filterSampai = '';
+
+  /* ============================================================
+     LOAD DATA
+     ============================================================ */
+  async function loadData(page) {
+    if (page) currentPage = page;
+    await withLoading('Memuat audit log...', async () => {
+      try {
+        const payload = {
+          page: currentPage,
+          limit: PAGE_LIMIT,
+          filter: {
+            q: filterText || undefined,
+            role: filterRole || undefined,
+            aksi: filterAksi || undefined,
+            dari: filterDari || undefined,
+            sampai: filterSampai || undefined
+          }
+        };
+        const res = await sispaRequest('admin.audit.list', payload);
+        allData = res;
+        renderStats(res.summary || {});
+        renderAksiDropdown(res.aksi_list || []);
+        renderTable();
+        renderPagination(res);
+      } catch (err) { handleApiError(err); }
+    });
+  }
+
+  function renderStats(s) {
+    el('statTotal').textContent = (s.total || 0).toLocaleString('id-ID');
+    el('statHariIni').textContent = s.hari_ini || 0;
+    el('statMinggu').textContent = s.minggu_ini || 0;
+    el('statAksi').textContent = (allData.aksi_list || []).length;
+  }
+
+  function renderAksiDropdown(list) {
+    const sel = el('filterAksi');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Semua Aksi</option>';
+    list.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.aksi;
+      opt.textContent = a.aksi + ' (' + a.jumlah + ')';
+      sel.appendChild(opt);
+    });
+    sel.value = cur;
+  }
+
+  /* ============================================================
+     RENDER TABLE
+     ============================================================ */
+  function renderTable() {
+    const tbody = el('logTable');
+    const wrap = el('tableWrap');
+    const emptyState = el('emptyState');
+    const noResultState = el('noResultState');
+    const pagWrap = el('paginationWrap');
+
+    wrap.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    noResultState.classList.add('hidden');
+    pagWrap.classList.add('hidden');
+
+    if (!allData.items || !allData.items.length) {
+      if (allData.total === 0 && !filterText && !filterRole && !filterAksi && !filterDari && !filterSampai) {
+        emptyState.classList.remove('hidden');
+      } else {
+        noResultState.classList.remove('hidden');
+      }
+      el('resultCount').textContent = 0;
+      refreshIcons();
+      return;
+    }
+    wrap.classList.remove('hidden');
+
+    el('resultCount').textContent = allData.total.toLocaleString('id-ID');
+
+    // Warna ikon per jenis aksi
+    function aksiMeta(aksi) {
+      if (aksi.startsWith('login') || aksi === 'auth.updateProfile' || aksi === 'change_password') {
+        return { icon: 'log-in', color: 'text-blue-600', bg: 'bg-blue-50' };
+      }
+      if (aksi.includes('.create')) return { icon: 'plus-circle', color: 'text-emerald-600', bg: 'bg-emerald-50' };
+      if (aksi.includes('.update')) return { icon: 'pencil', color: 'text-indigo-600', bg: 'bg-indigo-50' };
+      if (aksi.includes('.delete')) return { icon: 'trash-2', color: 'text-red-600', bg: 'bg-red-50' };
+      if (aksi.includes('.submit')) return { icon: 'send', color: 'text-green-600', bg: 'bg-green-50' };
+      if (aksi.includes('.save')) return { icon: 'save', color: 'text-slate-600', bg: 'bg-slate-100' };
+      if (aksi.includes('.pdf')) return { icon: 'file-text', color: 'text-purple-600', bg: 'bg-purple-50' };
+      if (aksi.includes('.impersonate')) return { icon: 'user-check', color: 'text-amber-600', bg: 'bg-amber-50' };
+      if (aksi === 'ERROR') return { icon: 'alert-circle', color: 'text-red-600', bg: 'bg-red-50' };
+      return { icon: 'activity', color: 'text-slate-500', bg: 'bg-slate-100' };
+    }
+
+    // Format detail JSON → ringkas
+    function ringkasDetail(detailStr) {
+      if (!detailStr || detailStr === '{}') return '<span class="text-slate-400">—</span>';
+      try {
+        const d = JSON.parse(detailStr);
+        const parts = [];
+        Object.keys(d).slice(0, 3).forEach(k => {
+          let v = d[k];
+          if (typeof v === 'object') v = JSON.stringify(v);
+          v = String(v);
+          if (v.length > 40) v = v.slice(0, 40) + '…';
+          parts.push(`<span class="text-slate-500">${escapeHtml(k)}:</span> ${escapeHtml(v)}`);
+        });
+        return parts.join(' · ');
+      } catch (e) {
+        const s = String(detailStr);
+        return s.length > 100 ? escapeHtml(s.slice(0, 100)) + '…' : escapeHtml(s);
+      }
+    }
+
+    tbody.innerHTML = allData.items.map(l => {
+      const m = aksiMeta(l.aksi);
+      const roleBadge = l.user_role === 'Admin' ? 'badge-warning'
+                      : l.user_role === 'Pengawas' ? 'badge-info'
+                      : 'badge-neutral';
+
+      return `
+        <tr class="hover:bg-slate-50">
+          <td class="text-xs text-mono text-slate-600">${escapeHtml(l.waktu)}</td>
+          <td>
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-semibold text-xs flex-shrink-0">
+                ${escapeHtml((l.user_nama || 'U').charAt(0).toUpperCase())}
+              </div>
+              <div class="min-w-0">
+                <div class="text-sm font-medium text-slate-900 truncate">${escapeHtml(l.user_nama)}</div>
+                <div class="text-xs text-slate-500">
+                  ${l.user_npsn ? `<span class="text-mono">${escapeHtml(l.user_npsn)}</span>` : ''}
+                  ${l.user_role ? `<span class="badge ${roleBadge} ml-1" style="font-size:10px;padding:1px 6px">${escapeHtml(l.user_role)}</span>` : ''}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded ${m.bg} ${m.color} flex items-center justify-center flex-shrink-0">
+                ${icon(m.icon, 'w-3.5 h-3.5')}
+              </span>
+              <span class="text-xs font-mono text-slate-700">${escapeHtml(l.aksi)}</span>
+            </div>
+          </td>
+          <td class="text-xs">${ringkasDetail(l.detail)}</td>
+        </tr>`;
+    }).join('');
+
+    // Tampilkan pagination kalau data > limit
+    if (allData.total > allData.limit) {
+      pagWrap.classList.remove('hidden');
+      const totalPages = Math.ceil(allData.total / allData.limit);
+      el('pageInfo').textContent = 'Halaman ' + allData.page + ' dari ' + totalPages;
+      el('btnPrev').disabled = allData.page <= 1;
+      el('btnNext').disabled = allData.page >= totalPages;
+      el('infoHalaman').textContent =
+        ((allData.page - 1) * allData.limit + 1) + '–' +
+        Math.min(allData.page * allData.limit, allData.total) + ' dari ' +
+        allData.total.toLocaleString('id-ID');
+    } else {
+      el('infoHalaman').textContent = allData.total.toLocaleString('id-ID') + ' aktivitas';
+    }
+
+    refreshIcons();
+  }
+
+  function renderPagination(res) {
+    // Sudah ditangani di renderTable
+  }
+
+  /* ============================================================
+     EXPORT CSV
+     ============================================================ */
+  el('btnExport').addEventListener('click', () => {
+    if (!allData || !allData.items || !allData.items.length) {
+      return swalError('Tidak ada data', 'Tidak ada log untuk diekspor.');
+    }
+
+    const headers = ['Waktu', 'Nama', 'NPSN', 'Role', 'Aksi', 'Detail'];
+    const rows = allData.items.map(l => [
+      l.waktu,
+      l.user_nama,
+      l.user_npsn,
+      l.user_role,
+      l.aksi,
+      l.detail
+    ]);
+
+    const csv = [headers, ...rows]
+      .map(row => row.map(cell => {
+        const s = String(cell == null ? '' : cell);
+        if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+          return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      }).join(','))
+      .join('\n');
+
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'audit-log-' + todayIso() + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    showToast('CSV diekspor', 'success');
+  });
+
+  /* ============================================================
+     PAGINATION
+     ============================================================ */
+  el('btnPrev').addEventListener('click', () => {
+    if (currentPage > 1) loadData(currentPage - 1);
+  });
+  el('btnNext').addEventListener('click', () => {
+    const totalPages = Math.ceil(allData.total / allData.limit);
+    if (currentPage < totalPages) loadData(currentPage + 1);
+  });
+
+  /* ============================================================
+     FILTER
+     ============================================================ */
+  let debounceTimer = null;
+  el('searchInput').addEventListener('input', (e) => {
+    filterText = e.target.value;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => loadData(1), 400);
+  });
+  el('filterRole').addEventListener('change', (e) => { filterRole = e.target.value; loadData(1); });
+  el('filterAksi').addEventListener('change', (e) => { filterAksi = e.target.value; loadData(1); });
+  el('filterDari').addEventListener('change', (e) => { filterDari = e.target.value; loadData(1); });
+  el('filterSampai').addEventListener('change', (e) => { filterSampai = e.target.value; loadData(1); });
+
+  el('btnReset').addEventListener('click', () => {
+    el('searchInput').value = '';
+    el('filterRole').value = '';
+    el('filterAksi').value = '';
+    el('filterDari').value = '';
+    el('filterSampai').value = '';
+    filterText = filterRole = filterAksi = filterDari = filterSampai = '';
+    loadData(1);
+  });
+
+  el('btnRefresh').addEventListener('click', () => loadData(1));
+</script>
+</body>
+</html>
