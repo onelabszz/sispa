@@ -181,13 +181,27 @@
             <i data-lucide="send" class="w-4 h-4"></i>
             <span>Kirim ke Pengawas</span>
           </button>
-          <div id="pdfSection" class="hidden pt-2 border-t border-slate-100">
+          <div id="pdfSection" class="hidden pt-2 border-t border-slate-100 space-y-2">
             <button id="btnPdf" class="btn btn-ghost w-full justify-center text-slate-700">
               <i data-lucide="file-text" class="w-4 h-4"></i>
               <span>Cetak Laporan PDF</span>
             </button>
+            <button id="btnSetLink" class="btn btn-secondary w-full justify-center">
+              <i data-lucide="link" class="w-4 h-4"></i>
+              <span id="btnSetLinkLabel">Tambah Link Dokumentasi</span>
+            </button>
           </div>
         </div>
+      </div>
+
+      <!-- Kotak info link dokumentasi -->
+      <div id="linkInfoBox" class="hidden p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-xs">
+        <div class="font-medium text-indigo-900 mb-1 flex items-center gap-1">
+          <i data-lucide="link" class="w-3.5 h-3.5"></i>
+          <span>Link Dokumentasi</span>
+        </div>
+        <a id="linkInfoValue" href="#" target="_blank"
+           class="block text-indigo-600 hover:underline break-all">—</a>
       </div>
 
       <div class="text-xs text-slate-400 text-center">
@@ -393,17 +407,110 @@
   function applyReadonly() {
     if (!isReadonly) return;
     el('readonlyBanner').classList.remove('hidden');
-    // Disable semua input
     document.querySelectorAll('input, select, textarea, .skor-btn').forEach(elem => {
       elem.disabled = true;
       elem.classList.add('opacity-70');
     });
     document.querySelectorAll('.indicator-row').forEach(r => r.classList.add('readonly'));
-    // Sembunyikan tombol simpan/kirim
     el('btnSave').classList.add('hidden');
     el('btnSubmit').classList.add('hidden');
     el('pdfSection').classList.remove('hidden');
     el('btnPdf').addEventListener('click', cetakPdf);
+    el('btnSetLink').addEventListener('click', openLinkModal);
+    renderLinkInfo();
+  }
+
+  /* ============================================================
+     LINK DOKUMENTASI
+     ============================================================ */
+
+  function renderLinkInfo() {
+    const link = existing ? (existing.link_dokumentasi || '') : '';
+    const box = el('linkInfoBox');
+    const label = el('btnSetLinkLabel');
+
+    if (link) {
+      el('linkInfoValue').textContent = link;
+      el('linkInfoValue').href = link;
+      box.classList.remove('hidden');
+      label.textContent = 'Edit Link Dokumentasi';
+    } else {
+      box.classList.add('hidden');
+      label.textContent = 'Tambah Link Dokumentasi';
+    }
+    refreshIcons();
+  }
+
+  function openLinkModal() {
+    const current = existing ? (existing.link_dokumentasi || '') : '';
+
+    openModal({
+      title: current ? 'Edit Link Dokumentasi' : 'Tambah Link Dokumentasi',
+      maxWidth: '520px',
+      body: `
+        <div class="space-y-4">
+          <div class="p-3 rounded-lg bg-indigo-50 border border-indigo-100 text-xs text-indigo-900">
+            <div class="font-semibold mb-1">Contoh link yang didukung:</div>
+            <ul class="list-disc list-inside space-y-0.5 text-indigo-800">
+              <li>Google Drive — <code class="text-mono text-[10px]">https://drive.google.com/file/d/xxxxx/view</code></li>
+              <li>YouTube (unlisted) — <code class="text-mono text-[10px]">https://youtube.com/watch?v=xxxxx</code></li>
+              <li>Google Docs — <code class="text-mono text-[10px]">https://docs.google.com/document/d/xxxxx</code></li>
+            </ul>
+            <div class="mt-2 text-indigo-700">
+              <strong>Penting:</strong> Pastikan link bisa diakses oleh Pengawas
+              (set sharing ke <em>Anyone with the link</em>).
+            </div>
+          </div>
+
+          <div>
+            <label class="label" for="fLinkInput">Link Dokumentasi</label>
+            <input type="url" id="fLinkInput" class="input text-sm"
+                   placeholder="https://drive.google.com/..."
+                   value="${escapeHtml(current)}" />
+            <p class="text-xs text-slate-500 mt-1">Kosongkan dan simpan untuk menghapus link.</p>
+          </div>
+        </div>`,
+      footer: `
+        <button class="btn btn-secondary" data-close>
+          ${icon('x', 'w-4 h-4')}<span>Batal</span>
+        </button>
+        <button class="btn btn-primary" id="btnSaveLink">
+          ${icon('save', 'w-4 h-4')}<span>Simpan</span>
+        </button>`
+    });
+
+    el('btnSaveLink').addEventListener('click', saveLink);
+    setTimeout(() => el('fLinkInput').focus(), 100);
+  }
+
+  async function saveLink() {
+    const btn = el('btnSaveLink');
+    const link = el('fLinkInput').value.trim();
+
+    // Validasi URL kalau diisi
+    if (link && !/^https?:\/\/.+/i.test(link)) {
+      return swalError('Link tidak valid', 'Link harus dimulai dengan http:// atau https://');
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `${icon('loader-2', 'w-4 h-4 animate-spin')}<span>Menyimpan...</span>`;
+    refreshIcons();
+
+    try {
+      await sispaRequest('supervisi.setLink', { id: editId, link_dokumentasi: link });
+      closeModal();
+
+      // Update data lokal
+      if (existing) existing.link_dokumentasi = link;
+      renderLinkInfo();
+
+      await swalSuccess('Tersimpan', link ? 'Link dokumentasi berhasil disimpan.' : 'Link dihapus.');
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = `${icon('save', 'w-4 h-4')}<span>Simpan</span>`;
+      refreshIcons();
+      swalError('Gagal menyimpan', err.message);
+    }
   }
 
   async function cetakPdf() {
